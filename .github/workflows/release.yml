@@ -1,8 +1,9 @@
 name: Build release package
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
     inputs:
       tag:
@@ -16,7 +17,7 @@ permissions:
 jobs:
   package:
     env:
-      RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+      RELEASE_TAG: ${{ github.ref_name || inputs.tag }}
     runs-on: ubuntu-latest
 
     steps:
@@ -93,6 +94,25 @@ PHP
           sha256sum "${PACKAGE}.zip" > "${PACKAGE}.zip.sha256"
           test -f "${PACKAGE}.Version.php"
           grep -q "VERSION = '${SAFE_VERSION}'" "${PACKAGE}.Version.php"
+
+      - name: Wait for GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          for attempt in {1..30}; do
+            if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
+              echo "Release ${RELEASE_TAG} is available."
+              exit 0
+            fi
+            echo "Waiting for release ${RELEASE_TAG}..."
+            sleep 5
+          done
+
+          echo "Release ${RELEASE_TAG} was not found."
+          exit 1
 
       - name: Upload release assets
         env:
