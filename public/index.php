@@ -9,6 +9,7 @@ date_default_timezone_set($config['app']['timezone']);
 
 $db = new Database($config);
 $service = new PressureService($config, $db->pdo());
+$pdo = $db->pdo();
 
 try {
     $current = $service->fetchCurrent();
@@ -17,12 +18,30 @@ try {
     )->fetch();
 
     $change = $latest ? $current['pressure_hpa'] - (float)$latest['pressure_hpa'] : 0.0;
+
+    $settings = [];
+    foreach ($pdo->query("SELECT `key`, `value` FROM gaugeiq_settings WHERE `key` IN ('monitor_last_success_at', 'monitor_last_error')") as $setting) {
+        $settings[(string)$setting['key']] = (string)$setting['value'];
+    }
+    $lastMonitorAt = $settings['monitor_last_success_at'] ?? null;
+    $monitorError = $settings['monitor_last_error'] ?? '';
+    $subscriptionCount = (int)$pdo->query('SELECT COUNT(*) FROM gaugeiq_push_subscriptions')->fetchColumn();
+    $enabledRuleCount = (int)$pdo->query('SELECT COUNT(*) FROM gaugeiq_alert_rules WHERE enabled = 1')->fetchColumn();
 } catch (Throwable $e) {
     $current = null;
     $latest = null;
     $change = 0.0;
     $error = $e->getMessage();
+    $lastMonitorAt = null;
+    $monitorError = '';
+    $subscriptionCount = 0;
+    $enabledRuleCount = 0;
 }
+
+$checkMinutes = max(1, (int)$config['pressure']['check_interval_minutes']);
+$nextMonitorAt = $lastMonitorAt ? strtotime($lastMonitorAt) + ($checkMinutes * 60) : null;
+$monitorAge = $lastMonitorAt ? time() - (int)strtotime($lastMonitorAt) : null;
+$monitorHealthy = $monitorAge !== null && $monitorAge <= ($checkMinutes * 60 * 2);
 ?><!doctype html>
 <html lang="en">
 <head>
@@ -90,6 +109,20 @@ try {
         <div class="row"><span>Pressure alert</span><strong>±<?= number_format((float)$config['pressure']['threshold_hpa'], 1) ?> hPa</strong></div>
         <div class="row"><span>Checks</span><strong>Every <?= (int)$config['pressure']['check_interval_minutes'] ?> minutes</strong></div>
         <div class="row"><span>Custom alerts</span><strong><a href="alerts.php">Manage</a></strong></div>
+    </section>
+
+    <section class="card monitoring-card" aria-labelledby="monitoringTitle">
+        <div class="section-heading">
+            <div><h2 id="monitoringTitle">Monitoring status</h2><p class="muted">GaugeIQ's scheduled background monitor.</p></div>
+            <span class="status-pill <?= $monitorHealthy ? 'status-good' : 'status-warn' ?>"><?= $monitorHealthy ? '● Monitoring active' : '● Check required' ?></span>
+        </div>
+        <div class="status-grid">
+            <div><span>Last successful check</span><strong><?= $lastMonitorAt ? htmlspecialchars(date('d M, H:i', (int)strtotime($lastMonitorAt)), ENT_QUOTES) : 'Not yet' ?></strong></div>
+            <div><span>Next expected check</span><strong><?= $nextMonitorAt ? htmlspecialchars(date('d M, H:i', $nextMonitorAt), ENT_QUOTES) : 'Waiting for cron' ?></strong></div>
+            <div><span>Notifications</span><strong><?= $subscriptionCount > 0 ? $subscriptionCount . ' device' . ($subscriptionCount === 1 ? '' : 's') . ' registered' : 'Not enabled' ?></strong></div>
+            <div><span>Active alert rules</span><strong><?= $enabledRuleCount ?></strong></div>
+        </div>
+        <?php if ($monitorError): ?><p class="monitor-warning">The last scheduled check reported an error. <?= htmlspecialchars($monitorError, ENT_QUOTES) ?></p><?php endif; ?>
     </section>
 
     <section class="card appearance-card" aria-labelledby="appearanceTitle"><div class="section-heading"><div><h2 id="appearanceTitle">Appearance</h2><p class="muted">Choose how GaugeIQ looks on this device.</p></div><select id="themeSelect" class="theme-select" aria-label="Appearance"><option value="system">Follow device</option><option value="light">Light</option><option value="dark">Dark</option></select></div></section>
