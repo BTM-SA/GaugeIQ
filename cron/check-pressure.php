@@ -56,11 +56,13 @@ try {
     $push = new PushService($config, $pdo);
     $sent = $push->send('GaugeIQ pressure alert', $body);
 
-    $stmt = $pdo->prepare(
-        "INSERT INTO settings (key, value) VALUES ('last_notified_pressure_hpa', ?)
-         ON CONFLICT(key) DO UPDATE SET value = excluded.value"
-    );
-    $stmt->execute([(string)$current['pressure_hpa']]);
+    if ($sent > 0) {
+        $stmt = $pdo->prepare(
+            "INSERT INTO settings (key, value) VALUES ('last_notified_pressure_hpa', ?)
+             ON CONFLICT(key) DO UPDATE SET value = excluded.value"
+        );
+        $stmt->execute([(string)$current['pressure_hpa']]);
+    }
 
     printf("Push alert sent to %d device(s).\n", $sent);
 } catch (Throwable $e) {
