@@ -45,18 +45,24 @@ $db = new Database($config);
 $pdo = $db->pdo();
 $now = gmdate('c');
 
-$stmt = $pdo->prepare(
-    'INSERT INTO push_subscriptions (endpoint, subscription_json, created_at, updated_at)
-     VALUES (?, ?, ?, ?)
-     ON CONFLICT(endpoint) DO UPDATE SET
-        subscription_json = excluded.subscription_json,
-        updated_at = excluded.updated_at'
-);
-$stmt->execute([
-    $endpoint,
-    json_encode($subscription, JSON_THROW_ON_ERROR),
-    $now,
-    $now,
-]);
+$table = 'gaugeiq_push_subscriptions';
+$json = json_encode($subscription, JSON_THROW_ON_ERROR);
+
+$existing = $pdo->prepare("SELECT id FROM {$table} WHERE endpoint = ?");
+$existing->execute([$endpoint]);
+$id = $existing->fetchColumn();
+
+if ($id === false) {
+    $stmt = $pdo->prepare(
+        "INSERT INTO {$table} (endpoint, subscription_json, created_at, updated_at)
+         VALUES (?, ?, ?, ?)"
+    );
+    $stmt->execute([$endpoint, $json, $now, $now]);
+} else {
+    $stmt = $pdo->prepare(
+        "UPDATE {$table} SET subscription_json = ?, updated_at = ? WHERE id = ?"
+    );
+    $stmt->execute([$json, $now, (int)$id]);
+}
 
 echo json_encode(['ok' => true]);
