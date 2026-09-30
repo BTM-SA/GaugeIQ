@@ -35,7 +35,7 @@ final class PushService
         ], JSON_THROW_ON_ERROR);
 
         $subscriptions = $this->db->query(
-            'SELECT id, subscription_json FROM push_subscriptions ORDER BY id ASC'
+            'SELECT id, subscription_json FROM gaugeiq_push_subscriptions ORDER BY id ASC'
         )->fetchAll();
 
         $sent = 0;
@@ -54,7 +54,7 @@ final class PushService
 
             $status = $report->getResponse()?->getStatusCode();
             if ($status === 404 || $status === 410) {
-                $delete = $this->db->prepare('DELETE FROM push_subscriptions WHERE id = ?');
+                $delete = $this->db->prepare('DELETE FROM gaugeiq_push_subscriptions WHERE id = ?');
                 $delete->execute([(int)$row['id']]);
             }
         }
