@@ -9,6 +9,11 @@ $lockPath = $configDir . '/installed.lock';
 require_once $root . '/app/Database.php';
 require_once $root . '/app/Schema.php';
 
+$autoload = $root . '/vendor/autoload.php';
+if (is_file($autoload)) {
+    require_once $autoload;
+}
+
 header('Cache-Control: no-store');
 
 if (is_file($lockPath)) {
@@ -67,11 +72,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$errors) {
         try {
-            if (!class_exists(\\Minishlink\\WebPush\\VAPID::class)) {
+            if (!class_exists(\Minishlink\WebPush\VAPID::class)) {
                 throw new RuntimeException('GaugeIQ Web Push dependencies are missing. The installation package must include vendor/ or Composer dependencies must be installed first.');
             }
 
-            $vapid = \\Minishlink\\WebPush\\VAPID::createVapidKeys();
+            $vapid = \Minishlink\WebPush\VAPID::createVapidKeys();
 
             $config = [
                 'app' => [
