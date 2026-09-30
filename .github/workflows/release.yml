@@ -86,12 +86,9 @@ PHP
           test -f "dist/${PACKAGE}/app/Version.php"
 
           cd dist
+          zip -qr "${PACKAGE}.zip" "${PACKAGE}"
           unzip -t "${PACKAGE}.zip" >/dev/null
           unzip -l "${PACKAGE}.zip" | grep -q "/vendor/autoload.php$"
-          cd ..
-
-          cd dist
-          zip -qr "${PACKAGE}.zip" "${PACKAGE}"
           sha256sum "${PACKAGE}.zip" > "${PACKAGE}.zip.sha256"
 
       - name: Upload release assets
