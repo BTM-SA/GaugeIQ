@@ -17,7 +17,7 @@ permissions:
 jobs:
   package:
     env:
-      RELEASE_TAG: ${{ github.ref_name || inputs.tag }}
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
     runs-on: ubuntu-latest
 
     steps:
