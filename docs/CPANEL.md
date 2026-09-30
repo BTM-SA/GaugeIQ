@@ -218,3 +218,14 @@ Do not replace the existing SQLite database with a new empty database and do not
 
 The in-app release check is informational; it must not expose configuration, VAPID credentials, database contents, or internal exception details.
 
+
+## Security rules
+
+- Use HTTPS.
+- Keep config/, app/, database/, cron/, bin/, storage/, and vendor/ outside the document root.
+- Never commit config/local.php.
+- Never publish the VAPID private key.
+- Do not make storage/ publicly accessible.
+- Do not expose a public endpoint that can send arbitrary push notifications.
+- Treat release ZIP files and their SHA-256 checksum as a matched pair.
+- Never replace config/local.php or persistent storage during an update.
