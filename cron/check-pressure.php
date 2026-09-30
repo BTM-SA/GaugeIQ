@@ -5,11 +5,14 @@ $config = require __DIR__ . '/../config/local.php';
 require __DIR__ . '/../app/Database.php';
 require __DIR__ . '/../app/PressureService.php';
 require __DIR__ . '/../app/PushService.php';
+require __DIR__ . '/../app/Schema.php';
+require __DIR__ . '/../app/AlertRuleService.php';
 
 date_default_timezone_set($config['app']['timezone']);
 
 $db = new Database($config);
 $pdo = $db->pdo();
+migrateDatabase($pdo);
 $service = new PressureService($config, $pdo);
 
 $current = $service->fetchCurrent();
@@ -30,15 +33,21 @@ printf(
     $previous === null ? '' : ' | pressure change ' . number_format($pressureChange, 1) . ' hPa'
 );
 
-$alerts = [];
+$ruleService = new AlertRuleService($pdo);
+$ruleMatches = $previous === null ? [] : $ruleService->evaluate($previous, $current);
+$alerts = array_map(
+    static fn(array $match): string => $match['message'],
+    $ruleMatches
+);
 
-if ($service->pressureThresholdExceeded($previous, $current['pressure_hpa'])) {
+// Keep the original pressure configuration working for installations that have
+// not yet created any alert rules in the Settings screen.
+if ($ruleMatches === [] && $previous !== null && $service->pressureThresholdExceeded($previous, $current['pressure_hpa'])) {
     $baseline = $pdo->prepare(
         "SELECT value FROM gaugeiq_settings WHERE key = 'last_notified_pressure_hpa'"
     );
     $baseline->execute();
     $baselineValue = $baseline->fetchColumn();
-
     $baselinePressure = $baselineValue === false ? null : (float)$baselineValue;
     $notificationChange = $baselinePressure === null
         ? $pressureChange
@@ -55,41 +64,6 @@ if ($service->pressureThresholdExceeded($previous, $current['pressure_hpa'])) {
         );
     }
 }
-
-if ($service->humidityThresholdExceeded($previous, $current['humidity_percent'])) {
-    $alerts[] = sprintf(
-        'Humidity is now %.0f%%.',
-        $current['humidity_percent']
-    );
-}
-
-if ($service->windSpeedThresholdExceeded($previous, $current['wind_speed_kmh'])) {
-    $alerts[] = sprintf(
-        'Wind speed is now %.1f km/h.',
-        $current['wind_speed_kmh']
-    );
-}
-
-if ($service->windDirectionChanged($previous, $current['wind_direction_degrees'])) {
-    $previousDirection = (float)$previous['wind_direction_degrees'];
-    $change = $service->circularDifference($previousDirection, $current['wind_direction_degrees']);
-
-    $alerts[] = sprintf(
-        'Wind direction changed by %.0f° to %s.',
-        $change,
-        PressureService::directionLabel($current['wind_direction_degrees'])
-    );
-}
-
-if ($previous !== null &&
-    $service->windDirectionMatches($current['wind_direction_degrees']) &&
-    !$service->windDirectionMatches((float)$previous['wind_direction_degrees'])) {
-    $alerts[] = sprintf(
-        'Wind is now coming from %s.',
-        PressureService::directionLabel($current['wind_direction_degrees'])
-    );
-}
-
 if ($alerts === []) {
     exit;
 }
@@ -101,23 +75,32 @@ try {
         implode(' ', $alerts)
     );
 
-    if ($sent > 0 && $service->pressureThresholdExceeded($previous, $current['pressure_hpa'])) {
-        $value = (string)$current['pressure_hpa'];
-
-        $exists = $pdo->query(
-            "SELECT 1 FROM gaugeiq_settings WHERE key = 'last_notified_pressure_hpa'"
-        )->fetchColumn();
-
-        if ($exists === false) {
-            $stmt = $pdo->prepare(
-                "INSERT INTO gaugeiq_settings (key, value) VALUES ('last_notified_pressure_hpa', ?)"
+    if ($sent > 0) {
+        foreach ($ruleMatches as $match) {
+            $ruleService->markTriggered(
+                (int)$match['id'],
+                (string)$match['message'],
+                (string)$current['observed_at']
             );
-            $stmt->execute([$value]);
-        } else {
-            $stmt = $pdo->prepare(
-                "UPDATE gaugeiq_settings SET value = ? WHERE key = 'last_notified_pressure_hpa'"
-            );
-            $stmt->execute([$value]);
+        }
+
+        if ($ruleMatches === [] && $service->pressureThresholdExceeded($previous, $current['pressure_hpa'])) {
+            $value = (string)$current['pressure_hpa'];
+            $exists = $pdo->query(
+                "SELECT 1 FROM gaugeiq_settings WHERE key = 'last_notified_pressure_hpa'"
+            )->fetchColumn();
+
+            if ($exists === false) {
+                $stmt = $pdo->prepare(
+                    "INSERT INTO gaugeiq_settings (key, value) VALUES ('last_notified_pressure_hpa', ?)"
+                );
+                $stmt->execute([$value]);
+            } else {
+                $stmt = $pdo->prepare(
+                    "UPDATE gaugeiq_settings SET value = ? WHERE key = 'last_notified_pressure_hpa'"
+                );
+                $stmt->execute([$value]);
+            }
         }
     }
 
