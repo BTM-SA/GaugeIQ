@@ -181,26 +181,40 @@ GaugeIQ test alert sent to 1 device(s).
 
 The test command is deliberately server-side. GaugeIQ does not expose a public test-push endpoint that an anonymous visitor could use to trigger notifications to every registered device.
 
-## 12. Updating GaugeIQ
+## 12. Installing a production release
 
-For normal code updates:
+A published GaugeIQ release package includes the Composer production dependencies in vendor/.
 
-1. Back up `config/local.php`.
-2. Keep the existing `storage/gaugeiq.sqlite`.
-3. Pull or upload the new application files.
-4. Run `composer install --no-dev --optimize-autoloader` if dependencies changed.
-5. Run `php database/migrate.php`.
-6. Run `php bin/check-requirements.php`.
-7. Do not regenerate VAPID keys.
-8. Do not replace the existing SQLite database with a fresh empty database.
+For a new installation:
 
-The application data, subscriptions, and notification baseline live in SQLite.
+1. Set the domain/subdomain document root to the GaugeIQ public/ directory.
+2. Upload and extract the release package outside the public web root.
+3. Open the GaugeIQ URL.
+4. Follow the /install/ wizard.
+5. Complete the monitoring location and database settings.
+6. Add GaugeIQ to the iPhone Home Screen and enable notifications.
+7. Configure the 15-minute cron job.
 
-## Security rules
+You do not need to run Composer when using an official production release package.
 
-- Use HTTPS.
-- Keep `config/`, `app/`, `database/`, `cron/`, `bin/`, `storage/`, and `vendor/` outside the document root.
-- Never commit `config/local.php`.
-- Never publish the VAPID private key.
-- Do not make `storage/` publicly accessible.
-- Do not expose a public endpoint that can send arbitrary push notifications.
+## 13. Updating GaugeIQ
+
+GaugeIQ can check the official GitHub Releases feed and display an update notification on the dashboard when a newer release is available. The notification links to the published release so the package and checksum can be reviewed before installation.
+
+For a manual update:
+
+1. Back up config/local.php.
+2. Keep the existing storage/ directory and database.
+3. Upload the new release files.
+4. Keep your existing config/local.php.
+5. Keep your existing VAPID keys.
+6. Run php database/migrate.php if the release includes database migrations.
+7. Run php bin/check-requirements.php.
+8. Verify the dashboard and cron monitoring.
+
+The bundled vendor/ directory means Composer is not required when updating from an official release package.
+
+Do not replace the existing SQLite database with a new empty database and do not regenerate VAPID keys.
+
+The in-app release check is informational; it must not expose configuration, VAPID credentials, database contents, or internal exception details.
+
