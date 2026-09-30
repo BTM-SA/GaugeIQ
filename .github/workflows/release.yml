@@ -82,7 +82,13 @@ PHP
           rm -rf "dist/${PACKAGE}/storage"
           mkdir -p "dist/${PACKAGE}/storage"
           test -f "dist/${PACKAGE}/vendor/autoload.php"
+          test -d "dist/${PACKAGE}/vendor/minishlink/web-push"
           test -f "dist/${PACKAGE}/app/Version.php"
+
+          cd dist
+          unzip -t "${PACKAGE}.zip" >/dev/null
+          unzip -l "${PACKAGE}.zip" | grep -q "/vendor/autoload.php$"
+          cd ..
 
           cd dist
           zip -qr "${PACKAGE}.zip" "${PACKAGE}"
