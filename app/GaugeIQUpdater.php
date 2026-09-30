@@ -81,6 +81,8 @@ final class GaugeIQUpdater
 
         try {
             $this->swapApplication($stage);
+            $this->runDatabaseMigration();
+            $this->healthCheck($version);
         } catch (Throwable $e) {
             try {
                 $this->restoreApplication($backup);
@@ -90,6 +92,7 @@ final class GaugeIQUpdater
             throw $e;
         } finally {
             $this->removeTree($stage);
+            $this->releaseLock();
         }
 
         return ['version' => $version];
@@ -308,6 +311,92 @@ final class GaugeIQUpdater
         if (!is_dir($this->storage) && !mkdir($this->storage, 0750, true) && !is_dir($this->storage)) {
             throw new RuntimeException('Unable to create the update workspace.');
         }
+
+        $lock = $this->storage . '/update.lock';
+        if (is_file($lock) && (time() - (int)@filemtime($lock)) < 3600) {
+            throw new RuntimeException('Another GaugeIQ update is already in progress.');
+        }
+        if (is_file($lock)) {
+            @unlink($lock);
+        }
+        $handle = @fopen($lock, 'x');
+        if ($handle === false) {
+            throw new RuntimeException('Unable to lock the GaugeIQ update process.');
+        }
+        fwrite($handle, (string)getmypid());
+        fclose($handle);
+    }
+
+    private function releaseLock(): void
+    {
+        @unlink($this->storage . '/update.lock');
+    }
+
+    private function runDatabaseMigration(): void
+    {
+        $script = $this->root . '/database/migrate.php';
+        if (!is_file($script)) {
+            throw new RuntimeException('The updated release is missing its database migration script.');
+        }
+
+        $pipes = [];
+        $process = proc_open(
+            [PHP_BINARY, $script],
+            [
+                0 => ['pipe', 'r'],
+                1 => ['pipe', 'w'],
+                2 => ['pipe', 'w'],
+            ],
+            $pipes,
+            $this->root
+        );
+
+        if (!is_resource($process)) {
+            throw new RuntimeException('GaugeIQ could not run the database migration.');
+        }
+
+        fclose($pipes[0]);
+        $stdout = stream_get_contents($pipes[1]);
+        $stderr = stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        $code = proc_close($process);
+
+        if ($code !== 0) {
+            error_log('GaugeIQ migration failed: ' . trim((string)$stderr));
+            throw new RuntimeException('The GaugeIQ database migration failed.');
+        }
+    }
+
+    private function healthCheck(string $expectedVersion): void
+    {
+        $versionFile = $this->root . '/app/Version.php';
+        $versionSource = is_file($versionFile) ? (string)file_get_contents($versionFile) : '';
+        if (!preg_match('/VERSIONs*=s*[\'"]([^\'"]+)[\'"]/', $versionSource, $match) || $match[1] !== $expectedVersion) {
+            throw new RuntimeException('The updated GaugeIQ version could not be verified.');
+        }
+
+        $autoload = $this->root . '/vendor/autoload.php';
+        if (!is_file($autoload)) {
+            throw new RuntimeException('The updated GaugeIQ Web Push dependencies are missing.');
+        }
+
+        require_once $autoload;
+        if (!class_exists('Minishlink\\WebPush\\WebPush')) {
+            throw new RuntimeException('The updated GaugeIQ Web Push dependencies are invalid.');
+        }
+
+        $configPath = $this->root . '/config/local.php';
+        if (!is_file($configPath)) {
+            throw new RuntimeException('The existing GaugeIQ configuration was not preserved.');
+        }
+
+        require $this->root . '/app/Database.php';
+        $config = require $configPath;
+        $db = new Database($config);
+        $pdo = $db->pdo();
+        $pdo->query('SELECT 1');
+        $pdo->query('SELECT version FROM gaugeiq_schema LIMIT 1')->fetchColumn();
     }
 
     private function removeTree(string $path): void
