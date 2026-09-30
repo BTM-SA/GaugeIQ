@@ -1,6 +1,6 @@
 # GaugeIQ on cPanel
 
-This guide is for a normal cPanel hosting account with PHP, Composer or SSH, SQLite, and cron support.
+This guide is for a normal cPanel hosting account with PHP, Composer or SSH, SQLite, and cron support. GaugeIQ can also use MySQL/MariaDB when configured by the installer or local configuration.
 
 ## 1. Keep the application outside the public web root
 
@@ -147,7 +147,25 @@ Do not run the cron URL through the browser. Run the PHP file from the server.
 
 The browser subscription is then saved in GaugeIQ's SQLite database.
 
-## 10. Test Web Push from the server
+## 10. Configure weather alerts
+
+After installation, open:
+
+```
+https://YOUR-GAUGΕIQ-URL/alerts.php
+```
+
+Create the alerts you want GaugeIQ to evaluate. Examples include:
+
+- Pressure changing by 3 hPa or more
+- Humidity rising above 75%
+- Wind speed rising above 40 km/h
+- Wind direction changing by 45°
+- Wind arriving from NW through N while wind speed is at least 40 km/h
+
+The alert cooldown is per rule. It prevents the same rule from generating a notification on every cron run while its condition remains active.
+
+## 11. Test Web Push from the server
 
 After the iPhone has enabled alerts, run:
 
@@ -163,7 +181,7 @@ GaugeIQ test alert sent to 1 device(s).
 
 The test command is deliberately server-side. GaugeIQ does not expose a public test-push endpoint that an anonymous visitor could use to trigger notifications to every registered device.
 
-## 11. Updating GaugeIQ
+## 12. Updating GaugeIQ
 
 For normal code updates:
 
