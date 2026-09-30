@@ -39,3 +39,22 @@ function refreshFields() {
 metric.addEventListener('change', refreshFields);
 condition.addEventListener('change', refreshFields);
 refreshFields();
+
+
+const compassChoices = document.querySelectorAll('.compass-choice');
+const degreesInput = document.getElementById('degrees');
+
+function refreshCompass() {
+    compassChoices.forEach(button => {
+        button.classList.toggle('selected', button.dataset.degrees === degreesInput.value);
+    });
+}
+
+compassChoices.forEach(button => {
+    button.addEventListener('click', () => {
+        degreesInput.value = button.dataset.degrees;
+        refreshCompass();
+    });
+});
+
+refreshCompass();
