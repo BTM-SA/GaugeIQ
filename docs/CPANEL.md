@@ -152,7 +152,7 @@ The browser subscription is then saved in GaugeIQ's SQLite database.
 After installation, open:
 
 ```
-https://YOUR-GAUGΕIQ-URL/alerts.php
+https://YOUR-GAUGЕIQ-URL/alerts.php
 ```
 
 Create the alerts you want GaugeIQ to evaluate. Examples include:
