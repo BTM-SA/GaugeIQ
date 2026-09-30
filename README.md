@@ -5,7 +5,7 @@ GaugeIQ is a mobile-first Progressive Web App for monitoring atmospheric pressur
 ## Architecture
 
 - PHP 8.2+ backend
-- SQLite by default for simple hosting
+- SQLite or MySQL/MariaDB storage
 - Open-Meteo weather data for atmospheric pressure
 - Web Push subscriptions for browser notifications
 - VAPID authentication for server-to-device push
@@ -62,6 +62,32 @@ The application is designed so that the project root is not the web root. Only `
 
 The public web root also sends basic browser security headers and disables directory listings.
 
+## Easy installation
+
+A first-run installer is available at `/install/`. It can create the initial configuration, initialize the database, generate VAPID credentials, and set the monitoring location.
+
+The installer supports:
+
+- SQLite for a simple personal installation
+- An existing MySQL/MariaDB database
+- Browser location permission for easy coordinate setup
+- Initial pressure, humidity, and wind monitoring choices
+
+The installer locks itself after successful installation.
+
+For production release packages, Composer dependencies should be bundled so a non-technical user does not need to run Composer.
+
+## Weather monitoring
+
+GaugeIQ records:
+
+- Atmospheric pressure
+- Relative humidity
+- Wind speed
+- Wind direction
+
+Alerts can be configured independently. Wind monitoring supports speed thresholds, direction-change thresholds, and specific compass directions. Direction calculations use degrees and correctly handle the 0°/360° boundary.
+
 ## Project status
 
-Foundation, Web Push notification delivery, cPanel deployment guidance, and basic web-root hardening are implemented. The next milestone can add pressure history, charts, configurable settings, and a richer mobile dashboard.
+Foundation, Web Push delivery, SQLite/MySQL database support, first-run installation, humidity monitoring, wind speed monitoring, and wind direction monitoring are implemented. The next milestone can add the full visual settings screen, pressure/weather history, charts, dark mode, and a richer mobile dashboard.
