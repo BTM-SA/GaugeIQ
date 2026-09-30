@@ -29,7 +29,7 @@ if (!$service->thresholdExceeded($previous, $current['pressure_hpa'])) {
 }
 
 $baseline = $pdo->query(
-    "SELECT value FROM settings WHERE key = 'last_notified_pressure_hpa'"
+    "SELECT value FROM gaugeiq_settings WHERE key = 'last_notified_pressure_hpa'"
 )->fetchColumn();
 
 $baselinePressure = $baseline === false ? null : (float)$baseline;
@@ -58,8 +58,8 @@ try {
 
     if ($sent > 0) {
         $stmt = $pdo->prepare(
-            "INSERT INTO settings (key, value) VALUES ('last_notified_pressure_hpa', ?)
-             ON CONFLICT(key) DO UPDATE SET value = excluded.value"
+            "INSERT INTO gaugeiq_settings (key, value) VALUES ('last_notified_pressure_hpa', ?)
+             ON DUPLICATE KEY UPDATE value = VALUES(value)"
         );
         $stmt->execute([(string)$current['pressure_hpa']]);
     }
