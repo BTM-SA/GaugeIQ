@@ -41,7 +41,10 @@ try {
             <h1>Air Pressure</h1>
             <p class="muted"><?= htmlspecialchars($config['pressure']['location_name'], ENT_QUOTES) ?></p>
         </div>
-        <button id="notifyButton" class="secondary" type="button">Enable alerts</button>
+        <div style="display:flex;gap:8px;align-items:center">
+            <a href="alerts.php" class="secondary" style="text-decoration:none">Alerts</a>
+            <button id="notifyButton" class="secondary" type="button">Enable alerts</button>
+        </div>
     </header>
 
     <section class="card hero">
@@ -49,6 +52,7 @@ try {
             <p class="label">Current pressure</p>
             <div class="pressure"><?= number_format($current['pressure_hpa'], 1) ?><span> hPa</span></div>
             <div class="<?= $change > 0 ? 'rise' : ($change < 0 ? 'fall' : 'steady') ?>">
+
                 <?= $change > 0 ? '↑ Rising' : ($change < 0 ? '↓ Falling' : '→ Stable') ?>
                 <?php if ($latest): ?>
                     <strong><?= $change >= 0 ? '+' : '' ?><?= number_format($change, 1) ?> hPa</strong>
@@ -61,8 +65,14 @@ try {
     </section>
 
     <section class="card">
-        <div class="row"><span>Alert threshold</span><strong>±<?= number_format((float)$config['pressure']['threshold_hpa'], 1) ?> hPa</strong></div>
+        <div class="row"><span>Humidity</span><strong><?= $current ? number_format($current['humidity_percent'], 0) . '%' : '—' ?></strong></div>
+        <div class="row"><span>Wind</span><strong><?= $current ? number_format($current['wind_speed_kmh'], 1) . ' km/h ' . htmlspecialchars(PressureService::directionLabel($current['wind_direction_degrees']), ENT_QUOTES) : '—' ?></strong></div>
+    </section>
+
+    <section class="card">
+        <div class="row"><span>Pressure alert</span><strong>±<?= number_format((float)$config['pressure']['threshold_hpa'], 1) ?> hPa</strong></div>
         <div class="row"><span>Checks</span><strong>Every <?= (int)$config['pressure']['check_interval_minutes'] ?> minutes</strong></div>
+        <div class="row"><span>Custom alerts</span><strong><a href="alerts.php">Manage</a></strong></div>
     </section>
 
     <p id="status" class="status"></p>
