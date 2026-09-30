@@ -8,6 +8,7 @@ GaugeIQ is a mobile-first Progressive Web App for monitoring atmospheric pressur
 - SQLite by default for simple hosting
 - Open-Meteo weather data for atmospheric pressure
 - Web Push subscriptions for browser notifications
+- VAPID authentication for server-to-device push
 - Server-side cron job for reliable background checking
 - Installable PWA for iPhone Safari
 
@@ -15,21 +16,33 @@ GaugeIQ is a mobile-first Progressive Web App for monitoring atmospheric pressur
 
 1. Copy `config/config.example.php` to `config/local.php`.
 2. Set the application's public base URL.
-3. Run `php database/migrate.php`.
-4. Configure the weather location and cron job.
-5. Serve the `public/` directory over HTTPS.
-6. Open GaugeIQ in Safari on iPhone, add it to the Home Screen, and enable notifications.
+3. Set the pressure location and alert threshold.
+4. Run `composer install`.
+5. Run `php database/migrate.php`.
+6. Generate VAPID credentials with `php bin/generate-vapid.php`.
+7. Put the generated public and private keys into `config/local.php`.
+8. Set the VAPID subject to a stable `mailto:` address or HTTPS URL.
+9. Serve only the `public/` directory as the website document root and use HTTPS.
+10. Install GaugeIQ on the iPhone Home Screen.
+11. Open GaugeIQ and tap **Enable alerts**.
+12. Configure the cron job to run `php /path/to/GaugeIQ/cron/check-pressure.php` every 15 minutes.
 
-No API key is required for the initial Open-Meteo integration.
+The VAPID keys must be generated once and kept unchanged. Never commit `config/local.php` or the private VAPID key.
 
-## Cron
+## iPhone notifications
 
-Run the pressure checker at an interval such as every 15 minutes:
+On iPhone and iPad, Web Push is supported for web apps that have been added to the Home Screen. Notification permission must be requested from a direct user interaction such as tapping GaugeIQ's alert button. citeturn0search8
 
-`php /path/to/GaugeIQ/cron/check-pressure.php`
+## Cron alerts
 
-The checker records the latest pressure and sends a push notification when the configured change threshold is crossed.
+GaugeIQ stores pressure readings and compares changes against the configured threshold. Once an alert is sent, that pressure becomes the notification baseline, preventing repeated alerts every cron run while pressure remains within the same movement range.
+
+Expired push subscriptions are removed automatically when the push service reports them as gone.
+
+## Server requirements
+
+The current Web Push library requires PHP 8.2+ plus the `curl`, `mbstring`, and `openssl` extensions. `bcmath` or `gmp` can improve performance but are optional. citeturn0search3
 
 ## Project status
 
-Initial foundation. Web Push credential generation/configuration and production push delivery will be completed in the next milestone.
+Foundation and Web Push notification layer are implemented. The next milestone can add pressure history, charts, configurable settings, and a richer mobile dashboard.
