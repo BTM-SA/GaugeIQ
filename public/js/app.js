@@ -257,3 +257,19 @@ async function checkForGaugeIQUpdate() {
 }
 
 checkForGaugeIQUpdate();
+
+const cronCopyButton = document.getElementById('cronCopyButton');
+const cronCommand = document.getElementById('cronCommand');
+const cronCopyStatus = document.getElementById('cronCopyStatus');
+if (cronCopyButton && cronCommand) {
+    cronCopyButton.addEventListener('click', async () => {
+        try {
+            await navigator.clipboard.writeText(cronCommand.textContent.trim());
+            cronCopyStatus.textContent = 'Command copied. Paste it into cPanel Cron Jobs.';
+            cronCopyButton.textContent = 'Copied';
+            setTimeout(() => { cronCopyButton.textContent = 'Copy command'; }, 1800);
+        } catch {
+            cronCopyStatus.textContent = 'Copy failed. Select the command and copy it manually.';
+        }
+    });
+}
