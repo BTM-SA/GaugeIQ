@@ -75,8 +75,22 @@ final class GaugeIQUpdater
         }
         $zip->close();
 
-        $this->swapApplication($stage);
-        $this->removeTree($stage);
+        $backup = $this->storage . '/backup-' . gmdate('Ymd-His');
+        mkdir($backup, 0750, true);
+        $this->backupApplication($backup);
+
+        try {
+            $this->swapApplication($stage);
+        } catch (Throwable $e) {
+            try {
+                $this->restoreApplication($backup);
+            } catch (Throwable $rollbackError) {
+                error_log('GaugeIQ rollback failed: ' . $rollbackError->getMessage());
+            }
+            throw $e;
+        } finally {
+            $this->removeTree($stage);
+        }
 
         return ['version' => $version];
     }
@@ -114,6 +128,78 @@ final class GaugeIQUpdater
             }
         }
         return $prefix;
+    }
+
+    private function backupApplication(string $backup): void
+    {
+        foreach (array_diff(scandir($this->root) ?: [], ['.', '..', 'storage']) as $entry) {
+            if ($entry === 'config') {
+                $this->backupConfig($backup . '/config');
+                continue;
+            }
+            $source = $this->root . '/' . $entry;
+            $target = $backup . '/' . $entry;
+            if (is_dir($source)) {
+                $this->copyTree($source, $target);
+            } elseif (is_file($source)) {
+                copy($source, $target);
+            }
+        }
+    }
+
+    private function backupConfig(string $target): void
+    {
+        if (!is_dir($target)) {
+            mkdir($target, 0750, true);
+        }
+        $source = $this->root . '/config';
+        foreach (array_diff(scandir($source) ?: [], ['.', '..']) as $entry) {
+            if (in_array($entry, ['local.php', 'installed.lock'], true)) {
+                continue;
+            }
+            $this->copyTree($source . '/' . $entry, $target . '/' . $entry);
+        }
+    }
+
+    private function restoreApplication(string $backup): void
+    {
+        foreach (array_diff(scandir($this->root) ?: [], ['.', '..', 'storage']) as $entry) {
+            if ($entry === 'config') {
+                continue;
+            }
+            $path = $this->root . '/' . $entry;
+            is_dir($path) ? $this->removeTree($path) : @unlink($path);
+        }
+        foreach (array_diff(scandir($backup) ?: [], ['.', '..']) as $entry) {
+            $this->copyTree($backup . '/' . $entry, $this->root . '/' . $entry);
+        }
+
+        $backupConfig = $backup . '/config';
+        if (is_dir($backupConfig)) {
+            foreach (array_diff(scandir($backupConfig) ?: [], ['.', '..']) as $entry) {
+                $this->copyTree($backupConfig . '/' . $entry, $this->root . '/config/' . $entry);
+            }
+        }
+    }
+
+    private function copyTree(string $source, string $target): void
+    {
+        if (is_dir($source)) {
+            if (!is_dir($target)) {
+                mkdir($target, 0750, true);
+            }
+            foreach (array_diff(scandir($source) ?: [], ['.', '..']) as $entry) {
+                $this->copyTree($source . '/' . $entry, $target . '/' . $entry);
+            }
+            return;
+        }
+        $parent = dirname($target);
+        if (!is_dir($parent)) {
+            mkdir($parent, 0750, true);
+        }
+        if (!copy($source, $target)) {
+            throw new RuntimeException('Unable to create the update backup.');
+        }
     }
 
     private function swapApplication(string $stage): void
