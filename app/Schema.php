@@ -92,6 +92,61 @@ SQL);
         $version = 2;
     }
 
+    if ($version === 2) {
+        if ($driver === 'mysql') {
+            $db->exec(<<<'SQL'
+CREATE TABLE IF NOT EXISTS gaugeiq_alert_rules (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(191) NOT NULL,
+    metric VARCHAR(64) NOT NULL,
+    condition_type VARCHAR(64) NOT NULL,
+    configuration_json TEXT NOT NULL,
+    enabled TINYINT(1) NOT NULL DEFAULT 1,
+    cooldown_minutes INT NOT NULL DEFAULT 60,
+    last_triggered_at VARCHAR(64) NULL,
+    created_at VARCHAR(64) NOT NULL,
+    updated_at VARCHAR(64) NOT NULL,
+    INDEX idx_gaugeiq_alert_enabled (enabled)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS gaugeiq_alert_events (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    rule_id BIGINT UNSIGNED NOT NULL,
+    observed_at VARCHAR(64) NOT NULL,
+    message TEXT NOT NULL,
+    created_at VARCHAR(64) NOT NULL,
+    INDEX idx_gaugeiq_alert_events_rule (rule_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+SQL);
+        } else {
+            $db->exec(<<<'SQL'
+CREATE TABLE IF NOT EXISTS gaugeiq_alert_rules (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    metric TEXT NOT NULL,
+    condition_type TEXT NOT NULL,
+    configuration_json TEXT NOT NULL,
+    enabled INTEGER NOT NULL DEFAULT 1,
+    cooldown_minutes INTEGER NOT NULL DEFAULT 60,
+    last_triggered_at TEXT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS gaugeiq_alert_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    rule_id INTEGER NOT NULL,
+    observed_at TEXT NOT NULL,
+    message TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+SQL);
+        }
+
+        $db->exec("UPDATE gaugeiq_schema SET version = 3");
+        $version = 3;
+    }
+
     if ($version === 1) {
         if ($driver === 'mysql') {
             $db->exec("ALTER TABLE gaugeiq_pressure_readings
