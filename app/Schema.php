@@ -23,8 +23,8 @@ CREATE TABLE IF NOT EXISTS gaugeiq_pressure_readings (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS gaugeiq_settings (
-    \`key\` VARCHAR(191) NOT NULL PRIMARY KEY,
-    \`value\` TEXT NOT NULL
+    `key` VARCHAR(191) NOT NULL PRIMARY KEY,
+    `value` TEXT NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS gaugeiq_push_subscriptions (
