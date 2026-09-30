@@ -101,7 +101,7 @@ final class GaugeIQUpdater
     private function validateArchive(ZipArchive $zip, string $version): string
     {
         $prefix = 'GaugeIQ-' . $version . '/';
-        $required = ['app/', 'public/', 'composer.json'];
+        $required = ['app/', 'public/', 'composer.json', 'vendor/autoload.php', 'vendor/minishlink/web-push/'];
         $found = array_fill_keys($required, false);
 
         for ($i = 0; $i < $zip->numFiles; $i++) {
@@ -119,6 +119,12 @@ final class GaugeIQUpdater
                 }
             }
             foreach ($required as $item) {
+                if ($item === 'vendor/autoload.php') {
+                    if ($relative === $item) {
+                        $found[$item] = true;
+                    }
+                    continue;
+                }
                 if ($relative === $item || str_starts_with($relative, $item)) {
                     $found[$item] = true;
                 }
@@ -372,7 +378,7 @@ final class GaugeIQUpdater
     {
         $versionFile = $this->root . '/app/Version.php';
         $versionSource = is_file($versionFile) ? (string)file_get_contents($versionFile) : '';
-        if (!preg_match('/VERSIONs*=s*[\'"]([^\'"]+)[\'"]/', $versionSource, $match) || $match[1] !== $expectedVersion) {
+        if (!preg_match('/VERSION\s*=\s*[\'"]([^\'"]+)[\'"]/', $versionSource, $match) || $match[1] !== $expectedVersion) {
             throw new RuntimeException('The updated GaugeIQ version could not be verified.');
         }
 
