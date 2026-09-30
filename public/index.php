@@ -1,7 +1,12 @@
 <?php
 declare(strict_types=1);
 
-$config = require __DIR__ . '/../config/local.php';
+$config = $configPath = __DIR__ . '/../config/local.php';
+if (!is_file($configPath)) {
+    header('Location: install/');
+    exit;
+}
+$config = require $configPath;
 require __DIR__ . '/../app/Database.php';
 require __DIR__ . '/../app/Schema.php';
 require __DIR__ . '/../app/PressureService.php';
