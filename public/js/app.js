@@ -110,7 +110,22 @@ if (!('Notification' in window) || !('PushManager' in window)) {
     });
 }
 
-function drawChart(canvas, values, unit, decimals = 1) {
+function formatChartTime(value, hours) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+
+    if (hours >= 168) {
+        return date.toLocaleDateString([], { day: 'numeric', month: 'short' });
+    }
+
+    return date.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    });
+}
+
+function drawChart(canvas, values, unit, decimals = 1, hours = 24) {
     const ctx = canvas.getContext('2d');
     const dpr = window.devicePixelRatio || 1;
     const width = canvas.clientWidth || 600;
@@ -135,7 +150,7 @@ function drawChart(canvas, values, unit, decimals = 1) {
     const min = Math.min(...valid.map(item => item.value));
     const max = Math.max(...valid.map(item => item.value));
     const range = max - min || 1;
-    const pad = { top: 18, right: 14, bottom: 28, left: 14 };
+    const pad = { top: 18, right: 14, bottom: 34, left: 14 };
     const plotW = width - pad.left - pad.right;
     const plotH = height - pad.top - pad.bottom;
 
@@ -163,33 +178,57 @@ function drawChart(canvas, values, unit, decimals = 1) {
     ctx.font = '12px system-ui';
     ctx.fillText(max.toFixed(decimals) + unit, pad.left, 13);
     ctx.fillText(min.toFixed(decimals) + unit, pad.left, height - 4);
+
+    const first = valid[0];
+    const last = valid[valid.length - 1];
+    const firstLabel = formatChartTime(first.time, hours);
+    const lastLabel = formatChartTime(last.time, hours);
+    ctx.fillText(firstLabel, pad.left, height - 17);
+    const lastWidth = ctx.measureText(lastLabel).width;
+    ctx.fillText(lastLabel, width - pad.right - lastWidth, height - 17);
 }
 
-async function loadHistory() {
+async function loadHistory(hours = 24) {
     if (!historyStatus) return;
+
+    historyStatus.textContent = 'Loading history…';
+
     try {
-        const response = await fetch('api/history.php?hours=24', { cache: 'no-store' });
+        const response = await fetch('api/history.php?hours=' + encodeURIComponent(hours), { cache: 'no-store' });
         if (!response.ok) throw new Error('History unavailable.');
+
         const data = await response.json();
         const readings = Array.isArray(data.readings) ? data.readings : [];
 
         const charts = [
-            ['pressureChart', readings.map(r => ({ value: Number(r.pressure_hpa) })), ' hPa', 1],
-            ['humidityChart', readings.map(r => ({ value: Number(r.humidity_percent) })), '%', 0],
-            ['windChart', readings.map(r => ({ value: Number(r.wind_speed_kmh) })), ' km/h', 1]
+            ['pressureChart', readings.map(r => ({ value: Number(r.pressure_hpa), time: r.observed_at })), ' hPa', 1],
+            ['humidityChart', readings.map(r => ({ value: Number(r.humidity_percent), time: r.observed_at })), '%', 0],
+            ['windChart', readings.map(r => ({ value: Number(r.wind_speed_kmh), time: r.observed_at })), ' km/h', 1]
         ];
 
         charts.forEach(([id, values, unit, decimals]) => {
             const canvas = document.getElementById(id);
-            if (canvas) drawChart(canvas, values, unit, decimals);
+            if (canvas) drawChart(canvas, values, unit, decimals, hours);
         });
 
+        const rangeLabel = hours === 168 ? '7 days' : hours + ' hours';
         historyStatus.textContent = readings.length
-            ? 'Last 24 hours · ' + readings.length + ' readings'
+            ? 'Last ' + rangeLabel + ' · ' + readings.length + ' readings'
             : 'No readings have been recorded yet.';
+
+        const title = document.getElementById('historyTitle');
+        if (title) title.textContent = 'History · ' + rangeLabel;
     } catch {
         historyStatus.textContent = 'Historical readings are currently unavailable.';
     }
 }
+
+document.querySelectorAll('.history-range-button').forEach(button => {
+    button.addEventListener('click', () => {
+        document.querySelectorAll('.history-range-button').forEach(item => item.classList.remove('active'));
+        button.classList.add('active');
+        loadHistory(Number(button.dataset.hours));
+    });
+});
 
 loadHistory();
