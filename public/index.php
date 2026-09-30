@@ -102,9 +102,15 @@ $monitorHealthy = $monitorAge !== null && $monitorAge <= ($checkMinutes * 60 * 2
     <section class="card history-card">
         <div class="section-heading">
             <div>
-                <h2>Last 24 hours</h2>
+                <h2 id="historyTitle">Last 24 hours</h2>
                 <p id="historyStatus" class="muted">Loading history…</p>
             </div>
+        </div>
+        <div class="history-range" role="group" aria-label="History range">
+            <button type="button" class="history-range-button" data-hours="6">6h</button>
+            <button type="button" class="history-range-button active" data-hours="24">24h</button>
+            <button type="button" class="history-range-button" data-hours="48">48h</button>
+            <button type="button" class="history-range-button" data-hours="168">7d</button>
         </div>
         <div class="chart-block"><h3>Pressure</h3><canvas id="pressureChart" height="220"></canvas></div>
         <div class="chart-block"><h3>Humidity</h3><canvas id="humidityChart" height="220"></canvas></div>
