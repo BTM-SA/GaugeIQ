@@ -1,0 +1,9 @@
+{
+  "name": "btm-sa/gaugeiq",
+  "description": "GaugeIQ atmospheric pressure monitor and Web Push alert service.",
+  "type": "project",
+  "require": {
+    "php": ">=8.2",
+    "minishlink/web-push": "^11.0"
+  }
+}
