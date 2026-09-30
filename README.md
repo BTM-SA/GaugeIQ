@@ -14,24 +14,15 @@ GaugeIQ is a mobile-first Progressive Web App for monitoring atmospheric pressur
 
 ## First setup
 
-1. Copy `config/config.example.php` to `config/local.php`.
-2. Set the application's public base URL.
-3. Set the pressure location and alert threshold.
-4. Run `composer install --no-dev --optimize-autoloader`.
-5. Run `php database/migrate.php`.
-6. Generate VAPID credentials with `php bin/generate-vapid.php`.
-7. Put the generated public and private keys into `config/local.php`.
-8. Set the VAPID subject to a stable `mailto:` address or HTTPS URL.
-9. Serve only the `public/` directory as the website document root and use HTTPS.
-10. Run `php bin/check-requirements.php`.
-11. Install GaugeIQ on the iPhone Home Screen.
-12. Open GaugeIQ and tap **Enable alerts**.
-13. Configure the cron job to run `php /path/to/GaugeIQ/cron/check-pressure.php` every 15 minutes.
+Production release packages are designed for:
 
-The VAPID keys must be generated once and kept unchanged. Never commit `config/local.php` or the private VAPID key.
+**Upload → open GaugeIQ → follow the installer → done.**
 
-For a detailed cPanel deployment, see [docs/CPANEL.md](docs/CPANEL.md).
+The /install/ wizard can create the initial configuration, initialize the database, generate VAPID credentials, and set the monitoring location. Release packages include Composer's production dependencies in vendor/, so a normal release installation does not require Composer.
 
+For source/development installations, Composer and the migration tools can still be used manually.
+
+For a detailed cPanel deployment, see docs/CPANEL.md.
 ## iPhone notifications
 
 On iPhone and iPad, Web Push is supported for web apps that have been added to the Home Screen. Notification permission must be requested from a direct user interaction such as tapping GaugeIQ's alert button.
@@ -86,7 +77,7 @@ The installer supports:
 
 The installer locks itself after successful installation.
 
-For production release packages, Composer dependencies should be bundled so a non-technical user does not need to run Composer.
+Production release packages bundle Composer dependencies, including vendor/, so non-technical cPanel users do not need to install Composer.
 
 ## Alert settings
 
@@ -105,4 +96,4 @@ Alerts can be configured independently. Wind monitoring supports speed threshold
 
 ## Project status
 
-Foundation, Web Push delivery, SQLite/MySQL database support, first-run installation, humidity monitoring, wind speed monitoring, wind direction monitoring, configurable alert rules, cooldowns, alert-event storage, and the initial mobile alert settings screen are implemented. The dashboard includes historical readings, recent alert history, light/dark/follow-device appearance controls, and scheduled monitoring health information. Remaining release work includes installer hardening and release packaging with Composer dependencies bundled.
+Foundation, Web Push delivery, SQLite/MySQL database support, first-run installation, humidity monitoring, wind speed monitoring, wind direction monitoring, configurable alert rules, cooldowns, alert-event storage, and the initial mobile alert settings screen are implemented. The dashboard includes historical readings, recent alert history, light/dark/follow-device appearance controls, scheduled monitoring health information, and release update notifications. Production releases are packaged with Composer dependencies bundled.
