@@ -96,6 +96,22 @@ SQL);
         $version = 2;
     }
 
+    if ($version === 1) {
+        if ($driver === 'mysql') {
+            $db->exec("ALTER TABLE gaugeiq_pressure_readings
+                ADD COLUMN humidity_percent DOUBLE NULL,
+                ADD COLUMN wind_speed_kmh DOUBLE NULL,
+                ADD COLUMN wind_direction_degrees DOUBLE NULL");
+        } else {
+            $db->exec("ALTER TABLE gaugeiq_pressure_readings ADD COLUMN humidity_percent REAL NULL");
+            $db->exec("ALTER TABLE gaugeiq_pressure_readings ADD COLUMN wind_speed_kmh REAL NULL");
+            $db->exec("ALTER TABLE gaugeiq_pressure_readings ADD COLUMN wind_direction_degrees REAL NULL");
+        }
+
+        $db->exec("UPDATE gaugeiq_schema SET version = 2");
+        $version = 2;
+    }
+
     if ($version === 2) {
         if ($driver === 'mysql') {
             $db->exec(<<<'SQL'
@@ -151,18 +167,4 @@ SQL);
         $version = 3;
     }
 
-    if ($version === 1) {
-        if ($driver === 'mysql') {
-            $db->exec("ALTER TABLE gaugeiq_pressure_readings
-                ADD COLUMN humidity_percent DOUBLE NULL,
-                ADD COLUMN wind_speed_kmh DOUBLE NULL,
-                ADD COLUMN wind_direction_degrees DOUBLE NULL");
-        } else {
-            $db->exec("ALTER TABLE gaugeiq_pressure_readings ADD COLUMN humidity_percent REAL NULL");
-            $db->exec("ALTER TABLE gaugeiq_pressure_readings ADD COLUMN wind_speed_kmh REAL NULL");
-            $db->exec("ALTER TABLE gaugeiq_pressure_readings ADD COLUMN wind_direction_degrees REAL NULL");
-        }
-
-        $db->exec("UPDATE gaugeiq_schema SET version = 2");
-    }
 }
