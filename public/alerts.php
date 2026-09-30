@@ -98,20 +98,8 @@ function h(string $value): string {
 <title>GaugeIQ Alerts</title>
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="css/app.css">
-<style>
-.alert-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.alert-grid .full{grid-column:1/-1}
-.alert-form label{display:block;font-weight:700;margin:14px 0 6px}
-.alert-form input,.alert-form select{width:100%;padding:12px;border:1px solid #d1d5db;border-radius:12px;font:inherit;background:var(--card,#fff);color:inherit}
-.alert-card{display:flex;justify-content:space-between;gap:16px;align-items:center}
-.alert-meta{color:#6b7280;font-size:14px}
-.alert-actions{display:flex;gap:8px;flex-wrap:wrap}
-.alert-actions button{padding:9px 12px}
-.notice{padding:12px 14px;border-radius:12px;background:#ecfdf5;color:#065f46;margin-bottom:16px}
-.error{padding:12px 14px;border-radius:12px;background:#fef2f2;color:#991b1b;margin-bottom:16px}
-.back{display:inline-block;margin-bottom:18px;color:inherit;text-decoration:none;font-weight:700}
-@media(max-width:560px){.alert-grid{grid-template-columns:1fr}.alert-card{align-items:flex-start;flex-direction:column}}
-</style>
+<link rel="stylesheet" href="css/alerts.css">
+
 </head>
 <body>
 <main class="shell">
@@ -169,6 +157,7 @@ function h(string $value): string {
             <div id="degreesField" hidden>
                 <label for="degrees">Direction (degrees)</label>
                 <input id="degrees" name="degrees" type="number" min="0" max="359" step="1" value="0">
+                <p class="alert-help muted">0° = N, 90° = E, 180° = S, 270° = W.</p>
             </div>
 
             <div id="speedField" hidden>
@@ -179,6 +168,7 @@ function h(string $value): string {
             <div id="fromField" hidden>
                 <label for="direction_from">Direction from (degrees)</label>
                 <input id="direction_from" name="direction_from" type="number" min="0" max="359" step="1" value="315">
+                <p class="alert-help muted">Ranges can cross north, such as NW (315°) → N (0°).</p>
             </div>
 
             <div id="toField" hidden>
@@ -208,7 +198,7 @@ function h(string $value): string {
             <div>
                 <strong><?= h((string)$rule['name']) ?></strong>
                 <div class="alert-meta">
-                    <?= h((string)$rule['metric']) ?> · <?= h((string)$rule['condition_type']) ?>
+                    <?= h(ucwords(str_replace('_', ' ', (string)$rule['metric']))) ?> · <?= h(ucwords(str_replace('_', ' ', (string)$rule['condition_type']))) ?>
                     · cooldown <?= (int)$rule['cooldown_minutes'] ?> min
                 </div>
                 <?php if (!empty($ruleConfig)): ?>
@@ -233,39 +223,7 @@ function h(string $value): string {
     <?php endforeach; ?>
 </section>
 </main>
-<script>
-const metric=document.getElementById('metric');
-const condition=document.getElementById('condition_type');
-const valueField=document.getElementById('valueField');
-const degreesField=document.getElementById('degreesField');
-const speedField=document.getElementById('speedField');
-const fromField=document.getElementById('fromField');
-const toField=document.getElementById('toField');
+<script src="js/alerts.js" defer></script>
 
-function refreshFields(){
-    const m=metric.value;
-    const c=condition.value;
-    const direction=m==='wind_direction' && c==='specific';
-    const combined=m==='wind' && c==='speed_and_direction';
-    degreesField.hidden=!direction;
-    valueField.hidden=direction||combined;
-    speedField.hidden=!combined;
-    fromField.hidden=!combined;
-    toField.hidden=!combined;
-    if(m==='wind_direction'){
-        [...condition.options].forEach(o=>o.hidden=!['change','specific'].includes(o.value));
-        if(!['change','specific'].includes(condition.value)) condition.value='change';
-    } else if(m==='wind'){
-        [...condition.options].forEach(o=>o.hidden=o.value!=='speed_and_direction');
-        condition.value='speed_and_direction';
-    } else {
-        [...condition.options].forEach(o=>o.hidden=['specific','speed_and_direction'].includes(o.value));
-        if(['specific','speed_and_direction'].includes(condition.value)) condition.value='change';
-    }
-}
-metric.addEventListener('change',refreshFields);
-condition.addEventListener('change',refreshFields);
-refreshFields();
-</script>
 </body>
 </html>
