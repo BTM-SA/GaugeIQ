@@ -96,6 +96,16 @@ if ($alerts === []) {
 }
 
 try {
+    // Record the alert event independently of push delivery. A triggered rule
+    // remains part of GaugeIQ history even when no device is subscribed.
+    foreach ($ruleMatches as $match) {
+        $ruleService->markTriggered(
+            (int)$match['id'],
+            (string)$match['message'],
+            (string)$current['observed_at']
+        );
+    }
+
     $push = new PushService($config, $pdo);
     $sent = $push->send(
         'GaugeIQ weather alert',
@@ -103,14 +113,6 @@ try {
     );
 
     if ($sent > 0) {
-        foreach ($ruleMatches as $match) {
-            $ruleService->markTriggered(
-                (int)$match['id'],
-                (string)$match['message'],
-                (string)$current['observed_at']
-            );
-        }
-
         if ($ruleMatches === [] && $service->pressureThresholdExceeded($previous, $current['pressure_hpa'])) {
             $value = (string)$current['pressure_hpa'];
             $exists = $pdo->query(
