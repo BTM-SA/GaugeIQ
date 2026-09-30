@@ -1,0 +1,238 @@
+<?php
+declare(strict_types=1);
+
+final class GaugeIQUpdater
+{
+    private string $root;
+    private string $storage;
+
+    public function __construct(string $root)
+    {
+        $this->root = rtrim($root, '/');
+        $this->storage = $this->root . '/storage/update';
+    }
+
+    public function installLatest(string $expectedVersion, string $packageUrl, string $checksumUrl): array
+    {
+        if (!extension_loaded('zip')) {
+            throw new RuntimeException('The PHP ZIP extension is required for updates.');
+        }
+
+        $version = ltrim($expectedVersion, 'v');
+        if ($version === '' || !preg_match('/^[0-9A-Za-z][0-9A-Za-z._-]*$/', $version)) {
+            throw new RuntimeException('Invalid release version.');
+        }
+
+        $this->prepareWorkspace();
+        $zipPath = $this->storage . '/GaugeIQ-' . $version . '.zip';
+        $checksumPath = $zipPath . '.sha256';
+        $this->download($packageUrl, $zipPath);
+        $this->download($checksumUrl, $checksumPath);
+
+        $expectedHash = $this->parseChecksum((string)file_get_contents($checksumPath));
+        $actualHash = hash_file('sha256', $zipPath);
+        if (!hash_equals(strtolower($expectedHash), strtolower($actualHash))) {
+            throw new RuntimeException('The downloaded release checksum does not match.');
+        }
+
+        $zip = new ZipArchive();
+        if ($zip->open($zipPath) !== true) {
+            throw new RuntimeException('The release package could not be opened.');
+        }
+
+        $stage = $this->storage . '/stage';
+        if (is_dir($stage)) {
+            $this->removeTree($stage);
+        }
+        mkdir($stage, 0750, true);
+
+        $prefix = $this->validateArchive($zip, $version);
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $name = $zip->getNameIndex($i);
+            if ($name === false || str_ends_with($name, '/')) {
+                continue;
+            }
+            $relative = substr($name, strlen($prefix));
+            $target = $stage . '/' . $relative;
+            $dir = dirname($target);
+            if (!is_dir($dir)) {
+                mkdir($dir, 0750, true);
+            }
+            $stream = $zip->getStream($name);
+            if ($stream === false) {
+                $zip->close();
+                throw new RuntimeException('The release package contains an unreadable file.');
+            }
+            $out = fopen($target, 'wb');
+            if ($out === false) {
+                fclose($stream);
+                $zip->close();
+                throw new RuntimeException('Unable to stage the release package.');
+            }
+            stream_copy_to_stream($stream, $out);
+            fclose($out);
+            fclose($stream);
+        }
+        $zip->close();
+
+        $this->swapApplication($stage);
+        $this->removeTree($stage);
+
+        return ['version' => $version];
+    }
+
+    private function validateArchive(ZipArchive $zip, string $version): string
+    {
+        $prefix = 'GaugeIQ-' . $version . '/';
+        $required = ['app/', 'public/', 'composer.json'];
+        $found = array_fill_keys($required, false);
+
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $name = $zip->getNameIndex($i);
+            if ($name === false || !str_starts_with($name, $prefix)) {
+                continue;
+            }
+            $relative = substr($name, strlen($prefix));
+            if ($relative === '' || str_starts_with($relative, '/') || str_contains($relative, '\')) {
+                throw new RuntimeException('The release package contains an unsafe path.');
+            }
+            foreach (explode('/', $relative) as $part) {
+                if ($part === '..' || $part === '') {
+                    throw new RuntimeException('The release package contains an unsafe path.');
+                }
+            }
+            foreach ($required as $item) {
+                if ($relative === $item || str_starts_with($relative, $item)) {
+                    $found[$item] = true;
+                }
+            }
+        }
+
+        foreach ($found as $item => $ok) {
+            if (!$ok) {
+                throw new RuntimeException('The release package is missing required application files.');
+            }
+        }
+        return $prefix;
+    }
+
+    private function swapApplication(string $stage): void
+    {
+        $preserve = ['config/local.php', 'config/installed.lock', 'storage'];
+        $entries = array_diff(scandir($stage) ?: [], ['.', '..']);
+
+        foreach ($entries as $entry) {
+            if (in_array($entry, ['config', 'storage'], true)) {
+                continue;
+            }
+            $this->replacePath($stage . '/' . $entry, $this->root . '/' . $entry);
+        }
+
+        foreach (['config', 'public', 'app', 'bin', 'cron', 'database'] as $dir) {
+            $source = $stage . '/' . $dir;
+            if (!is_dir($source)) {
+                continue;
+            }
+            if ($dir === 'config') {
+                foreach (array_diff(scandir($source) ?: [], ['.', '..']) as $file) {
+                    if (in_array('config/' . $file, $preserve, true)) {
+                        continue;
+                    }
+                    $this->replacePath($source . '/' . $file, $this->root . '/config/' . $file);
+                }
+            } else {
+                $this->replaceDirectory($source, $this->root . '/' . $dir);
+            }
+        }
+    }
+
+    private function replaceDirectory(string $source, string $target): void
+    {
+        if (is_dir($target)) {
+            $this->removeTree($target);
+        } elseif (file_exists($target)) {
+            unlink($target);
+        }
+        mkdir($target, 0750, true);
+        foreach (array_diff(scandir($source) ?: [], ['.', '..']) as $entry) {
+            $this->replacePath($source . '/' . $entry, $target . '/' . $entry);
+        }
+    }
+
+    private function replacePath(string $source, string $target): void
+    {
+        $parent = dirname($target);
+        if (!is_dir($parent)) {
+            mkdir($parent, 0750, true);
+        }
+        if (is_dir($source)) {
+            $this->replaceDirectory($source, $target);
+            return;
+        }
+        if (file_exists($target)) {
+            unlink($target);
+        }
+        if (!copy($source, $target)) {
+            throw new RuntimeException('Unable to install a release file.');
+        }
+        @chmod($target, 0640);
+    }
+
+    private function download(string $url, string $target): void
+    {
+        if (!filter_var($url, FILTER_VALIDATE_URL) || !str_starts_with(strtolower($url), 'https://')) {
+            throw new RuntimeException('The release download URL is invalid.');
+        }
+        $parts = parse_url($url);
+        if (($parts['host'] ?? '') !== 'github.com' && ($parts['host'] ?? '') !== 'objects.githubusercontent.com') {
+            throw new RuntimeException('Release downloads must come from GitHub.');
+        }
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_MAXREDIRS => 3,
+            CURLOPT_CONNECTTIMEOUT => 10,
+            CURLOPT_TIMEOUT => 120,
+            CURLOPT_USERAGENT => 'GaugeIQ Updater',
+            CURLOPT_HTTPHEADER => ['Accept: application/octet-stream'],
+        ]);
+        $data = curl_exec($ch);
+        $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+        if ($data === false || $code < 200 || $code >= 300) {
+            throw new RuntimeException('Unable to download the GaugeIQ release.' . ($error !== '' ? ' ' . $error : ''));
+        }
+        if (file_put_contents($target, $data, LOCK_EX) === false) {
+            throw new RuntimeException('Unable to save the GaugeIQ release.');
+        }
+    }
+
+    private function parseChecksum(string $content): string
+    {
+        if (!preg_match('/\b([a-fA-F0-9]{64})\b/', $content, $m)) {
+            throw new RuntimeException('The release checksum is invalid.');
+        }
+        return $m[1];
+    }
+
+    private function prepareWorkspace(): void
+    {
+        if (!is_dir($this->storage) && !mkdir($this->storage, 0750, true) && !is_dir($this->storage)) {
+            throw new RuntimeException('Unable to create the update workspace.');
+        }
+    }
+
+    private function removeTree(string $path): void
+    {
+        if (!is_dir($path)) {
+            return;
+        }
+        foreach (array_diff(scandir($path) ?: [], ['.', '..']) as $entry) {
+            $item = $path . '/' . $entry;
+            is_dir($item) && !is_link($item) ? $this->removeTree($item) : @unlink($item);
+        }
+        @rmdir($path);
+    }
+}
