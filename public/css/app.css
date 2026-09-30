@@ -69,6 +69,12 @@ button {
 button:disabled { opacity: .55; cursor: default; }
 .status { text-align: center; color: #6b7280; font-size: 14px; }
 
+.test-button {
+    display: block;
+    width: 100%;
+    margin: 0 0 16px;
+}
+
 @media (max-width: 560px) {
     header { align-items: flex-start; }
     header .secondary { white-space: nowrap; }
