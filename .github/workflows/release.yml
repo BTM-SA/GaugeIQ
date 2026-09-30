@@ -86,10 +86,13 @@ PHP
           test -f "dist/${PACKAGE}/app/Version.php"
 
           cd dist
+          cp "${PACKAGE}/app/Version.php" "${PACKAGE}.Version.php"
           zip -qr "${PACKAGE}.zip" "${PACKAGE}"
           unzip -t "${PACKAGE}.zip" >/dev/null
           unzip -l "${PACKAGE}.zip" | grep -q "/vendor/autoload.php$"
           sha256sum "${PACKAGE}.zip" > "${PACKAGE}.zip.sha256"
+          test -f "${PACKAGE}.Version.php"
+          grep -q "VERSION = '${SAFE_VERSION}'" "${PACKAGE}.Version.php"
 
       - name: Upload release assets
         env:
@@ -103,4 +106,5 @@ PHP
           gh release upload "${RELEASE_TAG}" \
             "dist/GaugeIQ-${SAFE_VERSION}.zip" \
             "dist/GaugeIQ-${SAFE_VERSION}.zip.sha256" \
+            "dist/GaugeIQ-${SAFE_VERSION}.Version.php" \
             --clobber
