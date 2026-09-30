@@ -40,14 +40,14 @@ jobs:
           VERSION="${RELEASE_TAG}"
           SAFE_VERSION="${VERSION#v}"
           cat > app/Version.php <<PHP
-<?php
-declare(strict_types=1);
+          <?php
+          declare(strict_types=1);
 
-final class GaugeIQVersion
-{
-    public const VERSION = '${SAFE_VERSION}';
-}
-PHP
+          final class GaugeIQVersion
+          {
+              public const VERSION = '${SAFE_VERSION}';
+          }
+          PHP
           php -l app/Version.php
 
       - name: Install production dependencies
