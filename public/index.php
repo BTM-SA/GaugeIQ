@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 $config = require __DIR__ . '/../config/local.php';
 require __DIR__ . '/../app/Database.php';
+require __DIR__ . '/../app/Schema.php';
 require __DIR__ . '/../app/PressureService.php';
 
 date_default_timezone_set($config['app']['timezone']);
@@ -10,6 +11,7 @@ date_default_timezone_set($config['app']['timezone']);
 $db = new Database($config);
 $service = new PressureService($config, $db->pdo());
 $pdo = $db->pdo();
+migrateDatabase($pdo);
 
 try {
     $current = $service->fetchCurrent();
