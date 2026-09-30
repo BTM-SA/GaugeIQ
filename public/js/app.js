@@ -55,6 +55,40 @@ async function enablePushNotifications() {
     status.textContent = 'Notifications are enabled for GaugeIQ.';
     notifyButton.textContent = 'Alerts enabled';
     notifyButton.disabled = true;
+
+    const test = document.createElement('button');
+    test.type = 'button';
+    test.className = 'secondary test-button';
+    test.textContent = 'Send test alert';
+
+    test.addEventListener('click', async () => {
+        try {
+            test.disabled = true;
+
+            const response = await fetch('api/test-push.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'The test notification failed.');
+            }
+
+            status.textContent = result.sent > 0
+                ? 'Test notification sent.'
+                : 'No notification devices are registered yet.';
+        } catch (error) {
+            status.textContent = error instanceof Error
+                ? error.message
+                : 'Test notification failed.';
+        } finally {
+            test.disabled = false;
+        }
+    });
+
+    document.querySelector('.shell').appendChild(test);
 }
 
 if ('serviceWorker' in navigator) {
@@ -77,7 +111,9 @@ if (!('Notification' in window) || !('PushManager' in window)) {
 
             await enablePushNotifications();
         } catch (error) {
-            status.textContent = error instanceof Error ? error.message : 'Unable to enable notifications.';
+            status.textContent = error instanceof Error
+                ? error.message
+                : 'Unable to enable notifications.';
         }
     });
 }
