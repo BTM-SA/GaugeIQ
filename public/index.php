@@ -5,6 +5,7 @@ $config = require __DIR__ . '/../config/local.php';
 require __DIR__ . '/../app/Database.php';
 require __DIR__ . '/../app/Schema.php';
 require __DIR__ . '/../app/PressureService.php';
+require __DIR__ . '/../app/Version.php';
 
 date_default_timezone_set($config['app']['timezone']);
 
@@ -60,6 +61,12 @@ $monitorHealthy = $monitorAge !== null && $monitorAge <= ($checkMinutes * 60 * 2
 </head>
 <body>
 <main class="shell">
+    <div id="updateNotice" class="update-notice" hidden role="status">
+        <strong id="updateNoticeTitle">GaugeIQ update available</strong>
+        <span id="updateNoticeText"></span>
+        <a id="updateNoticeLink" href="#" target="_blank" rel="noopener">View release</a>
+    </div>
+
     <header>
         <div>
             <p class="eyebrow">GAUGЕIQ</p>
