@@ -197,7 +197,29 @@ For a new installation:
 
 You do not need to run Composer when using an official production release package.
 
-## 13. Updating GaugeIQ
+## 13. Administrator and updates
+
+The installer creates an administrator account. Use:
+
+```
+https://YOUR-GAUGЕIQ-URL/login.php
+```
+
+The admin session uses secure, HTTP-only, SameSite cookies and CSRF protection. The administrator area is required for application updates.
+
+From **Admin → Updates**, GaugeIQ can install a published release after downloading the official package and checksum. The updater:
+
+- accepts only HTTPS GitHub release downloads
+- verifies the SHA-256 checksum before installation
+- validates the archive structure and rejects unsafe paths
+- preserves config/local.php, config/installed.lock, and storage/
+- creates an application backup before replacement
+- attempts a rollback if replacement fails
+- runs database migrations when the updated application is next loaded
+
+Keep the administrator password private. Do not share the admin session or expose update endpoints to unauthenticated users.
+
+## 14. Updating GaugeIQ
 
 GaugeIQ can check the official GitHub Releases feed and display an update notification on the dashboard when a newer release is available. The notification links to the published release so the package and checksum can be reviewed before installation.
 
