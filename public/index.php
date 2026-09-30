@@ -29,6 +29,9 @@ try {
     $monitorError = $settings['monitor_last_error'] ?? '';
     $subscriptionCount = (int)$pdo->query('SELECT COUNT(*) FROM gaugeiq_push_subscriptions')->fetchColumn();
     $enabledRuleCount = (int)$pdo->query('SELECT COUNT(*) FROM gaugeiq_alert_rules WHERE enabled = 1')->fetchColumn();
+    $recentAlerts = $pdo->query(
+        'SELECT e.message, e.observed_at, r.name FROM gaugeiq_alert_events e LEFT JOIN gaugeiq_alert_rules r ON r.id = e.rule_id ORDER BY e.id DESC LIMIT 8'
+    )->fetchAll();
 } catch (Throwable $e) {
     $current = null;
     $latest = null;
@@ -38,6 +41,7 @@ try {
     $monitorError = '';
     $subscriptionCount = 0;
     $enabledRuleCount = 0;
+    $recentAlerts = [];
 }
 
 $checkMinutes = max(1, (int)$config['pressure']['check_interval_minutes']);
@@ -125,6 +129,29 @@ $monitorHealthy = $monitorAge !== null && $monitorAge <= ($checkMinutes * 60 * 2
             <div><span>Active alert rules</span><strong><?= $enabledRuleCount ?></strong></div>
         </div>
         <?php if ($monitorError): ?><p class="monitor-warning">The last scheduled check reported an error. <?= htmlspecialchars($monitorError, ENT_QUOTES) ?></p><?php endif; ?>
+    </section>
+
+    <section class="card alert-history-card" aria-labelledby="alertHistoryTitle">
+        <div class="section-heading">
+            <div><h2 id="alertHistoryTitle">Alert history</h2><p class="muted">Recent conditions that triggered your saved rules.</p></div>
+            <a class="history-link" href="alerts.php">Manage alerts</a>
+        </div>
+        <?php if (!$recentAlerts): ?>
+            <p class="muted empty-history">No alerts have been triggered yet.</p>
+        <?php else: ?>
+            <div class="alert-history-list">
+                <?php foreach ($recentAlerts as $alert): ?>
+                    <article class="alert-history-item">
+                        <div class="alert-history-icon">!</div>
+                        <div class="alert-history-content">
+                            <strong><?= htmlspecialchars((string)($alert['name'] ?: 'GaugeIQ alert'), ENT_QUOTES) ?></strong>
+                            <p><?= htmlspecialchars((string)$alert['message'], ENT_QUOTES) ?></p>
+                            <time datetime="<?= htmlspecialchars((string)$alert['observed_at'], ENT_QUOTES) ?>"><?= htmlspecialchars(date('d M, H:i', (int)strtotime((string)$alert['observed_at'])), ENT_QUOTES) ?></time>
+                        </div>
+                    </article>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
     </section>
 
     <section class="card appearance-card" aria-labelledby="appearanceTitle"><div class="section-heading"><div><h2 id="appearanceTitle">Appearance</h2><p class="muted">Choose how GaugeIQ looks on this device.</p></div><select id="themeSelect" class="theme-select" aria-label="Appearance"><option value="system">Follow device</option><option value="light">Light</option><option value="dark">Dark</option></select></div></section>
