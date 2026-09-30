@@ -25,17 +25,14 @@ self.addEventListener('push', event => {
         data = { body: event.data ? event.data.text() : 'GaugeIQ alert' };
     }
 
-    const title = data.title || 'GaugeIQ';
-    const options = {
-        body: data.body || 'Atmospheric pressure has changed.',
-        icon: './icons/icon-192.png',
-        badge: './icons/icon-192.png',
-        data: { url: data.url || './' },
-        tag: 'gaugeiq-pressure',
-        renotify: true
-    };
-
-    event.waitUntil(self.registration.showNotification(title, options));
+    event.waitUntil(
+        self.registration.showNotification(data.title || 'GaugeIQ', {
+            body: data.body || 'Atmospheric pressure has changed.',
+            data: { url: data.url || './' },
+            tag: 'gaugeiq-pressure',
+            renotify: true
+        })
+    );
 });
 
 self.addEventListener('notificationclick', event => {
