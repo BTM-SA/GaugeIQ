@@ -57,11 +57,22 @@ try {
     $sent = $push->send('GaugeIQ pressure alert', $body);
 
     if ($sent > 0) {
-        $stmt = $pdo->prepare(
-            "INSERT INTO gaugeiq_settings (key, value) VALUES ('last_notified_pressure_hpa', ?)
-             ON DUPLICATE KEY UPDATE value = VALUES(value)"
-        );
-        $stmt->execute([(string)$current['pressure_hpa']]);
+        $value = (string)$current['pressure_hpa'];
+        $exists = $pdo->query(
+            "SELECT 1 FROM gaugeiq_settings WHERE key = 'last_notified_pressure_hpa'"
+        )->fetchColumn();
+
+        if ($exists === false) {
+            $stmt = $pdo->prepare(
+                "INSERT INTO gaugeiq_settings (key, value) VALUES ('last_notified_pressure_hpa', ?)"
+            );
+            $stmt->execute([$value]);
+        } else {
+            $stmt = $pdo->prepare(
+                "UPDATE gaugeiq_settings SET value = ? WHERE key = 'last_notified_pressure_hpa'"
+            );
+            $stmt->execute([$value]);
+        }
     }
 
     printf("Push alert sent to %d device(s).\n", $sent);
