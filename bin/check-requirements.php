@@ -9,9 +9,10 @@ echo "=========================\n";
 $configExists = is_file($configPath);
 $config = $configExists ? require $configPath : [];
 $driver = strtolower((string)($config['database']['driver'] ?? 'sqlite'));
+$pdoExtension = 'pdo_' . $driver;
 
 $required = [
-    'pdo_' . $driver => extension_loaded('pdo_' . $driver),
+    $pdoExtension => extension_loaded($pdoExtension),
     'curl' => extension_loaded('curl'),
     'mbstring' => extension_loaded('mbstring'),
     'openssl' => extension_loaded('openssl'),
@@ -29,19 +30,22 @@ if (!$configExists) {
 
 $database = $config['database'] ?? [];
 if ($driver === 'mysql') {
-    $checks = [
-        'MySQL database configured' => trim((string)($database['name'] ?? '')) !== ''
-            && trim((string)($database['username'] ?? '')) !== '',
+    $databaseChecks = [
+        'MySQL database configured' =>
+            trim((string)($database['name'] ?? '')) !== '' &&
+            trim((string)($database['username'] ?? '')) !== '',
     ];
 } else {
     $path = (string)($database['path'] ?? '');
     $directory = $path !== '' ? dirname($path) : '';
-    $checks = [
-        'database directory writable' => $directory !== '' && (is_dir($directory)
-            ? is_writable($directory)
-            : is_writable(dirname($directory))),
+    $databaseChecks = [
+        'database directory writable' =>
+            $directory !== '' &&
+            (is_dir($directory) ? is_writable($directory) : is_writable(dirname($directory))),
     ];
 }
+
+$checks = $databaseChecks + [
     'public base URL is HTTPS' => str_starts_with(
         strtolower((string)($config['app']['base_url'] ?? '')),
         'https://'
