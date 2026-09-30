@@ -154,10 +154,20 @@ function h(string $value): string {
                 <input id="value" name="value" type="number" step="0.1" value="3">
             </div>
 
-            <div id="degreesField" hidden>
-                <label for="degrees">Direction (degrees)</label>
-                <input id="degrees" name="degrees" type="number" min="0" max="359" step="1" value="0">
-                <p class="alert-help muted">0° = N, 90° = E, 180° = S, 270° = W.</p>
+            <div id="degreesField" class="full" hidden>
+                <label>Specific wind direction</label>
+                <div class="compass-grid" role="group" aria-label="Specific wind direction">
+                    <button type="button" class="compass-choice" data-degrees="0">N</button>
+                    <button type="button" class="compass-choice" data-degrees="45">NE</button>
+                    <button type="button" class="compass-choice" data-degrees="90">E</button>
+                    <button type="button" class="compass-choice" data-degrees="135">SE</button>
+                    <button type="button" class="compass-choice" data-degrees="180">S</button>
+                    <button type="button" class="compass-choice" data-degrees="225">SW</button>
+                    <button type="button" class="compass-choice" data-degrees="270">W</button>
+                    <button type="button" class="compass-choice" data-degrees="315">NW</button>
+                </div>
+                <input id="degrees" name="degrees" type="hidden" value="0">
+                <p class="alert-help muted">GaugeIQ stores the selected compass direction as degrees.</p>
             </div>
 
             <div id="speedField" hidden>
@@ -165,15 +175,18 @@ function h(string $value): string {
                 <input id="speed_min" name="speed_min" type="number" min="0" step="0.1" value="40">
             </div>
 
-            <div id="fromField" hidden>
-                <label for="direction_from">Direction from (degrees)</label>
-                <input id="direction_from" name="direction_from" type="number" min="0" max="359" step="1" value="315">
-                <p class="alert-help muted">Ranges can cross north, such as NW (315°) → N (0°).</p>
-            </div>
-
-            <div id="toField" hidden>
-                <label for="direction_to">Direction to (degrees)</label>
-                <input id="direction_to" name="direction_to" type="number" min="0" max="359" step="1" value="45">
+            <div id="fromField" class="full" hidden>
+                <label>Wind direction range</label>
+                <div class="direction-range">
+                    <select id="direction_from" name="direction_from">
+                        <option value="315">NW</option><option value="0">N</option><option value="45">NE</option><option value="90">E</option><option value="135">SE</option><option value="180">S</option><option value="225">SW</option><option value="270">W</option>
+                    </select>
+                    <span>→</span>
+                    <select id="direction_to" name="direction_to">
+                        <option value="0">N</option><option value="45">NE</option><option value="90">E</option><option value="135">SE</option><option value="180">S</option><option value="225">SW</option><option value="270">W</option><option value="315">NW</option>
+                    </select>
+                </div>
+                <p class="alert-help muted">Ranges may cross north, for example NW → N.</p>
             </div>
 
             <div>
