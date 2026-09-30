@@ -1,6 +1,6 @@
 # GaugeIQ
 
-GaugeIQ is a mobile-first Progressive Web App for monitoring atmospheric pressure and sending notifications when pressure changes beyond a user-defined threshold.
+GaugeIQ is a mobile-first Progressive Web App for monitoring atmospheric pressure, humidity, and wind, with configurable server-side alerts delivered to supported devices.
 
 ## Architecture
 
@@ -36,9 +36,20 @@ For a detailed cPanel deployment, see [docs/CPANEL.md](docs/CPANEL.md).
 
 On iPhone and iPad, Web Push is supported for web apps that have been added to the Home Screen. Notification permission must be requested from a direct user interaction such as tapping GaugeIQ's alert button.
 
-## Cron alerts
+## Weather alerts
 
-GaugeIQ stores pressure readings and compares changes against the configured threshold. Once an alert is sent, that pressure becomes the notification baseline, preventing repeated alerts every cron run while pressure remains within the same movement range.
+GaugeIQ stores each weather observation and evaluates saved alert rules during the server-side cron run. Rules currently support:
+
+- Pressure changes, rising above a value, or falling below a value
+- Humidity changes, rising above a value, or falling below a value
+- Wind-speed changes, rising above a value, or falling below a value
+- Wind-direction changes by a configurable number of degrees
+- Wind arriving from a specific compass direction
+- Combined minimum wind speed plus a direction range, including ranges that cross north such as NW → N
+
+Each rule can be enabled or disabled and has its own notification cooldown. Triggered rules are recorded in the alert-event table so notification history can be expanded in the dashboard later.
+
+For installations that have not created custom rules yet, the original pressure-threshold configuration remains available as a compatibility fallback.
 
 Expired push subscriptions are removed automatically when the push service reports them as gone.
 
@@ -77,6 +88,10 @@ The installer locks itself after successful installation.
 
 For production release packages, Composer dependencies should be bundled so a non-technical user does not need to run Composer.
 
+## Alert settings
+
+The browser settings page is available at `/alerts.php`. It provides a mobile-friendly interface for creating, enabling, disabling, and deleting alert rules. Direction values are stored as degrees internally so the alert engine can handle the 0°/360° boundary correctly.
+
 ## Weather monitoring
 
 GaugeIQ records:
@@ -90,4 +105,4 @@ Alerts can be configured independently. Wind monitoring supports speed threshold
 
 ## Project status
 
-Foundation, Web Push delivery, SQLite/MySQL database support, first-run installation, humidity monitoring, wind speed monitoring, and wind direction monitoring are implemented. The next milestone can add the full visual settings screen, pressure/weather history, charts, dark mode, and a richer mobile dashboard.
+Foundation, Web Push delivery, SQLite/MySQL database support, first-run installation, humidity monitoring, wind speed monitoring, wind direction monitoring, configurable alert rules, cooldowns, alert-event storage, and the initial mobile alert settings screen are implemented. Upcoming work includes a richer compass-based alert builder, historical charts, dark mode, dashboard health/status information, and release packaging with Composer dependencies bundled.
