@@ -178,17 +178,7 @@ return " . var_export($config, true) . ";
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
 <title>Set up GaugeIQ</title>
-<style>
-:root{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",system-ui,sans-serif;color:#111827;background:#f3f4f6}
-*{box-sizing:border-box}body{margin:0;min-height:100vh}.shell{width:min(680px,100%);margin:auto;padding:32px 18px 48px}
-.card{background:#fff;border:1px solid #e5e7eb;border-radius:22px;padding:24px;margin-top:16px;box-shadow:0 8px 30px rgba(17,24,39,.06)}
-h1{margin:0 0 8px;font-size:32px}.muted{color:#6b7280}.step{font-size:12px;font-weight:800;letter-spacing:.12em;color:#6b7280}
-label{display:block;font-weight:700;margin:18px 0 7px}input,select{width:100%;padding:13px;border:1px solid #d1d5db;border-radius:12px;font:inherit;background:#fff}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.choice{display:flex;gap:10px;align-items:flex-start;font-weight:500}.choice input{width:auto;margin-top:4px}
-button{width:100%;border:0;border-radius:13px;padding:14px 16px;font:inherit;font-weight:800;background:#111827;color:#fff;margin-top:22px;cursor:pointer}
-.secondary{background:#e5e7eb;color:#111827;margin-top:10px}.error{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;padding:14px;border-radius:14px}.success{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;padding:16px;border-radius:14px}
-@media(max-width:560px){.grid{grid-template-columns:1fr}}
-</style>
+<link rel="stylesheet" href="install.css">
 </head>
 <body>
 <main class="shell">
@@ -269,19 +259,6 @@ button{width:100%;border:0;border-radius:13px;padding:14px 16px;font:inherit;fon
         </form>
     <?php endif; ?>
 </main>
-<script>
-const driver=document.getElementById('database_driver');
-const fields=document.getElementById('mysqlFields');
-function updateDatabaseFields(){fields.hidden=driver.value!=='mysql'}
-driver?.addEventListener('change',updateDatabaseFields); updateDatabaseFields();
-document.getElementById('locationButton')?.addEventListener('click',()=>{
-    if(!navigator.geolocation){alert('Location services are not available in this browser.');return}
-    navigator.geolocation.getCurrentPosition(pos=>{
-        document.getElementById('latitude').value=pos.coords.latitude.toFixed(6);
-        document.getElementById('longitude').value=pos.coords.longitude.toFixed(6);
-        document.getElementById('location_name').value='My location';
-    },()=>alert('GaugeIQ could not access your location. You can enter the coordinates manually.'));
-});
-</script>
+<script src="install.js" defer></script>
 </body>
 </html>
