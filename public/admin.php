@@ -17,13 +17,11 @@ $updateError = isset($_GET['update_error']);
 <?php if ($updateError): ?><section class="card error"><strong>GaugeIQ could not complete the update.</strong><p>The detailed error was written to the server log.</p></section><?php endif; ?>
 <section class="card"><h2>Updates</h2><p id="adminUpdateStatus" class="muted">Checking for the latest release…</p>
 <div id="adminUpdateDetails" hidden><p><strong id="adminLatestVersion"></strong></p>
-<form method="post" action="admin-update.php" onsubmit="return confirm('Install this verified GaugeIQ release now?');">
+<form method="post" action="admin-update.php">
 <input type="hidden" name="csrf" value="<?= htmlspecialchars($csrf, ENT_QUOTES) ?>">
 <input type="hidden" name="version" id="adminUpdateVersion">
 <input type="hidden" name="package_url" id="adminPackageUrl">
 <input type="hidden" name="checksum_url" id="adminChecksumUrl">
 <button type="submit">Install update</button></form></div>
 <p><a class="secondary button-link" href="./">Back to GaugeIQ</a></p></section>
-<script>
-(async()=>{try{const r=await fetch('api/update-check.php',{cache:'no-store'});const d=await r.json();const s=document.getElementById('adminUpdateStatus');if(!r.ok)throw 0;if(!d.update_available){s.textContent='GaugeIQ is up to date (v'+d.current_version+').';return}if(!d.package_url||!d.checksum_url){s.textContent='An update was found, but its release package or checksum is missing.';return}document.getElementById('adminLatestVersion').textContent='Version '+d.latest_version+' is available.';document.getElementById('adminUpdateVersion').value=d.latest_version;document.getElementById('adminPackageUrl').value=d.package_url;document.getElementById('adminChecksumUrl').value=d.checksum_url;document.getElementById('adminUpdateDetails').hidden=false;s.textContent='';}catch(e){document.getElementById('adminUpdateStatus').textContent='Unable to check for GaugeIQ updates.';}})();
-</script></main></body></html>
+<script src="js/admin.js" defer></script></main></body></html>
