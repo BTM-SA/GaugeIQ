@@ -38,7 +38,7 @@ try {
     <header>
         <div>
             <p class="eyebrow">GAUGЕIQ</p>
-            <h1>Air Pressure</h1>
+            <h1>GaugeIQ</h1>
             <p class="muted"><?= htmlspecialchars($config['pressure']['location_name'], ENT_QUOTES) ?></p>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
@@ -47,26 +47,43 @@ try {
         </div>
     </header>
 
-    <section class="card hero">
-        <?php if ($current): ?>
-            <p class="label">Current pressure</p>
-            <div class="pressure"><?= number_format($current['pressure_hpa'], 1) ?><span> hPa</span></div>
-            <div class="<?= $change > 0 ? 'rise' : ($change < 0 ? 'fall' : 'steady') ?>">
+    <section class="measurement-grid">
+        <article class="card metric-card pressure-card">
+            <p class="label">Air pressure</p>
+            <?php if ($current): ?>
+                <div class="metric-value"><?= number_format($current['pressure_hpa'], 1) ?><span> hPa</span></div>
+                <div class="metric-trend <?= $change > 0 ? 'rise' : ($change < 0 ? 'fall' : 'steady') ?>">
+                    <?= $change > 0 ? '↑ Rising' : ($change < 0 ? '↓ Falling' : '→ Stable') ?>
+                    <?php if ($latest): ?><strong><?= $change >= 0 ? '+' : '' ?><?= number_format($change, 1) ?> hPa</strong><?php endif; ?>
+                </div>
+            <?php else: ?>
+                <div class="metric-unavailable">Unavailable</div>
+            <?php endif; ?>
+        </article>
 
-                <?= $change > 0 ? '↑ Rising' : ($change < 0 ? '↓ Falling' : '→ Stable') ?>
-                <?php if ($latest): ?>
-                    <strong><?= $change >= 0 ? '+' : '' ?><?= number_format($change, 1) ?> hPa</strong>
-                <?php endif; ?>
-            </div>
-        <?php else: ?>
-            <p>Pressure is currently unavailable.</p>
-            <p class="muted"><?= htmlspecialchars($error ?? 'Try again later.', ENT_QUOTES) ?></p>
-        <?php endif; ?>
+        <article class="card metric-card">
+            <p class="label">Humidity</p>
+            <div class="metric-value"><?= $current ? number_format($current['humidity_percent'], 0) : '—' ?><span>%</span></div>
+            <p class="metric-caption">Relative humidity</p>
+        </article>
+
+        <article class="card metric-card">
+            <p class="label">Wind</p>
+            <div class="metric-value"><?= $current ? number_format($current['wind_speed_kmh'], 1) : '—' ?><span> km/h</span></div>
+            <p class="metric-caption"><?= $current ? htmlspecialchars(PressureService::directionLabel($current['wind_direction_degrees']), ENT_QUOTES) . ' · ' . number_format($current['wind_direction_degrees'], 0) . '°' : 'Direction unavailable' ?></p>
+        </article>
     </section>
 
-    <section class="card">
-        <div class="row"><span>Humidity</span><strong><?= $current ? number_format($current['humidity_percent'], 0) . '%' : '—' ?></strong></div>
-        <div class="row"><span>Wind</span><strong><?= $current ? number_format($current['wind_speed_kmh'], 1) . ' km/h ' . htmlspecialchars(PressureService::directionLabel($current['wind_direction_degrees']), ENT_QUOTES) : '—' ?></strong></div>
+    <section class="card history-card">
+        <div class="section-heading">
+            <div>
+                <h2>Last 24 hours</h2>
+                <p id="historyStatus" class="muted">Loading history…</p>
+            </div>
+        </div>
+        <div class="chart-block"><h3>Pressure</h3><canvas id="pressureChart" height="220"></canvas></div>
+        <div class="chart-block"><h3>Humidity</h3><canvas id="humidityChart" height="220"></canvas></div>
+        <div class="chart-block"><h3>Wind speed</h3><canvas id="windChart" height="220"></canvas></div>
     </section>
 
     <section class="card">
