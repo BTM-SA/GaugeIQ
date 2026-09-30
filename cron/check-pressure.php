@@ -15,8 +15,35 @@ $pdo = $db->pdo();
 migrateDatabase($pdo);
 $service = new PressureService($config, $pdo);
 
-$current = $service->fetchCurrent();
+function setGaugeIqStatus(PDO $pdo, string $key, string $value): void
+{
+    $exists = $pdo->prepare('SELECT 1 FROM gaugeiq_settings WHERE `key` = ?');
+    $exists->execute([$key]);
+    if ($exists->fetchColumn() === false) {
+        $stmt = $pdo->prepare('INSERT INTO gaugeiq_settings (`key`, `value`) VALUES (?, ?)');
+    } else {
+        $stmt = $pdo->prepare('UPDATE gaugeiq_settings SET `value` = ? WHERE `key` = ?');
+        $stmt->execute([$value, $key]);
+        return;
+    }
+    $stmt->execute([$key, $value]);
+}
+
+try {
+    $current = $service->fetchCurrent();
 $previous = $service->record($current);
+    setGaugeIqStatus($pdo, 'monitor_last_success_at', gmdate('c'));
+    setGaugeIqStatus($pdo, 'monitor_last_error', '');
+
+} catch (Throwable $e) {
+    try {
+        setGaugeIqStatus($pdo, 'monitor_last_error', $e->getMessage());
+    } catch (Throwable) {
+        // Preserve the original monitoring error when status storage is unavailable.
+    }
+    fwrite(STDERR, "Weather monitoring failed: " . $e->getMessage() . "\n");
+    exit(1);
+}
 
 $pressureChange = $previous === null
     ? 0.0
