@@ -1,3 +1,41 @@
+const themeSelect = document.getElementById('themeSelect');
+const themeMeta = document.getElementById('themeColorMeta');
+
+function applyTheme(theme) {
+    const root = document.documentElement;
+    if (theme === 'system') {
+        root.removeAttribute('data-theme');
+    } else {
+        root.dataset.theme = theme;
+    }
+
+    const dark = theme === 'dark'
+        || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+    if (themeMeta) {
+        themeMeta.setAttribute('content', dark ? '#0b1120' : '#f3f4f6');
+    }
+}
+
+const savedTheme = localStorage.getItem('gaugeiq-theme') || 'system';
+if (themeSelect) {
+    themeSelect.value = savedTheme;
+    themeSelect.addEventListener('change', () => {
+        const theme = themeSelect.value;
+        localStorage.setItem('gaugeiq-theme', theme);
+        applyTheme(theme);
+    });
+}
+
+const colorScheme = window.matchMedia('(prefers-color-scheme: dark)');
+colorScheme.addEventListener?.('change', () => {
+    if ((localStorage.getItem('gaugeiq-theme') || 'system') === 'system') {
+        applyTheme('system');
+    }
+});
+
+applyTheme(savedTheme);
+
 const status = document.getElementById('status');
 const notifyButton = document.getElementById('notifyButton');
 const historyStatus = document.getElementById('historyStatus');
