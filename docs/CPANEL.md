@@ -183,7 +183,7 @@ The test command is deliberately server-side. GaugeIQ does not expose a public t
 
 ## 12. Installing a production release
 
-A published GaugeIQ release package includes the Composer production dependencies in vendor/.
+A published GaugeIQ release package includes the Composer production dependencies in vendor/. Do not use GitHub's **Code → Download ZIP** for installation; that source archive does not contain vendor/.
 
 For a new installation:
 
