@@ -31,7 +31,7 @@ The VAPID keys must be generated once and kept unchanged. Never commit `config/l
 
 ## iPhone notifications
 
-On iPhone and iPad, Web Push is supported for web apps that have been added to the Home Screen. Notification permission must be requested from a direct user interaction such as tapping GaugeIQ's alert button. citeturn0search8
+On iPhone and iPad, Web Push is supported for web apps that have been added to the Home Screen. Notification permission must be requested from a direct user interaction such as tapping GaugeIQ's alert button.
 
 ## Cron alerts
 
@@ -41,7 +41,7 @@ Expired push subscriptions are removed automatically when the push service repor
 
 ## Server requirements
 
-The current Web Push library requires PHP 8.2+ plus the `curl`, `mbstring`, and `openssl` extensions. `bcmath` or `gmp` can improve performance but are optional. citeturn0search3
+The current Web Push library requires PHP 8.2+ plus the `curl`, `mbstring`, and `openssl` extensions. `bcmath` or `gmp` can improve performance but are optional.
 
 ## Project status
 
