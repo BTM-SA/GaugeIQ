@@ -167,4 +167,29 @@ SQL);
         $version = 3;
     }
 
+
+    if ($version === 3) {
+        if ($driver === 'mysql') {
+            $db->exec(<<<'SQL'
+CREATE TABLE IF NOT EXISTS gaugeiq_admin_users (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(191) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at VARCHAR(64) NOT NULL,
+    updated_at VARCHAR(64) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+SQL);
+        } else {
+            $db->exec(<<<'SQL'
+CREATE TABLE IF NOT EXISTS gaugeiq_admin_users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+SQL);
+        }
+        $db->exec("UPDATE gaugeiq_schema SET version = 4");
+    }
 }
