@@ -59,7 +59,10 @@ jobs:
           set -euo pipefail
           test -f vendor/autoload.php
           test -d vendor/minishlink/web-push
-          php -r "require 'vendor/autoload.php'; if (!class_exists('Minishlink\\WebPush\\WebPush')) exit(1); echo 'Web Push dependencies OK.' . PHP_EOL;"
+          test -f vendor/web-token/jwt-library/KeyManagement/JWKFactory.php
+          test -f vendor/web-token/jwt-library/Library/Utils/TypeConverter.php
+          test -f vendor/web-token/jwt-library/Algorithm/KeyConverter.php
+          php -r "require 'vendor/autoload.php'; $classes = ['Minishlink\\WebPush\\WebPush', 'Jose\\Component\\KeyManagement\\JWKFactory']; foreach ($classes as $class) { if (!class_exists($class)) { fwrite(STDERR, 'Missing required class: ' . $class . PHP_EOL); exit(1); } } echo 'Web Push dependencies OK.' . PHP_EOL;"
 
       - name: Build release package
         shell: bash
@@ -84,6 +87,7 @@ jobs:
           mkdir -p "dist/${PACKAGE}/storage"
           test -f "dist/${PACKAGE}/vendor/autoload.php"
           test -d "dist/${PACKAGE}/vendor/minishlink/web-push"
+          test -f "dist/${PACKAGE}/vendor/web-token/jwt-library/KeyManagement/JWKFactory.php"
           test -f "dist/${PACKAGE}/app/Version.php"
 
           cd dist
@@ -91,6 +95,7 @@ jobs:
           zip -qr "${PACKAGE}.zip" "${PACKAGE}"
           unzip -t "${PACKAGE}.zip" >/dev/null
           unzip -l "${PACKAGE}.zip" | grep -q "/vendor/autoload.php$"
+          unzip -l "${PACKAGE}.zip" | grep -q "/vendor/web-token/jwt-library/KeyManagement/JWKFactory.php$"
           sha256sum "${PACKAGE}.zip" > "${PACKAGE}.zip.sha256"
           test -f "${PACKAGE}.Version.php"
           grep -q "VERSION = '${SAFE_VERSION}'" "${PACKAGE}.Version.php"
