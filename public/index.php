@@ -75,6 +75,7 @@ $monitorHealthy = $monitorAge !== null && $monitorAge <= ($checkMinutes * 60 * 2
         </div>
         <div class="header-actions">
             <a href="alerts.php" class="secondary button-link">Alerts</a>
+            <a href="login.php" class="secondary button-link">Admin</a>
             <button id="notifyButton" class="secondary" type="button">Enable alerts</button>
         </div>
     </header>
