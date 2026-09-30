@@ -14,6 +14,9 @@ CREATE TABLE IF NOT EXISTS gaugeiq_schema (
 CREATE TABLE IF NOT EXISTS gaugeiq_pressure_readings (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     pressure_hpa DOUBLE NOT NULL,
+    humidity_percent DOUBLE NULL,
+    wind_speed_kmh DOUBLE NULL,
+    wind_direction_degrees DOUBLE NULL,
     observed_at VARCHAR(64) NOT NULL,
     created_at VARCHAR(64) NOT NULL,
     INDEX idx_gaugeiq_pressure_created (created_at)
@@ -42,6 +45,9 @@ CREATE TABLE IF NOT EXISTS gaugeiq_schema (
 CREATE TABLE IF NOT EXISTS gaugeiq_pressure_readings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     pressure_hpa REAL NOT NULL,
+    humidity_percent REAL NULL,
+    wind_speed_kmh REAL NULL,
+    wind_direction_degrees REAL NULL,
     observed_at TEXT NOT NULL,
     created_at TEXT NOT NULL
 );
@@ -83,5 +89,21 @@ SQL);
 
     if ($version === 0) {
         $db->exec("INSERT INTO gaugeiq_schema (version) VALUES (1)");
+        $version = 1;
+    }
+
+    if ($version < 2) {
+        if ($driver === 'mysql') {
+            $db->exec("ALTER TABLE gaugeiq_pressure_readings
+                ADD COLUMN humidity_percent DOUBLE NULL,
+                ADD COLUMN wind_speed_kmh DOUBLE NULL,
+                ADD COLUMN wind_direction_degrees DOUBLE NULL");
+        } else {
+            $db->exec("ALTER TABLE gaugeiq_pressure_readings ADD COLUMN humidity_percent REAL NULL");
+            $db->exec("ALTER TABLE gaugeiq_pressure_readings ADD COLUMN wind_speed_kmh REAL NULL");
+            $db->exec("ALTER TABLE gaugeiq_pressure_readings ADD COLUMN wind_direction_degrees REAL NULL");
+        }
+
+        $db->exec("UPDATE gaugeiq_schema SET version = 2");
     }
 }
