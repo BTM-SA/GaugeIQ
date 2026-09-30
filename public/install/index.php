@@ -67,6 +67,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$errors) {
         try {
+            if (!class_exists(\\Minishlink\\WebPush\\VAPID::class)) {
+                throw new RuntimeException('GaugeIQ Web Push dependencies are missing. The installation package must include vendor/ or Composer dependencies must be installed first.');
+            }
+
+            $vapid = \\Minishlink\\WebPush\\VAPID::createVapidKeys();
+
             $config = [
                 'app' => [
                     'name' => 'GaugeIQ',
@@ -108,10 +114,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ],
                 'push' => [
                     'subject' => '',
-                    'public_key' => '',
-                    'private_key' => '',
+                    'public_key' => $vapid['publicKey'],
+                    'private_key' => $vapid['privateKey'],
                 ],
             ];
+
+            $config['push']['subject'] = 'https://' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
 
             if ($config['database']['driver'] === 'sqlite') {
                 unset(
