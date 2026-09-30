@@ -13,7 +13,7 @@ $service = new PressureService($config, $db->pdo());
 try {
     $current = $service->fetchCurrent();
     $latest = $db->pdo()->query(
-        'SELECT pressure_hpa, observed_at FROM pressure_readings ORDER BY id DESC LIMIT 1'
+        'SELECT pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, observed_at FROM gaugeiq_pressure_readings ORDER BY id DESC LIMIT 1'
     )->fetch();
 
     $change = $latest ? $current['pressure_hpa'] - (float)$latest['pressure_hpa'] : 0.0;
@@ -37,7 +37,7 @@ try {
 <main class="shell">
     <header>
         <div>
-            <p class="eyebrow">GAUGΕIQ</p>
+            <p class="eyebrow">GAUGЕIQ</p>
             <h1>Air Pressure</h1>
             <p class="muted"><?= htmlspecialchars($config['pressure']['location_name'], ENT_QUOTES) ?></p>
         </div>
