@@ -94,8 +94,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'threshold_hpa' => (float)$threshold,
                     'check_interval_minutes' => 15,
                 ],
+                'humidity' => [
+                    'enabled' => $defaults['humidity_enabled'] === '1',
+                    'mode' => 'change',
+                    'threshold_percent' => 10.0,
+                ],
+                'wind' => [
+                    'enabled' => $defaults['wind_enabled'] === '1',
+                    'speed_mode' => 'above',
+                    'speed_threshold_kmh' => 40.0,
+                    'direction_change_degrees' => 45.0,
+                    'specific_directions' => [],
+                ],
                 'push' => [
-                    'subject' => 'mailto:admin@example.com',
+                    'subject' => '',
                     'public_key' => '',
                     'private_key' => '',
                 ],
