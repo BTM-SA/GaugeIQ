@@ -9,7 +9,17 @@ return [
     ],
 
     'database' => [
+        'driver' => 'sqlite',
         'path' => __DIR__ . '/../storage/gaugeiq.sqlite',
+
+        // MySQL / MariaDB example:
+        // 'driver' => 'mysql',
+        // 'host' => '127.0.0.1',
+        // 'port' => '3306',
+        // 'name' => 'gaugeiq',
+        // 'username' => 'gaugeiq_user',
+        // 'password' => 'change-me',
+        // 'charset' => 'utf8mb4',
     ],
 
     'pressure' => [
@@ -21,7 +31,6 @@ return [
     ],
 
     'push' => [
-        // Generate VAPID credentials before enabling production push.
         'subject' => 'mailto:admin@example.com',
         'public_key' => '',
         'private_key' => '',
