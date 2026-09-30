@@ -232,3 +232,28 @@ document.querySelectorAll('.history-range-button').forEach(button => {
 });
 
 loadHistory();
+
+async function checkForGaugeIQUpdate() {
+    const notice = document.getElementById('updateNotice');
+    const title = document.getElementById('updateNoticeTitle');
+    const message = document.getElementById('updateNoticeText');
+    const link = document.getElementById('updateNoticeLink');
+    if (!notice || !title || !message || !link) return;
+
+    try {
+        const response = await fetch('api/update-check.php', { cache: 'no-store' });
+        if (!response.ok) return;
+
+        const data = await response.json();
+        if (!data.update_available) return;
+
+        title.textContent = 'GaugeIQ update available';
+        message.textContent = 'Version ' + data.latest_version + ' is available.';
+        link.href = data.release_url || '#';
+        notice.hidden = false;
+    } catch {
+        // Update checks are optional and must never interrupt the dashboard.
+    }
+}
+
+checkForGaugeIQUpdate();
