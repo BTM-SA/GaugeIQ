@@ -37,18 +37,32 @@ jobs:
           PACKAGE="GaugeIQ-${SAFE_VERSION}"
           mkdir -p "dist/${PACKAGE}"
 
-          rsync -a             --exclude='.git/'             --exclude='.github/'             --exclude='config/local.php'             --exclude='config/installed.lock'             --exclude='storage/*'             --exclude='*.log'             ./ "dist/${PACKAGE}/"
+          rsync -a \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='config/local.php' \
+            --exclude='config/installed.lock' \
+            --exclude='storage/*' \
+            --exclude='*.log' \
+            ./ "dist/${PACKAGE}/"
 
           rm -rf "dist/${PACKAGE}/storage"
           mkdir -p "dist/${PACKAGE}/storage"
 
           cd dist
           zip -qr "${PACKAGE}.zip" "${PACKAGE}"
-
           sha256sum "${PACKAGE}.zip" > "${PACKAGE}.zip.sha256"
 
       - name: Upload release assets
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release upload "${{ github.event.release.tag_name }}"             "dist/GaugeIQ-${{ github.event.release.tag_name#v }}.zip"             "dist/GaugeIQ-${{ github.event.release.tag_name#v }}.zip.sha256"             --clobber
+          set -euo pipefail
+
+          VERSION="${{ github.event.release.tag_name }}"
+          SAFE_VERSION="${VERSION#v}"
+
+          gh release upload "${{ github.event.release.tag_name }}" \
+            "dist/GaugeIQ-${SAFE_VERSION}.zip" \
+            "dist/GaugeIQ-${SAFE_VERSION}.zip.sha256" \
+            --clobber
