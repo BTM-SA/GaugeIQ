@@ -42,12 +42,12 @@ final class PressureService
     public function record(float $pressure, string $observedAt): ?float
     {
         $previous = $this->db->query(
-            'SELECT pressure_hpa FROM pressure_readings ORDER BY id DESC LIMIT 1'
+            'SELECT pressure_hpa FROM gaugeiq_pressure_readings ORDER BY id DESC LIMIT 1'
         )->fetchColumn();
 
         $now = gmdate('c');
         $stmt = $this->db->prepare(
-            'INSERT INTO pressure_readings (pressure_hpa, observed_at, created_at) VALUES (?, ?, ?)'
+            'INSERT INTO gaugeiq_pressure_readings (pressure_hpa, observed_at, created_at) VALUES (?, ?, ?)'
         );
         $stmt->execute([$pressure, $observedAt, $now]);
 
