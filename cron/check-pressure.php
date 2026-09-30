@@ -13,51 +13,97 @@ $pdo = $db->pdo();
 $service = new PressureService($config, $pdo);
 
 $current = $service->fetchCurrent();
-$previous = $service->record($current['pressure_hpa'], $current['observed_at']);
-$change = $previous === null ? 0.0 : $current['pressure_hpa'] - $previous;
+$previous = $service->record($current);
+
+$pressureChange = $previous === null
+    ? 0.0
+    : $current['pressure_hpa'] - (float)$previous['pressure_hpa'];
 
 printf(
-    "GaugeIQ: %s hPa (%s)%s
-",
-    number_format($current['pressure_hpa'], 1),
+    "GaugeIQ: %.1f hPa | %.0f%% humidity | %.1f km/h %s (%s)%s\n",
+    $current['pressure_hpa'],
+    $current['humidity_percent'],
+    $current['wind_speed_kmh'],
+    PressureService::directionLabel($current['wind_direction_degrees']),
+    $current['wind_direction_degrees'],
     $current['observed_at'],
-    $previous === null ? '' : ' | change ' . number_format($change, 1) . ' hPa'
+    $previous === null ? '' : ' | pressure change ' . number_format($pressureChange, 1) . ' hPa'
 );
 
-if (!$service->thresholdExceeded($previous, $current['pressure_hpa'])) {
-    exit;
+$alerts = [];
+
+if ($service->pressureThresholdExceeded($previous, $current['pressure_hpa'])) {
+    $baseline = $pdo->prepare(
+        "SELECT value FROM gaugeiq_settings WHERE key = 'last_notified_pressure_hpa'"
+    );
+    $baseline->execute();
+    $baselineValue = $baseline->fetchColumn();
+
+    $baselinePressure = $baselineValue === false ? null : (float)$baselineValue;
+    $notificationChange = $baselinePressure === null
+        ? $pressureChange
+        : $current['pressure_hpa'] - $baselinePressure;
+
+    if ($baselinePressure === null ||
+        abs($notificationChange) >= (float)$config['pressure']['threshold_hpa']) {
+        $direction = $pressureChange >= 0 ? 'rising' : 'falling';
+        $alerts[] = sprintf(
+            'Pressure is %s by %.1f hPa to %.1f hPa.',
+            $direction,
+            abs($pressureChange),
+            $current['pressure_hpa']
+        );
+    }
 }
 
-$baseline = $pdo->query(
-    "SELECT value FROM gaugeiq_settings WHERE key = 'last_notified_pressure_hpa'"
-)->fetchColumn();
-
-$baselinePressure = $baseline === false ? null : (float)$baseline;
-$notificationChange = $baselinePressure === null
-    ? $change
-    : $current['pressure_hpa'] - $baselinePressure;
-
-if ($baselinePressure !== null &&
-    abs($notificationChange) < (float)$config['pressure']['threshold_hpa']) {
-    echo "Threshold crossed from the previous reading, but not from the last notification baseline; no alert sent.
-";
-    exit;
+if ($service->humidityThresholdExceeded($previous, $current['humidity_percent'])) {
+    $alerts[] = sprintf(
+        'Humidity is now %.0f%%.',
+        $current['humidity_percent']
+    );
 }
 
-$direction = $change >= 0 ? 'rising' : 'falling';
-$body = sprintf(
-    'Pressure is %s by %.1f hPa and is now %.1f hPa.',
-    $direction,
-    abs($change),
-    $current['pressure_hpa']
-);
+if ($service->windSpeedThresholdExceeded($previous, $current['wind_speed_kmh'])) {
+    $alerts[] = sprintf(
+        'Wind speed is now %.1f km/h.',
+        $current['wind_speed_kmh']
+    );
+}
+
+if ($service->windDirectionChanged($previous, $current['wind_direction_degrees'])) {
+    $previousDirection = (float)$previous['wind_direction_degrees'];
+    $change = $service->circularDifference($previousDirection, $current['wind_direction_degrees']);
+
+    $alerts[] = sprintf(
+        'Wind direction changed by %.0f° to %s.',
+        $change,
+        PressureService::directionLabel($current['wind_direction_degrees'])
+    );
+}
+
+if ($previous !== null &&
+    $service->windDirectionMatches($current['wind_direction_degrees']) &&
+    !$service->windDirectionMatches((float)$previous['wind_direction_degrees'])) {
+    $alerts[] = sprintf(
+        'Wind is now coming from %s.',
+        PressureService::directionLabel($current['wind_direction_degrees'])
+    );
+}
+
+if ($alerts === []) {
+    exit;
+}
 
 try {
     $push = new PushService($config, $pdo);
-    $sent = $push->send('GaugeIQ pressure alert', $body);
+    $sent = $push->send(
+        'GaugeIQ weather alert',
+        implode(' ', $alerts)
+    );
 
-    if ($sent > 0) {
+    if ($sent > 0 && $service->pressureThresholdExceeded($previous, $current['pressure_hpa'])) {
         $value = (string)$current['pressure_hpa'];
+
         $exists = $pdo->query(
             "SELECT 1 FROM gaugeiq_settings WHERE key = 'last_notified_pressure_hpa'"
         )->fetchColumn();
@@ -75,7 +121,7 @@ try {
         }
     }
 
-    printf("Push alert sent to %d device(s).\n", $sent);
+    printf("Weather alert sent to %d device(s).\n", $sent);
 } catch (Throwable $e) {
     fwrite(STDERR, "Push delivery failed: " . $e->getMessage() . "\n");
     exit(1);
