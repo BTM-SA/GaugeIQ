@@ -78,7 +78,11 @@ SQL);
             $newCount = (int)$db->query("SELECT COUNT(*) FROM {$new}")->fetchColumn();
 
             if ($oldExists && $newCount === 0) {
-                $db->exec("INSERT INTO {$new} SELECT * FROM {$old}");
+                if ($old === 'pressure_readings') {
+                    $db->exec("INSERT INTO {$new} (id, pressure_hpa, observed_at, created_at) SELECT id, pressure_hpa, observed_at, created_at FROM {$old}");
+                } else {
+                    $db->exec("INSERT INTO {$new} SELECT * FROM {$old}");
+                }
             }
         }
     } else {
