@@ -88,11 +88,11 @@ SQL);
     $version = (int)($db->query('SELECT version FROM gaugeiq_schema LIMIT 1')->fetchColumn() ?: 0);
 
     if ($version === 0) {
-        $db->exec("INSERT INTO gaugeiq_schema (version) VALUES (1)");
-        $version = 1;
+        $db->exec("INSERT INTO gaugeiq_schema (version) VALUES (2)");
+        $version = 2;
     }
 
-    if ($version < 2) {
+    if ($version === 1) {
         if ($driver === 'mysql') {
             $db->exec("ALTER TABLE gaugeiq_pressure_readings
                 ADD COLUMN humidity_percent DOUBLE NULL,
