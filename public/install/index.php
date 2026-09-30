@@ -36,6 +36,8 @@ $defaults = [
     'database_name' => '',
     'database_username' => '',
     'database_password' => '',
+    'admin_username' => 'admin',
+    'admin_password' => '',
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -56,6 +58,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $threshold = filter_var($defaults['threshold_hpa'], FILTER_VALIDATE_FLOAT);
     if ($threshold === false || $threshold <= 0) {
         $errors[] = 'Enter a pressure alert threshold greater than zero.';
+    }
+
+    if ($defaults['admin_username'] === '' || !preg_match('/^[A-Za-z0-9._-]{3,64}$/', $defaults['admin_username'])) {
+        $errors[] = 'Choose an administrator username using 3–64 letters, numbers, dots, underscores, or hyphens.';
+    }
+
+    if (strlen($defaults['admin_password']) < 12) {
+        $errors[] = 'Administrator password must be at least 12 characters long.';
     }
 
     if (!in_array($defaults['database_driver'], ['sqlite', 'mysql'], true)) {
@@ -139,6 +149,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $db = new Database($config);
             migrateDatabase($db->pdo());
+
+            $adminStmt = $db->pdo()->prepare('INSERT INTO gaugeiq_admin_users (username, password_hash, created_at, updated_at) VALUES (?, ?, ?, ?)');
+            $now = gmdate('c');
+            $adminStmt->execute([$defaults['admin_username'], password_hash($defaults['admin_password'], PASSWORD_DEFAULT), $now, $now]);
 
             if (!is_dir($configDir) && !mkdir($configDir, 0750, true) && !is_dir($configDir)) {
                 throw new RuntimeException('Unable to create the configuration directory.');
@@ -229,7 +243,14 @@ return " . var_export($config, true) . ";
             <label class="choice"><input type="checkbox" name="humidity_enabled" value="1" <?= $defaults['humidity_enabled'] === '1' ? 'checked' : '' ?>> Monitor humidity</label>
             <label class="choice"><input type="checkbox" name="wind_enabled" value="1" <?= $defaults['wind_enabled'] === '1' ? 'checked' : '' ?>> Monitor wind speed and direction</label>
 
-            <p class="step" style="margin-top:28px">4 · DATABASE</p>
+            <p class="step" style="margin-top:28px">4 · ADMINISTRATOR</p>
+            <label for="admin_username">Administrator username</label>
+            <input id="admin_username" name="admin_username" value="<?= htmlspecialchars($defaults['admin_username'], ENT_QUOTES) ?>" autocomplete="username" required>
+            <label for="admin_password">Administrator password</label>
+            <input id="admin_password" name="admin_password" type="password" autocomplete="new-password" minlength="12" required>
+            <p class="muted">Use at least 12 characters. This account protects administration and future update controls.</p>
+
+            <p class="step" style="margin-top:28px">5 · DATABASE</p>
             <label for="database_driver">Database</label>
             <select id="database_driver" name="database_driver">
                 <option value="sqlite" <?= $defaults['database_driver'] === 'sqlite' ? 'selected' : '' ?>>SQLite — easiest</option>
