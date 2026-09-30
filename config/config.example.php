@@ -30,6 +30,20 @@ return [
         'check_interval_minutes' => 15,
     ],
 
+    'humidity' => [
+        'enabled' => true,
+        'mode' => 'change',
+        'threshold_percent' => 10.0,
+    ],
+
+    'wind' => [
+        'enabled' => true,
+        'speed_mode' => 'above',
+        'speed_threshold_kmh' => 40.0,
+        'direction_change_degrees' => 45.0,
+        'specific_directions' => [],
+    ],
+
     'push' => [
         'subject' => 'mailto:admin@example.com',
         'public_key' => '',
