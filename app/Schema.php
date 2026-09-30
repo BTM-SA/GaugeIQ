@@ -3,7 +3,38 @@ declare(strict_types=1);
 
 function migrateDatabase(PDO $db): void
 {
-    $db->exec(<<<'SQL'
+    $driver = (string)$db->getAttribute(PDO::ATTR_DRIVER_NAME);
+
+    if ($driver === 'mysql') {
+        $db->exec(<<<'SQL'
+CREATE TABLE IF NOT EXISTS gaugeiq_schema (
+    version INT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS gaugeiq_pressure_readings (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    pressure_hpa DOUBLE NOT NULL,
+    observed_at VARCHAR(64) NOT NULL,
+    created_at VARCHAR(64) NOT NULL,
+    INDEX idx_gaugeiq_pressure_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS gaugeiq_settings (
+    \`key\` VARCHAR(191) NOT NULL PRIMARY KEY,
+    \`value\` TEXT NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS gaugeiq_push_subscriptions (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    endpoint VARCHAR(2048) NOT NULL,
+    subscription_json LONGTEXT NOT NULL,
+    created_at VARCHAR(64) NOT NULL,
+    updated_at VARCHAR(64) NOT NULL,
+    UNIQUE KEY uq_gaugeiq_push_endpoint (endpoint(191))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+SQL);
+    } elseif ($driver === 'sqlite') {
+        $db->exec(<<<'SQL'
 CREATE TABLE IF NOT EXISTS gaugeiq_schema (
     version INTEGER NOT NULL
 );
@@ -16,7 +47,7 @@ CREATE TABLE IF NOT EXISTS gaugeiq_pressure_readings (
 );
 
 CREATE TABLE IF NOT EXISTS gaugeiq_settings (
-    key VARCHAR(191) PRIMARY KEY,
+    key TEXT PRIMARY KEY,
     value TEXT NOT NULL
 );
 
@@ -29,9 +60,28 @@ CREATE TABLE IF NOT EXISTS gaugeiq_push_subscriptions (
 );
 SQL);
 
+        foreach ([
+            'pressure_readings' => 'gaugeiq_pressure_readings',
+            'settings' => 'gaugeiq_settings',
+            'push_subscriptions' => 'gaugeiq_push_subscriptions',
+        ] as $old => $new) {
+            $oldExists = (bool)$db->query(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name=" . $db->quote($old)
+            )->fetchColumn();
+
+            $newCount = (int)$db->query("SELECT COUNT(*) FROM {$new}")->fetchColumn();
+
+            if ($oldExists && $newCount === 0) {
+                $db->exec("INSERT INTO {$new} SELECT * FROM {$old}");
+            }
+        }
+    } else {
+        throw new RuntimeException('Unsupported database driver: ' . $driver);
+    }
+
     $version = (int)($db->query('SELECT version FROM gaugeiq_schema LIMIT 1')->fetchColumn() ?: 0);
 
-    if ($version < 1) {
+    if ($version === 0) {
         $db->exec("INSERT INTO gaugeiq_schema (version) VALUES (1)");
     }
 }
