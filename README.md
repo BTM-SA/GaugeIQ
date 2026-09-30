@@ -105,4 +105,4 @@ Alerts can be configured independently. Wind monitoring supports speed threshold
 
 ## Project status
 
-Foundation, Web Push delivery, SQLite/MySQL database support, first-run installation, humidity monitoring, wind speed monitoring, wind direction monitoring, configurable alert rules, cooldowns, alert-event storage, and the initial mobile alert settings screen are implemented. Upcoming work includes a richer compass-based alert builder, historical charts, dark mode, dashboard health/status information, and release packaging with Composer dependencies bundled.
+Foundation, Web Push delivery, SQLite/MySQL database support, first-run installation, humidity monitoring, wind speed monitoring, wind direction monitoring, configurable alert rules, cooldowns, alert-event storage, and the initial mobile alert settings screen are implemented. The dashboard includes historical readings, light/dark/follow-device appearance controls, and scheduled monitoring health information. Remaining release work includes installer hardening and release packaging with Composer dependencies bundled.
