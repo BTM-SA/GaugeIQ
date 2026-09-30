@@ -21,11 +21,36 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: curl, mbstring, openssl, pdo_sqlite, pdo_mysql
+          extensions: curl, mbstring, openssl, pdo_sqlite, pdo_mysql, zip
           tools: composer
+
+      - name: Set release version
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${{ github.event.release.tag_name }}"
+          SAFE_VERSION="${VERSION#v}"
+          cat > app/Version.php <<PHP
+<?php
+declare(strict_types=1);
+
+final class GaugeIQVersion
+{
+    public const VERSION = '${SAFE_VERSION}';
+}
+PHP
+          php -l app/Version.php
 
       - name: Install production dependencies
         run: composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
+
+      - name: Verify production dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f vendor/autoload.php
+          test -d vendor/minishlink/web-push
+          php -r "require 'vendor/autoload.php'; if (!class_exists('Minishlink\\WebPush\\WebPush')) exit(1); echo 'Web Push dependencies OK.' . PHP_EOL;"
 
       - name: Build release package
         shell: bash
@@ -48,6 +73,8 @@ jobs:
 
           rm -rf "dist/${PACKAGE}/storage"
           mkdir -p "dist/${PACKAGE}/storage"
+          test -f "dist/${PACKAGE}/vendor/autoload.php"
+          test -f "dist/${PACKAGE}/app/Version.php"
 
           cd dist
           zip -qr "${PACKAGE}.zip" "${PACKAGE}"
