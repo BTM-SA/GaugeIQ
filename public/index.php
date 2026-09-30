@@ -28,7 +28,7 @@ try {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#111827">
+<meta name="theme-color" content="#f3f4f6" id="themeColorMeta">
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="css/app.css">
 <title>GaugeIQ</title>
@@ -41,8 +41,8 @@ try {
             <h1>GaugeIQ</h1>
             <p class="muted"><?= htmlspecialchars($config['pressure']['location_name'], ENT_QUOTES) ?></p>
         </div>
-        <div style="display:flex;gap:8px;align-items:center">
-            <a href="alerts.php" class="secondary" style="text-decoration:none">Alerts</a>
+        <div class="header-actions">
+            <a href="alerts.php" class="secondary button-link">Alerts</a>
             <button id="notifyButton" class="secondary" type="button">Enable alerts</button>
         </div>
     </header>
@@ -91,6 +91,8 @@ try {
         <div class="row"><span>Checks</span><strong>Every <?= (int)$config['pressure']['check_interval_minutes'] ?> minutes</strong></div>
         <div class="row"><span>Custom alerts</span><strong><a href="alerts.php">Manage</a></strong></div>
     </section>
+
+    <section class="card appearance-card" aria-labelledby="appearanceTitle"><div class="section-heading"><div><h2 id="appearanceTitle">Appearance</h2><p class="muted">Choose how GaugeIQ looks on this device.</p></div><select id="themeSelect" class="theme-select" aria-label="Appearance"><option value="system">Follow device</option><option value="light">Light</option><option value="dark">Dark</option></select></div></section>
 
     <p id="status" class="status"></p>
 </main>
