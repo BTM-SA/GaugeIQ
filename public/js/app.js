@@ -38,6 +38,7 @@ applyTheme(savedTheme);
 
 const status = document.getElementById('status');
 const notifyButton = document.getElementById('notifyButton');
+const testNotifyButton = document.getElementById('testNotifyButton');
 const historyStatus = document.getElementById('historyStatus');
 
 async function getRegistration() {
@@ -111,6 +112,31 @@ async function showAlertsOnIfAlreadyEnabled() {
 }
 
 showAlertsOnIfAlreadyEnabled();
+
+if (testNotifyButton) {
+    testNotifyButton.addEventListener('click', async () => {
+        try {
+            if (!('Notification' in window) || Notification.permission !== 'granted') {
+                throw new Error('Enable GaugeIQ notifications first.');
+            }
+
+            const registration = await getRegistration();
+            await registration.showNotification('GaugeIQ test notification', {
+                body: 'If you hear a sound, GaugeIQ notifications are working on this device.',
+                tag: 'gaugeiq-test',
+                renotify: true,
+                silent: false,
+                data: { url: './' }
+            });
+
+            status.textContent = 'Test notification sent.';
+        } catch (error) {
+            status.textContent = error instanceof Error
+                ? error.message
+                : 'Unable to send the test notification.';
+        }
+    });
+}
 
 if (!('Notification' in window) || !('PushManager' in window)) {
     notifyButton.disabled = true;
