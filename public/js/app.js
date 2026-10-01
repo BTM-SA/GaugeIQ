@@ -184,16 +184,25 @@ function drawChart(canvas, values, unit, decimals = 1, hours = 24) {
     ctx.lineCap = 'round';
     ctx.beginPath();
 
-    valid.forEach((item, index) => {
-        const x = valid.length === 1
+    const points = valid.map((item, index) => ({
+        x: valid.length === 1
             ? pad.left + (plotW / 2)
-            : pad.left + (index / (valid.length - 1)) * plotW;
-        const y = pad.top + (1 - ((item.value - min) / range)) * plotH;
-        if (index === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-    });
+            : pad.left + (index / (valid.length - 1)) * plotW,
+        y: pad.top + (1 - ((item.value - min) / range)) * plotH
+    }));
 
-    if (valid.length > 1) {
+    if (points.length > 1) {
+        ctx.moveTo(points[0].x, points[0].y);
+
+        for (let index = 1; index < points.length - 1; index += 1) {
+            const midpointX = (points[index].x + points[index + 1].x) / 2;
+            const midpointY = (points[index].y + points[index + 1].y) / 2;
+            ctx.quadraticCurveTo(points[index].x, points[index].y, midpointX, midpointY);
+        }
+
+        const last = points[points.length - 1];
+        const previous = points[points.length - 2];
+        ctx.quadraticCurveTo(previous.x, previous.y, last.x, last.y);
         ctx.stroke();
     }
 
