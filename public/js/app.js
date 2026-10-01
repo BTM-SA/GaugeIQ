@@ -153,10 +153,10 @@ function drawChart(canvas, values, unit, decimals = 1, hours = 24) {
     ctx.clearRect(0, 0, width, height);
 
     const valid = values.filter(item => Number.isFinite(item.value));
-    if (valid.length < 2) {
+    if (valid.length === 0) {
         ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--muted');
         ctx.font = '14px system-ui';
-        ctx.fillText('Not enough history yet.', 16, 32);
+        ctx.fillText('No history recorded yet.', 16, 32);
         return;
     }
 
@@ -183,13 +183,27 @@ function drawChart(canvas, values, unit, decimals = 1, hours = 24) {
     ctx.beginPath();
 
     valid.forEach((item, index) => {
-        const x = pad.left + (index / (valid.length - 1)) * plotW;
+        const x = valid.length === 1
+            ? pad.left + (plotW / 2)
+            : pad.left + (index / (valid.length - 1)) * plotW;
         const y = pad.top + (1 - ((item.value - min) / range)) * plotH;
         if (index === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
     });
 
-    ctx.stroke();
+    if (valid.length > 1) {
+        ctx.stroke();
+    }
+
+    if (valid.length === 1) {
+        const item = valid[0];
+        const x = pad.left + (plotW / 2);
+        const y = pad.top + (1 - ((item.value - min) / range)) * plotH;
+        ctx.fillStyle = line;
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, Math.PI * 2);
+        ctx.fill();
+    }
 
     ctx.fillStyle = text;
     ctx.font = '12px system-ui';
