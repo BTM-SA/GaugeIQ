@@ -16,33 +16,38 @@ final class PressureService
             . "&current=surface_pressure,relative_humidity_2m,wind_speed_10m,wind_direction_10m"
             . "&wind_speed_unit=kmh&timezone=auto";
 
-        $context = stream_context_create([
-            'http' => [
-                'timeout' => 10,
-                'header' => "User-Agent: GaugeIQ/0.2\r\n",
-            ],
+        if (!function_exists('curl_init')) {
+            throw new RuntimeException('Unable to retrieve weather data: cURL is not available.');
+        }
+
+        $curl = curl_init($url);
+        if ($curl === false) {
+            throw new RuntimeException('Unable to retrieve weather data: cURL could not be initialized.');
+        }
+
+        curl_setopt_array($curl, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => 10,
+            CURLOPT_TIMEOUT => 15,
+            CURLOPT_HTTPHEADER => ['User-Agent: GaugeIQ/0.2'],
         ]);
 
-        $json = file_get_contents($url, false, $context);
+        $json = curl_exec($curl);
+        $curlError = curl_error($curl);
+        $httpStatus = (int)curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        curl_close($curl);
+
         if ($json === false) {
-            $error = error_get_last();
-            $detail = is_array($error) && isset($error['message'])
-                ? (string)$error['message']
-                : 'No PHP stream error was reported.';
-
-            $httpStatus = null;
-            if (isset($http_response_header) && is_array($http_response_header)) {
-                foreach ($http_response_header as $header) {
-                    if (preg_match('/^HTTP\/\d(?:\.\d)?\s+(\d{3})/i', $header, $matches)) {
-                        $httpStatus = $matches[1];
-                        break;
-                    }
-                }
-            }
-
-            $status = $httpStatus === null ? '' : " HTTP status {$httpStatus}.";
+            $detail = $curlError !== '' ? $curlError : 'No cURL error was reported.';
+            $status = $httpStatus > 0 ? " HTTP status {$httpStatus}." : '';
             throw new RuntimeException(
                 "Unable to retrieve weather data: {$detail}{$status}"
+            );
+        }
+
+        if ($httpStatus < 200 || $httpStatus >= 300) {
+            throw new RuntimeException(
+                "Unable to retrieve weather data: HTTP status {$httpStatus}."
             );
         }
 
