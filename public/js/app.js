@@ -180,6 +180,8 @@ function drawChart(canvas, values, unit, decimals = 1, hours = 24) {
 
     ctx.strokeStyle = line;
     ctx.lineWidth = 2.5;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
     ctx.beginPath();
 
     valid.forEach((item, index) => {
