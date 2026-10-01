@@ -30,7 +30,8 @@ self.addEventListener('push', event => {
             body: data.body || 'Atmospheric pressure has changed.',
             data: { url: data.url || './' },
             tag: 'gaugeiq-pressure',
-            renotify: true
+            renotify: true,
+            silent: false
         })
     );
 });
