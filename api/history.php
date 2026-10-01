@@ -12,12 +12,15 @@ try {
     $hours = min(168, max(1, (int)($_GET['hours'] ?? 24)));
     $since = gmdate('c', time() - ($hours * 3600));
 
+    // Filter by created_at, which is always stored in UTC by GaugeIQ.
+    // observed_at comes from the weather provider's configured timezone and
+    // therefore should not be used for the UTC history window.
     $stmt = $db->pdo()->prepare(
         'SELECT pressure_hpa, humidity_percent, wind_speed_kmh,
-                wind_direction_degrees, observed_at
+                wind_direction_degrees, observed_at, created_at
          FROM gaugeiq_pressure_readings
-         WHERE observed_at >= ?
-         ORDER BY observed_at ASC'
+         WHERE created_at >= ?
+         ORDER BY created_at ASC'
     );
     $stmt->execute([$since]);
 
