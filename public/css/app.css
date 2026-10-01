@@ -127,6 +127,7 @@ button:disabled { opacity: .55; cursor: default; }
 :root[data-theme="light"]{color-scheme:light;--text:#111827;--muted:#6b7280;--background:#f3f4f6;--card:#fff;--surface:#f9fafb;--border:#e5e7eb;--accent:#111827;--theme-color:#f3f4f6}
 .header-actions{display:flex;gap:8px;align-items:center}
 .button-link{text-decoration:none}
+.header-actions .secondary{display:inline-flex;align-items:center;justify-content:center;gap:8px;box-sizing:border-box;border:0;border-radius:12px;padding:11px 15px;font:inherit;font-weight:700;line-height:normal;text-decoration:none;white-space:nowrap}
 .appearance-card{margin-top:16px}
 .theme-select{min-width:150px;padding:11px 12px;border:1px solid var(--border);border-radius:12px;background:var(--card);color:var(--text);font:inherit;font-weight:700}
 @media(max-width:560px){.header-actions{align-items:stretch;flex-direction:column}.header-actions .secondary{white-space:nowrap}.section-heading{align-items:flex-start;gap:14px;flex-direction:column}.theme-select{width:100%}}
