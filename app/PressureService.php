@@ -23,9 +23,27 @@ final class PressureService
             ],
         ]);
 
-        $json = @file_get_contents($url, false, $context);
+        $json = file_get_contents($url, false, $context);
         if ($json === false) {
-            throw new RuntimeException('Unable to retrieve weather data.');
+            $error = error_get_last();
+            $detail = is_array($error) && isset($error['message'])
+                ? (string)$error['message']
+                : 'No PHP stream error was reported.';
+
+            $httpStatus = null;
+            if (isset($http_response_header) && is_array($http_response_header)) {
+                foreach ($http_response_header as $header) {
+                    if (preg_match('/^HTTP\/\d(?:\.\d)?\s+(\d{3})/i', $header, $matches)) {
+                        $httpStatus = $matches[1];
+                        break;
+                    }
+                }
+            }
+
+            $status = $httpStatus === null ? '' : " HTTP status {$httpStatus}.";
+            throw new RuntimeException(
+                "Unable to retrieve weather data: {$detail}{$status}"
+            );
         }
 
         $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
