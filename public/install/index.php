@@ -205,7 +205,7 @@ return " . var_export($config, true) . ";
             <strong>GaugeIQ is installed.</strong>
             <p>Your database and configuration are ready.</p>
             <p>Open the GaugeIQ home page and enable notifications on your iPhone.</p>
-            <button type="button" onclick="location.href='../'">Open GaugeIQ</button>
+            <a class="button" href="../index.php">Open GaugeIQ</a>
         </section>
     <?php else: ?>
         <?php if ($errors): ?>
