@@ -152,7 +152,21 @@ function drawChart(canvas, values, unit, decimals = 1, hours = 24) {
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, width, height);
 
-    const valid = values.filter(item => Number.isFinite(item.value));
+    const grouped = new Map();
+    values.forEach(item => {
+        if (!Number.isFinite(item.value)) return;
+        const timestamp = new Date(item.time).getTime();
+        const key = Number.isFinite(timestamp) ? timestamp : 'invalid-' + grouped.size;
+        if (!grouped.has(key)) grouped.set(key, []);
+        grouped.get(key).push(item.value);
+    });
+
+    const valid = [...grouped.entries()]
+        .map(([timestamp, readings]) => ({
+            value: readings.reduce((sum, value) => sum + value, 0) / readings.length,
+            time: Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : values.find(item => Number.isFinite(item.value))?.time
+        }))
+        .sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
     if (valid.length === 0) {
         ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--muted');
         ctx.font = '14px system-ui';
@@ -184,25 +198,36 @@ function drawChart(canvas, values, unit, decimals = 1, hours = 24) {
     ctx.lineCap = 'round';
     ctx.beginPath();
 
-    const points = valid.map((item, index) => ({
-        x: valid.length === 1
-            ? pad.left + (plotW / 2)
-            : pad.left + (index / (valid.length - 1)) * plotW,
-        y: pad.top + (1 - ((item.value - min) / range)) * plotH
-    }));
+    const firstTime = new Date(valid[0].time).getTime();
+    const lastTime = new Date(valid[valid.length - 1].time).getTime();
+    const timeRange = lastTime - firstTime || 1;
+
+    const points = valid.map(item => {
+        const timestamp = new Date(item.time).getTime();
+        return {
+            x: valid.length === 1
+                ? pad.left + (plotW / 2)
+                : pad.left + ((timestamp - firstTime) / timeRange) * plotW,
+            y: pad.top + (1 - ((item.value - min) / range)) * plotH
+        };
+    });
 
     if (points.length > 1) {
         ctx.moveTo(points[0].x, points[0].y);
 
-        for (let index = 1; index < points.length - 1; index += 1) {
-            const midpointX = (points[index].x + points[index + 1].x) / 2;
-            const midpointY = (points[index].y + points[index + 1].y) / 2;
-            ctx.quadraticCurveTo(points[index].x, points[index].y, midpointX, midpointY);
-        }
+        for (let index = 0; index < points.length - 1; index += 1) {
+            const current = points[index];
+            const next = points[index + 1];
+            const previous = points[index - 1] || current;
+            const following = points[index + 2] || next;
 
-        const last = points[points.length - 1];
-        const previous = points[points.length - 2];
-        ctx.quadraticCurveTo(previous.x, previous.y, last.x, last.y);
+            const control1X = current.x + (next.x - previous.x) / 6;
+            const control1Y = current.y + (next.y - previous.y) / 6;
+            const control2X = next.x - (following.x - current.x) / 6;
+            const control2Y = next.y - (following.y - current.y) / 6;
+
+            ctx.bezierCurveTo(control1X, control1Y, control2X, control2Y, next.x, next.y);
+        }
         ctx.stroke();
     }
 
