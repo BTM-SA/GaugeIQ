@@ -62,7 +62,7 @@ async function enablePushNotifications() {
         throw new Error('Notifications are blocked for GaugeIQ. Enable them in iPhone Settings.');
     }
 
-    const response = await fetch('api/push-config.php', { cache: 'no-store' });
+    const response = await fetch('../api/push-config.php', { cache: 'no-store' });
     if (!response.ok) throw new Error('GaugeIQ push notifications are not configured yet.');
 
     const { publicKey } = await response.json();
@@ -76,7 +76,7 @@ async function enablePushNotifications() {
         });
     }
 
-    const saveResponse = await fetch('api/subscribe.php', {
+    const saveResponse = await fetch('../api/subscribe.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(subscription.toJSON())
@@ -225,7 +225,7 @@ async function loadHistory(hours = 24) {
     historyStatus.textContent = 'Loading history…';
 
     try {
-        const response = await fetch('api/history.php?hours=' + encodeURIComponent(hours), { cache: 'no-store' });
+        const response = await fetch('../api/history.php?hours=' + encodeURIComponent(hours), { cache: 'no-store' });
         if (!response.ok) throw new Error('History unavailable.');
 
         const data = await response.json();
@@ -272,7 +272,7 @@ async function checkForGaugeIQUpdate() {
     if (!notice || !title || !message || !link) return;
 
     try {
-        const response = await fetch('api/update-check.php', { cache: 'no-store' });
+        const response = await fetch('../api/update-check.php', { cache: 'no-store' });
         if (!response.ok) return;
 
         const data = await response.json();
