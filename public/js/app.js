@@ -215,18 +215,53 @@ function drawChart(canvas, values, unit, decimals = 1, hours = 24) {
     if (points.length > 1) {
         ctx.moveTo(points[0].x, points[0].y);
 
+        // Use a monotonic cubic interpolation so changes between readings
+        // are smooth without inventing overshoots or artificial flat spots.
+        const slopes = points.map((point, index) => {
+            if (index === 0) {
+                return (points[1].y - point.y) / (points[1].x - point.x || 1);
+            }
+            if (index === points.length - 1) {
+                return (point.y - points[index - 1].y) / (point.x - points[index - 1].x || 1);
+            }
+
+            const dx = points[index + 1].x - points[index - 1].x || 1;
+            return (points[index + 1].y - points[index - 1].y) / dx;
+        });
+
         for (let index = 0; index < points.length - 1; index += 1) {
             const current = points[index];
             const next = points[index + 1];
-            const previous = points[index - 1] || current;
-            const following = points[index + 2] || next;
+            const dx = next.x - current.x;
+            const slope = (next.y - current.y) / (dx || 1);
 
-            const control1X = current.x + (next.x - previous.x) / 6;
-            const control1Y = current.y + (next.y - previous.y) / 6;
-            const control2X = next.x - (following.x - current.x) / 6;
-            const control2Y = next.y - (following.y - current.y) / 6;
+            let m1 = slopes[index];
+            let m2 = slopes[index + 1];
 
-            ctx.bezierCurveTo(control1X, control1Y, control2X, control2Y, next.x, next.y);
+            // Preserve genuinely constant readings as genuinely horizontal.
+            if (Math.abs(next.y - current.y) < 0.001) {
+                m1 = 0;
+                m2 = 0;
+            } else {
+                // Prevent the curve from overshooting between two readings.
+                if (slope === 0) {
+                    m1 = 0;
+                    m2 = 0;
+                } else {
+                    const limit = 3 * Math.abs(slope);
+                    m1 = Math.sign(m1) === Math.sign(slope) ? Math.max(-limit, Math.min(limit, m1)) : 0;
+                    m2 = Math.sign(m2) === Math.sign(slope) ? Math.max(-limit, Math.min(limit, m2)) : 0;
+                }
+            }
+
+            ctx.bezierCurveTo(
+                current.x + dx / 3,
+                current.y + m1 * dx / 3,
+                next.x - dx / 3,
+                next.y - m2 * dx / 3,
+                next.x,
+                next.y
+            );
         }
         ctx.stroke();
     }
