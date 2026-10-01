@@ -128,15 +128,20 @@ if (testNotifyButton) {
             }
 
             const registration = await getRegistration();
+
+            if (!registration.active) {
+                throw new Error('GaugeIQ service worker is not active yet. Please tap Refresh and try again.');
+            }
+
             await registration.showNotification('GaugeIQ test notification', {
                 body: 'If you hear a sound, GaugeIQ notifications are working on this device.',
-                tag: 'gaugeiq-test',
+                tag: 'gaugeiq-test-' + Date.now(),
                 renotify: true,
                 silent: false,
                 data: { url: './' }
             });
 
-            status.textContent = 'Test notification sent.';
+            status.textContent = 'Test notification sent. Check your notification center.';
         } catch (error) {
             status.textContent = error instanceof Error
                 ? error.message
