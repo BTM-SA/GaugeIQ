@@ -85,7 +85,8 @@ async function enablePushNotifications() {
     if (!saveResponse.ok) throw new Error('GaugeIQ could not save this device for notifications.');
 
     status.textContent = 'Notifications are enabled for GaugeIQ.';
-    notifyButton.textContent = 'Alerts enabled';
+    notifyButton.innerHTML = '<span class="alerts-led" aria-hidden="true"></span><span>Alerts on</span>';
+    notifyButton.classList.add('alerts-on');
     notifyButton.disabled = true;
 }
 
@@ -94,6 +95,22 @@ if ('serviceWorker' in navigator) {
         status.textContent = 'PWA service worker could not be registered.';
     });
 }
+
+async function showAlertsOnIfAlreadyEnabled() {
+    if (!('Notification' in window) || !('PushManager' in window) || Notification.permission !== 'granted') return;
+    try {
+        const registration = await getRegistration();
+        if (await registration.pushManager.getSubscription()) {
+            notifyButton.innerHTML = '<span class="alerts-led" aria-hidden="true"></span><span>Alerts on</span>';
+            notifyButton.classList.add('alerts-on');
+            notifyButton.disabled = true;
+        }
+    } catch {
+        // Leave the normal enable button available if the existing subscription cannot be checked.
+    }
+}
+
+showAlertsOnIfAlreadyEnabled();
 
 if (!('Notification' in window) || !('PushManager' in window)) {
     notifyButton.disabled = true;
