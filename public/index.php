@@ -84,6 +84,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
             <a href="alerts.php" class="secondary button-link">Alerts</a>
             <a href="login.php" class="secondary button-link">Admin</a>
             <button id="notifyButton" class="secondary" type="button">Enable alerts</button>
+            <button id="testNotifyButton" class="secondary test-button" type="button">Test notification</button>
         </div>
     </header>
 
