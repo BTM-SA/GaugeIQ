@@ -38,9 +38,6 @@ applyTheme(savedTheme);
 
 const status = document.getElementById('status');
 const notifyButton = document.getElementById('notifyButton');
-const testNotifyButton = document.getElementById('testNotifyButton');
-const serverTestNotifyButton = document.getElementById('serverTestNotifyButton');
-const refreshButton = document.getElementById('refreshButton');
 const historyStatus = document.getElementById('historyStatus');
 
 async function getRegistration() {
@@ -115,16 +112,7 @@ async function showAlertsOnIfAlreadyEnabled() {
 
 showAlertsOnIfAlreadyEnabled();
 
-if (refreshButton) {
-    refreshButton.addEventListener('click', () => {
-        window.location.reload();
-    });
-}
-
-if (testNotifyButton) {
-    testNotifyButton.addEventListener('click', async () => {
-        try {
-            if (!('Notification' in window) || Notification.permission !== 'granted') {
+if (!('Notification' in window) || Notification.permission !== 'granted') {
                 throw new Error('Enable GaugeIQ notifications first.');
             }
 
