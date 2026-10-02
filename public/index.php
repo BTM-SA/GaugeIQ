@@ -11,10 +11,6 @@ require __DIR__ . '/../app/Database.php';
 require __DIR__ . '/../app/Schema.php';
 require __DIR__ . '/../app/PressureService.php';
 require __DIR__ . '/../app/Version.php';
-require __DIR__ . '/../app/AdminAuth.php';
-AdminAuth::startSession();
-$csrfToken = AdminAuth::csrfToken();
-
 date_default_timezone_set($config['app']['timezone']);
 
 $db = new Database($config);
@@ -65,7 +61,6 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f3f4f6" id="themeColorMeta">
-<meta name="gaugeiq-csrf" content="<?= htmlspecialchars($csrfToken, ENT_QUOTES) ?>">
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="css/app.css">
 <title>GaugeIQ</title>
@@ -85,12 +80,8 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
             <p class="muted"><?= htmlspecialchars($config['pressure']['location_name'], ENT_QUOTES) ?></p>
         </div>
         <div class="header-actions">
-            <a href="alerts.php" class="secondary button-link">Alerts</a>
             <a href="login.php" class="secondary button-link">Admin</a>
             <button id="notifyButton" class="secondary" type="button">Enable alerts</button>
-            <button id="testNotifyButton" class="secondary test-button" type="button">Test notification</button>
-            <button id="serverTestNotifyButton" class="secondary test-button" type="button">Server test</button>
-            <button id="refreshButton" class="secondary" type="button">Refresh</button>
         </div>
     </header>
 
@@ -142,7 +133,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     <section class="card">
         <div class="row"><span>Pressure alert</span><strong>±<?= number_format((float)$config['pressure']['threshold_hpa'], 1) ?> hPa</strong></div>
         <div class="row"><span>Checks</span><strong>Every <?= (int)$config['pressure']['check_interval_minutes'] ?> minutes</strong></div>
-        <div class="row"><span>Custom alerts</span><strong><a href="alerts.php">Manage</a></strong></div>
+        <div class="row"><span>Custom alerts</span><strong><a href="login.php">Manage in Admin</a></strong></div>
     </section>
 
     <?php if (!$monitorHealthy): ?>
@@ -180,7 +171,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     <section class="card alert-history-card" aria-labelledby="alertHistoryTitle">
         <div class="section-heading">
             <div><h2 id="alertHistoryTitle">Alert history</h2><p class="muted">Recent conditions that triggered your saved rules.</p></div>
-            <a class="history-link" href="alerts.php">Manage alerts</a>
+            <a class="history-link" href="login.php">Manage alerts in Admin</a>
         </div>
         <?php if (!$recentAlerts): ?>
             <p class="muted empty-history">No alerts have been triggered yet.</p>
