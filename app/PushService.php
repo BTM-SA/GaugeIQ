@@ -12,6 +12,11 @@ final class PushService
 
     public function send(string $title, string $body): int
     {
+        return $this->sendDetailed($title, $body)['sent'];
+    }
+
+    public function sendDetailed(string $title, string $body): array
+    {
         $publicKey = trim((string)$this->config['push']['public_key']);
         $privateKey = trim((string)$this->config['push']['private_key']);
         $subject = trim((string)$this->config['push']['subject']);
@@ -39,26 +44,56 @@ final class PushService
         )->fetchAll();
 
         $sent = 0;
+        $results = [];
 
         foreach ($subscriptions as $row) {
-            $subscription = Subscription::create(
-                json_decode((string)$row['subscription_json'], true, 512, JSON_THROW_ON_ERROR)
-            );
+            $id = (int)$row['id'];
 
-            $report = $webPush->sendOneNotification($subscription, $payload);
+            try {
+                $subscription = Subscription::create(
+                    json_decode((string)$row['subscription_json'], true, 512, JSON_THROW_ON_ERROR)
+                );
 
-            if ($report->isSuccess()) {
-                $sent++;
-                continue;
-            }
+                $report = $webPush->sendOneNotification($subscription, $payload);
 
-            $status = $report->getResponse()?->getStatusCode();
-            if ($status === 404 || $status === 410) {
-                $delete = $this->db->prepare('DELETE FROM gaugeiq_push_subscriptions WHERE id = ?');
-                $delete->execute([(int)$row['id']]);
+                if ($report->isSuccess()) {
+                    $sent++;
+                    $results[] = [
+                        'id' => $id,
+                        'ok' => true,
+                        'status' => $report->getResponse()?->getStatusCode(),
+                    ];
+                    continue;
+                }
+
+                $status = $report->getResponse()?->getStatusCode();
+                $reason = trim((string)$report->getReason());
+
+                $results[] = [
+                    'id' => $id,
+                    'ok' => false,
+                    'status' => $status,
+                    'reason' => $reason !== '' ? $reason : 'Push service rejected the notification.',
+                ];
+
+                if ($status === 404 || $status === 410) {
+                    $delete = $this->db->prepare('DELETE FROM gaugeiq_push_subscriptions WHERE id = ?');
+                    $delete->execute([$id]);
+                }
+            } catch (Throwable $e) {
+                $results[] = [
+                    'id' => $id,
+                    'ok' => false,
+                    'status' => null,
+                    'reason' => $e->getMessage(),
+                ];
             }
         }
 
-        return $sent;
+        return [
+            'sent' => $sent,
+            'subscriptions' => count($subscriptions),
+            'results' => $results,
+        ];
     }
 }
