@@ -38,14 +38,14 @@ try {
     migrateDatabase($pdo);
 
     $push = new PushService($config, $pdo);
-    $sent = $push->send(
+    $result = $push->sendDetailed(
         'GaugeIQ server test',
         'This notification was sent through GaugeIQ\'s server-side Web Push service.'
     );
 
     echo json_encode([
         'ok' => true,
-        'sent' => $sent,
+        ...$result,
     ]);
 } catch (Throwable $e) {
     http_response_code(503);
