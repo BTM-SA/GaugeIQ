@@ -153,20 +153,44 @@ if (testNotifyButton) {
 
 if (serverTestNotifyButton) {
     serverTestNotifyButton.addEventListener('click', async () => {
+        serverTestNotifyButton.disabled = true;
+        status.textContent = 'Running server push test…';
         try {
             const csrf = document.querySelector('meta[name="gaugeiq-csrf"]')?.content || '';
+            if (!csrf) throw new Error('GaugeIQ security token is missing. Reload the app and try again.');
+
             const response = await fetch('../api/test-push.php', {
                 method: 'POST',
                 headers: { 'X-CSRF-Token': csrf },
+                credentials: 'same-origin',
                 cache: 'no-store'
             });
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok) throw new Error(data.error || 'Server push test failed.');
+
+            const text = await response.text();
+            let data = {};
+            try { data = JSON.parse(text); } catch { data = { error: text || 'The server returned an invalid response.' }; }
+
+            if (!response.ok) {
+                throw new Error(data.error || ('Server push test failed (HTTP ' + response.status + ').'));
+            }
+
+            if (Array.isArray(data.results) && data.results.length) {
+                const failures = data.results.filter(result => !result.ok);
+                if (failures.length) {
+                    const detail = failures.map(result =>
+                        'Device ' + result.id + ': HTTP ' + (result.status ?? 'n/a') + ' — ' + result.reason
+                    ).join(' | ');
+                    throw new Error(detail);
+                }
+            }
+
             status.textContent = data.sent > 0
                 ? 'Server push sent to ' + data.sent + ' device(s). Check your notification center.'
-                : 'Server push ran, but no subscribed device accepted the notification.';
+                : 'Server push ran, but there are no accepted subscribed devices.';
         } catch (error) {
             status.textContent = error instanceof Error ? error.message : 'Unable to run the server push test.';
+        } finally {
+            serverTestNotifyButton.disabled = false;
         }
     });
 }
