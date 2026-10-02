@@ -62,12 +62,12 @@ if ($targetTimestamp !== false) {
     $baselineQuery = $pdo->prepare(
         'SELECT pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, observed_at
          FROM gaugeiq_pressure_readings
-         WHERE id <> ? AND observed_at <= ?
+         WHERE observed_at <= ? AND observed_at < ?
          ORDER BY observed_at DESC, id DESC LIMIT 1'
     );
     $baselineQuery->execute([
-        (int)($pdo->query('SELECT MAX(id) FROM gaugeiq_pressure_readings')->fetchColumn() ?: 0),
-        date('Y-m-d H:i:s', $targetTimestamp),
+        date('Y-m-d\\TH:i:s', $targetTimestamp),
+        (string)$current['observed_at'],
     ]);
     $baseline = $baselineQuery->fetch() ?: null;
 }
