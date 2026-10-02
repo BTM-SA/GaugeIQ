@@ -59,3 +59,7 @@
     .alert-actions form{flex:1}
     .alert-actions button{width:100%}
 }
+
+.alerts-list-section{margin-top:20px}.alert-card{align-items:flex-start;flex-wrap:wrap}.alert-card.editing{border-color:var(--accent)}.alert-config.readable{font-family:inherit;font-size:13px;font-weight:700;color:var(--text)}.alert-edit-form{width:100%;padding:18px;margin-top:4px;border-top:1px solid var(--border);background:var(--surface);border-radius:14px}.edit-form-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}.edit-form-heading strong,.edit-form-heading span{display:block}.edit-form-heading span{margin-top:3px;color:var(--muted);font-size:13px}.edit-enabled{display:flex!important;align-items:center;gap:8px;font-weight:700!important}.edit-enabled input{width:auto!important}
+.alert-history-item{position:relative}.alert-history-delete{margin-top:8px;padding:7px 10px;border:1px solid #fecaca;border-radius:9px;background:#fff1f2;color:#9f1239;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+@media(max-width:600px){.alert-card{display:block}.alert-actions{margin-top:14px;flex-wrap:wrap}.alert-actions form{flex:1}.alert-actions button{width:100%}.alert-edit-form{padding:15px}}
