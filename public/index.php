@@ -11,6 +11,9 @@ require __DIR__ . '/../app/Database.php';
 require __DIR__ . '/../app/Schema.php';
 require __DIR__ . '/../app/PressureService.php';
 require __DIR__ . '/../app/Version.php';
+require __DIR__ . '/../app/AdminAuth.php';
+AdminAuth::startSession();
+$csrfToken = AdminAuth::csrfToken();
 
 date_default_timezone_set($config['app']['timezone']);
 
@@ -62,6 +65,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f3f4f6" id="themeColorMeta">
+<meta name="gaugeiq-csrf" content="<?= htmlspecialchars($csrfToken, ENT_QUOTES) ?>">
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="css/app.css">
 <title>GaugeIQ</title>
@@ -85,6 +89,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
             <a href="login.php" class="secondary button-link">Admin</a>
             <button id="notifyButton" class="secondary" type="button">Enable alerts</button>
             <button id="testNotifyButton" class="secondary test-button" type="button">Test notification</button>
+            <button id="serverTestNotifyButton" class="secondary test-button" type="button">Server test</button>
             <button id="refreshButton" class="secondary" type="button">Refresh</button>
         </div>
     </header>
