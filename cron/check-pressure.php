@@ -45,9 +45,36 @@ $previous = $service->record($current);
     exit(1);
 }
 
-$pressureChange = $previous === null
+$lookbackHours = 3;
+$lookbackSetting = $pdo->prepare(
+    "SELECT value FROM gaugeiq_settings WHERE key = 'alert_lookback_hours'"
+);
+$lookbackSetting->execute();
+$storedLookback = $lookbackSetting->fetchColumn();
+if ($storedLookback !== false) {
+    $lookbackHours = max(1, min(168, (int)$storedLookback));
+}
+
+$baseline = null;
+$targetTimestamp = strtotime((string)$current['observed_at']);
+if ($targetTimestamp !== false) {
+    $targetTimestamp -= $lookbackHours * 3600;
+    $baselineQuery = $pdo->prepare(
+        'SELECT pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, observed_at
+         FROM gaugeiq_pressure_readings
+         WHERE id <> ? AND observed_at <= ?
+         ORDER BY observed_at DESC, id DESC LIMIT 1'
+    );
+    $baselineQuery->execute([
+        (int)($pdo->query('SELECT MAX(id) FROM gaugeiq_pressure_readings')->fetchColumn() ?: 0),
+        date('Y-m-d H:i:s', $targetTimestamp),
+    ]);
+    $baseline = $baselineQuery->fetch() ?: null;
+}
+
+$pressureChange = $baseline === null
     ? 0.0
-    : $current['pressure_hpa'] - (float)$previous['pressure_hpa'];
+    : $current['pressure_hpa'] - (float)$baseline['pressure_hpa'];
 
 printf(
     "GaugeIQ: %.1f hPa | %.0f%% humidity | %.1f km/h %s (%s)%s\n",
@@ -61,7 +88,7 @@ printf(
 );
 
 $ruleService = new AlertRuleService($pdo);
-$ruleMatches = $previous === null ? [] : $ruleService->evaluate($previous, $current);
+$ruleMatches = $baseline === null ? [] : $ruleService->evaluate($baseline, $current);
 $alerts = array_map(
     static fn(array $match): string => $match['message'],
     $ruleMatches
@@ -69,7 +96,7 @@ $alerts = array_map(
 
 // Keep the original pressure configuration working for installations that have
 // not yet created any alert rules in the Settings screen.
-if ($ruleMatches === [] && $previous !== null && $service->pressureThresholdExceeded($previous, $current['pressure_hpa'])) {
+if ($ruleMatches === [] && $baseline !== null && $service->pressureThresholdExceeded($baseline, $current['pressure_hpa'])) {
     $baseline = $pdo->prepare(
         "SELECT value FROM gaugeiq_settings WHERE key = 'last_notified_pressure_hpa'"
     );
@@ -113,7 +140,7 @@ try {
     );
 
     if ($sent > 0) {
-        if ($ruleMatches === [] && $service->pressureThresholdExceeded($previous, $current['pressure_hpa'])) {
+        if ($ruleMatches === [] && $baseline !== null && $service->pressureThresholdExceeded($baseline, $current['pressure_hpa'])) {
             $value = (string)$current['pressure_hpa'];
             $exists = $pdo->query(
                 "SELECT 1 FROM gaugeiq_settings WHERE key = 'last_notified_pressure_hpa'"
