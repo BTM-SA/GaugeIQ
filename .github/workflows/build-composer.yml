@@ -1,0 +1,39 @@
+name: Build Composer dependencies
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  composer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out GaugeIQ
+        uses: actions/checkout@v5
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+
+      - name: Install production dependencies
+        run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Commit Composer dependencies
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add composer.lock
+          git add -f vendor
+          if git diff --cached --quiet; then
+            echo "Composer dependencies are already up to date."
+            exit 0
+          fi
+          git commit -m "Build Composer dependencies"
+          git push
