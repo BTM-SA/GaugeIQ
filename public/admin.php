@@ -49,6 +49,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif ($action === 'delete') {
                 $rules->delete((int)$_POST['id']);
                 $notice = 'Alert deleted.';
+            } elseif ($action === 'edit') {
+                $id = (int)$_POST['id'];
+                $metric = (string)$_POST['metric'];
+                $type = (string)$_POST['condition_type'];
+                $configuration = [];
+                if (in_array($metric, ['pressure', 'humidity', 'wind_speed'], true)) {
+                    $configuration['value'] = (float)$_POST['value'];
+                } elseif ($metric === 'wind_direction') {
+                    $configuration['degrees'] = (float)$_POST['degrees'];
+                } elseif ($metric === 'wind') {
+                    $configuration = [
+                        'speed_min' => (float)$_POST['speed_min'],
+                        'direction_from' => (float)$_POST['direction_from'],
+                        'direction_to' => (float)$_POST['direction_to'],
+                    ];
+                }
+                $rules->update($id, (string)$_POST['name'], $metric, $type, $configuration, isset($_POST['enabled']), (int)$_POST['cooldown_minutes']);
+                $notice = 'Alert rule updated.';
             } elseif ($action === 'toggle') {
                 $id = (int)$_POST['id'];
                 $rule = null;
@@ -264,7 +282,7 @@ $enabledRuleCount = count(array_filter($allRules, static fn(array $rule): bool =
 
     <?php foreach ($allRules as $rule): ?>
         <?php $ruleConfig = json_decode((string)$rule['configuration_json'], true) ?: []; ?>
-        <article class="card alert-card">
+        <article class="card alert-card" data-alert-card>
             <div class="alert-card-main">
                 <div class="alert-card-title">
                     <span class="alert-rule-dot <?= (int)$rule['enabled'] ? 'enabled' : '' ?>"></span>
@@ -272,26 +290,43 @@ $enabledRuleCount = count(array_filter($allRules, static fn(array $rule): bool =
                     <span class="alert-state <?= (int)$rule['enabled'] ? 'on' : 'off' ?>"><?= (int)$rule['enabled'] ? 'Enabled' : 'Disabled' ?></span>
                 </div>
                 <div class="alert-meta"><?= h(ucwords(str_replace('_', ' ', (string)$rule['metric']))) ?> · <?= h(ucwords(str_replace('_', ' ', (string)$rule['condition_type']))) ?> · cooldown <?= (int)$rule['cooldown_minutes'] ?> min</div>
-                <?php if (!empty($ruleConfig)): ?>
-                    <div class="alert-config"><?= h(json_encode($ruleConfig, JSON_UNESCAPED_SLASHES)) ?></div>
-                <?php endif; ?>
+                <div class="alert-config readable">
+                    <?php if ($rule['metric'] === 'pressure'): ?>Air pressure <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 1)) ?> hPa
+                    <?php elseif ($rule['metric'] === 'humidity'): ?>Humidity <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 0)) ?>%
+                    <?php elseif ($rule['metric'] === 'wind_speed'): ?>Wind speed <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 1)) ?> km/h
+                    <?php elseif ($rule['metric'] === 'wind_direction'): ?>Wind direction <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['degrees'] ?? 0), 0)) ?>°
+                    <?php else: ?>Wind <?= h(number_format((float)($ruleConfig['speed_min'] ?? 0), 1)) ?> km/h or faster, from <?= h(PressureService::directionLabel((float)($ruleConfig['direction_from'] ?? 0))) ?> to <?= h(PressureService::directionLabel((float)($ruleConfig['direction_to'] ?? 0))) ?>
+                    <?php endif; ?>
+                </div>
             </div>
             <div class="alert-actions">
-                <form method="post">
-                    <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
-                    <input type="hidden" name="action" value="toggle">
-                    <input type="hidden" name="id" value="<?= (int)$rule['id'] ?>">
-                    <button type="submit" class="secondary"><?= (int)$rule['enabled'] ? 'Disable' : 'Enable' ?></button>
-                </form>
-                <form method="post" onsubmit="return confirm('Delete this alert?')">
-                    <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
-                    <input type="hidden" name="action" value="delete">
-                    <input type="hidden" name="id" value="<?= (int)$rule['id'] ?>">
-                    <button type="submit" class="danger-button">Delete</button>
-                </form>
+                <button type="button" class="secondary edit-alert-button" data-edit-alert>Edit</button>
+                <form method="post"><input type="hidden" name="csrf" value="<?= h($csrf) ?>"><input type="hidden" name="action" value="toggle"><input type="hidden" name="id" value="<?= (int)$rule['id'] ?>"><button type="submit" class="secondary"><?= (int)$rule['enabled'] ? 'Disable' : 'Enable' ?></button></form>
+                <form method="post" onsubmit="return confirm('Delete this alert?')"><input type="hidden" name="csrf" value="<?= h($csrf) ?>"><input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="<?= (int)$rule['id'] ?>"><button type="submit" class="danger-button">Delete</button></form>
             </div>
+            <form method="post" class="alert-edit-form" data-edit-form hidden>
+                <input type="hidden" name="csrf" value="<?= h($csrf) ?>"><input type="hidden" name="action" value="edit"><input type="hidden" name="id" value="<?= (int)$rule['id'] ?>">
+                <div class="edit-form-heading"><div><strong>Edit alert rule</strong><span>Update this rule without creating a duplicate.</span></div><button type="button" class="secondary" data-cancel-edit>Cancel</button></div>
+                <div class="alert-grid">
+                    <div class="full"><label>Alert name</label><input name="name" value="<?= h((string)$rule['name']) ?>" required></div>
+                    <div><label>Monitor</label><select name="metric" data-edit-metric>
+                        <?php foreach (['pressure'=>'Air pressure','humidity'=>'Humidity','wind_speed'=>'Wind speed','wind_direction'=>'Wind direction','wind'=>'Wind speed + direction'] as $v=>$label): ?><option value="<?= $v ?>" <?= $rule['metric']===$v?'selected':'' ?>><?= $label ?></option><?php endforeach; ?>
+                    </select></div>
+                    <div><label>Condition</label><select name="condition_type" data-edit-condition>
+                        <?php foreach (['change'=>'Changes by','above'=>'Rises above','below'=>'Falls below','specific'=>'Specific direction','speed_and_direction'=>'Speed AND direction'] as $v=>$label): ?><option value="<?= $v ?>" <?= $rule['condition_type']===$v?'selected':'' ?>><?= $label ?></option><?php endforeach; ?>
+                    </select></div>
+                    <div data-edit-value-field><label>Value</label><input name="value" type="number" step="0.1" value="<?= h((string)($ruleConfig['value'] ?? 3)) ?>"></div>
+                    <div data-edit-degrees-field hidden><label>Direction (degrees)</label><input name="degrees" type="number" min="0" max="359" step="1" value="<?= h((string)($ruleConfig['degrees'] ?? 0)) ?>"></div>
+                    <div data-edit-speed-field hidden><label>Minimum wind speed (km/h)</label><input name="speed_min" type="number" min="0" step="0.1" value="<?= h((string)($ruleConfig['speed_min'] ?? 40)) ?>"></div>
+                    <div data-edit-from-field hidden><label>Direction from</label><select name="direction_from"><?php foreach ([315=>'NW',0=>'N',45=>'NE',90=>'E',135=>'SE',180=>'S',225=>'SW',270=>'W'] as $deg=>$label): ?><option value="<?= $deg ?>" <?= (float)($ruleConfig['direction_from'] ?? 0)===$deg?'selected':'' ?>><?= $label ?></option><?php endforeach; ?></select></div>
+                    <div data-edit-to-field hidden><label>Direction to</label><select name="direction_to"><?php foreach ([0=>'N',45=>'NE',90=>'E',135=>'SE',180=>'S',225=>'SW',270=>'W',315=>'NW'] as $deg=>$label): ?><option value="<?= $deg ?>" <?= (float)($ruleConfig['direction_to'] ?? 0)===$deg?'selected':'' ?>><?= $label ?></option><?php endforeach; ?></select></div>
+                    <div><label>Cooldown (minutes)</label><input name="cooldown_minutes" type="number" min="0" value="<?= (int)$rule['cooldown_minutes'] ?>"></div>
+                    <label class="edit-enabled full"><input type="checkbox" name="enabled" value="1" <?= (int)$rule['enabled'] ? 'checked' : '' ?>> Keep this alert enabled</label>
+                </div>
+                <button type="submit">Save changes</button>
+            </form>
         </article>
-    <?php endforeach; ?>
+
 </section>
 
 <section class="card admin-updates">
@@ -313,6 +348,11 @@ $enabledRuleCount = count(array_filter($allRules, static fn(array $rule): bool =
 
 <script src="js/admin.js" defer></script>
 <script src="js/alerts.js" defer></script>
+<script>
+document.querySelectorAll('[data-edit-alert]').forEach(b=>b.addEventListener('click',()=>{const c=b.closest('[data-alert-card]');c.querySelector('[data-edit-form]').hidden=false;b.hidden=true;c.classList.add('editing')}));
+document.querySelectorAll('[data-cancel-edit]').forEach(b=>b.addEventListener('click',()=>{const c=b.closest('[data-alert-card]');c.querySelector('[data-edit-form]').hidden=true;c.querySelector('[data-edit-alert]').hidden=false;c.classList.remove('editing')}));
+document.querySelectorAll('[data-edit-form]').forEach(f=>{const m=f.querySelector('[data-edit-metric]'),c=f.querySelector('[data-edit-condition]'),v=f.querySelector('[data-edit-value-field]'),d=f.querySelector('[data-edit-degrees-field]'),sp=f.querySelector('[data-edit-speed-field]'),fr=f.querySelector('[data-edit-from-field]'),to=f.querySelector('[data-edit-to-field]');const r=()=>{const w=m.value==='wind',dir=m.value==='wind_direction',combo=w&&c.value==='speed_and_direction';d.hidden=!(dir&&c.value==='specific');v.hidden=dir||combo;sp.hidden=!combo;fr.hidden=!combo;to.hidden=!combo;[...c.options].forEach(o=>o.hidden=dir?!['change','specific'].includes(o.value):w?o.value!=='speed_and_direction':['specific','speed_and_direction'].includes(o.value))};m.addEventListener('change',r);c.addEventListener('change',r);r()});
+</script>
 </main>
 </body>
 </html>
