@@ -11,9 +11,12 @@ require __DIR__ . '/../app/Database.php';
 require __DIR__ . '/../app/Schema.php';
 require __DIR__ . '/../app/PressureService.php';
 require __DIR__ . '/../app/Version.php';
+require __DIR__ . '/../app/AdminAuth.php';
 date_default_timezone_set($config['app']['timezone']);
 
 $db = new Database($config);
+AdminAuth::startSession();
+$csrfToken = AdminAuth::csrfToken();
 $service = new PressureService($config, $db->pdo());
 $pdo = $db->pdo();
 migrateDatabase($pdo);
@@ -35,7 +38,7 @@ try {
     $subscriptionCount = (int)$pdo->query('SELECT COUNT(*) FROM gaugeiq_push_subscriptions')->fetchColumn();
     $enabledRuleCount = (int)$pdo->query('SELECT COUNT(*) FROM gaugeiq_alert_rules WHERE enabled = 1')->fetchColumn();
     $recentAlerts = $pdo->query(
-        'SELECT e.message, e.observed_at, r.name FROM gaugeiq_alert_events e LEFT JOIN gaugeiq_alert_rules r ON r.id = e.rule_id ORDER BY e.id DESC LIMIT 8'
+        'SELECT e.id, e.message, e.observed_at, r.name FROM gaugeiq_alert_events e LEFT JOIN gaugeiq_alert_rules r ON r.id = e.rule_id ORDER BY e.id DESC LIMIT 8'
     )->fetchAll();
 } catch (Throwable $e) {
     $current = null;
@@ -184,6 +187,10 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                             <strong><?= htmlspecialchars((string)($alert['name'] ?: 'GaugeIQ alert'), ENT_QUOTES) ?></strong>
                             <p><?= htmlspecialchars((string)$alert['message'], ENT_QUOTES) ?></p>
                             <time datetime="<?= htmlspecialchars((string)$alert['observed_at'], ENT_QUOTES) ?>"><?= htmlspecialchars(date('d M, H:i', (int)strtotime((string)$alert['observed_at'])), ENT_QUOTES) ?></time>
+                            <form method="post" action="delete-alert-history.php" onsubmit="return confirm('Delete this alert history record?')">
+                                <input type="hidden" name="csrf" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES) ?>"><input type="hidden" name="id" value="<?= (int)$alert['id'] ?>">
+                                <button type="submit" class="alert-history-delete">Delete record</button>
+                            </form>
                         </div>
                     </article>
                 <?php endforeach; ?>
