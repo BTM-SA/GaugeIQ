@@ -39,6 +39,7 @@ applyTheme(savedTheme);
 const status = document.getElementById('status');
 const notifyButton = document.getElementById('notifyButton');
 const testNotifyButton = document.getElementById('testNotifyButton');
+const serverTestNotifyButton = document.getElementById('serverTestNotifyButton');
 const refreshButton = document.getElementById('refreshButton');
 const historyStatus = document.getElementById('historyStatus');
 
@@ -146,6 +147,26 @@ if (testNotifyButton) {
             status.textContent = error instanceof Error
                 ? error.message
                 : 'Unable to send the test notification.';
+        }
+    });
+}
+
+if (serverTestNotifyButton) {
+    serverTestNotifyButton.addEventListener('click', async () => {
+        try {
+            const csrf = document.querySelector('meta[name="gaugeiq-csrf"]')?.content || '';
+            const response = await fetch('../api/test-push.php', {
+                method: 'POST',
+                headers: { 'X-CSRF-Token': csrf },
+                cache: 'no-store'
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.error || 'Server push test failed.');
+            status.textContent = data.sent > 0
+                ? 'Server push sent to ' + data.sent + ' device(s). Check your notification center.'
+                : 'Server push ran, but no subscribed device accepted the notification.';
+        } catch (error) {
+            status.textContent = error instanceof Error ? error.message : 'Unable to run the server push test.';
         }
     });
 }
@@ -387,3 +408,27 @@ if (cronCopyButton && cronCommand) {
         }
     });
 }
+
+
+let gaugeIqHiddenAt = null;
+
+function refreshGaugeIqWhenReturning() {
+    if (gaugeIqHiddenAt === null) return;
+    const hiddenFor = Date.now() - gaugeIqHiddenAt;
+    gaugeIqHiddenAt = null;
+    if (hiddenFor >= 60 * 1000) {
+        window.location.reload();
+    }
+}
+
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+        gaugeIqHiddenAt = Date.now();
+    } else if (document.visibilityState === 'visible') {
+        refreshGaugeIqWhenReturning();
+    }
+});
+
+window.addEventListener('pageshow', () => {
+    refreshGaugeIqWhenReturning();
+});
