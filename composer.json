@@ -4,6 +4,7 @@
   "type": "project",
   "require": {
     "php": ">=8.2",
-    "minishlink/web-push": "^11.0"
+    "minishlink/web-push": "^11.0",
+    "guzzlehttp/guzzle": "^7.9"
   }
 }
