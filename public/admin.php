@@ -39,9 +39,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($action === 'save_lookback') {
                 $hours = max(1, min(168, (int)($_POST['lookback_hours'] ?? 3)));
-                $stmt = $pdo->prepare("INSERT INTO gaugeiq_settings (`key`, `value`) VALUES ('alert_lookback_hours', ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
                 if ((string)$pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite') {
                     $stmt = $pdo->prepare("INSERT INTO gaugeiq_settings (key, value) VALUES ('alert_lookback_hours', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value");
+                } else {
+                    $stmt = $pdo->prepare("INSERT INTO gaugeiq_settings (`key`, `value`) VALUES ('alert_lookback_hours', ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
                 }
                 $stmt->execute([(string)$hours]);
                 $notice = 'Alert comparison window saved.';
