@@ -60,6 +60,8 @@ final class PushService
 
                 if ($report->isSuccess()) {
                     $sent++;
+                    $mark = $this->db->prepare('UPDATE gaugeiq_push_subscriptions SET last_push_at = ?, last_push_status = ?, last_push_error = NULL WHERE id = ?');
+                    $mark->execute([gmdate('c'), 'sent', $id]);
                     $results[] = [
                         'id' => $id,
                         'ok' => true,
@@ -70,6 +72,9 @@ final class PushService
 
                 $status = $report->getResponse()?->getStatusCode();
                 $reason = trim((string)$report->getReason());
+
+                $mark = $this->db->prepare('UPDATE gaugeiq_push_subscriptions SET last_push_at = ?, last_push_status = ?, last_push_error = ? WHERE id = ?');
+                $mark->execute([gmdate('c'), 'failed', $reason !== '' ? $reason : 'Push service rejected the notification.', $id]);
 
                 $results[] = [
                     'id' => $id,
@@ -83,6 +88,8 @@ final class PushService
                     $delete->execute([$id]);
                 }
             } catch (Throwable $e) {
+                $mark = $this->db->prepare('UPDATE gaugeiq_push_subscriptions SET last_push_at = ?, last_push_status = ?, last_push_error = ? WHERE id = ?');
+                $mark->execute([gmdate('c'), 'failed', $e->getMessage(), $id]);
                 $results[] = [
                     'id' => $id,
                     'ok' => false,
