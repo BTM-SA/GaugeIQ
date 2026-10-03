@@ -112,33 +112,6 @@ async function showAlertsOnIfAlreadyEnabled() {
 
 showAlertsOnIfAlreadyEnabled();
 
-if (!('Notification' in window) || Notification.permission !== 'granted') {
-                throw new Error('Enable GaugeIQ notifications first.');
-            }
-
-            const registration = await getRegistration();
-
-            if (!registration.active) {
-                throw new Error('GaugeIQ service worker is not active yet. Please tap Refresh and try again.');
-            }
-
-            await registration.showNotification('GaugeIQ test notification', {
-                body: 'If you hear a sound, GaugeIQ notifications are working on this device.',
-                tag: 'gaugeiq-test-' + Date.now(),
-                renotify: true,
-                silent: false,
-                data: { url: './' }
-            });
-
-            status.textContent = 'Test notification sent. Check your notification center.';
-        } catch (error) {
-            status.textContent = error instanceof Error
-                ? error.message
-                : 'Unable to send the test notification.';
-        }
-    });
-}
-
 if (!('Notification' in window) || !('PushManager' in window)) {
     notifyButton.disabled = true;
     notifyButton.textContent = 'Notifications unavailable';
