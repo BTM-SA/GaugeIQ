@@ -55,7 +55,7 @@ try {
 $checkMinutes = max(1, (int)$config['pressure']['check_interval_minutes']);
 $nextMonitorAt = $lastMonitorAt ? strtotime($lastMonitorAt) + ($checkMinutes * 60) : null;
 $monitorAge = $lastMonitorAt ? time() - (int)strtotime($lastMonitorAt) : null;
-$monitorHealthy = $monitorAge !== null && $monitorAge <= ($checkMinutes * 60 * 2);
+$monitorHealthy = $monitorAge !== null && $monitorAge <= ($checkMinutes * 60 * 3);
 $cronScript = realpath(__DIR__ . '/../cron/check-pressure.php') ?: (__DIR__ . '/../cron/check-pressure.php');
 $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 ?><!doctype html>
@@ -143,16 +143,16 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     <section class="card cron-setup-card" aria-labelledby="cronSetupTitle">
         <div class="section-heading">
             <div>
-                <h2 id="cronSetupTitle">Monitoring needs one cron job</h2>
-                <p class="muted">Add this command once in cPanel Cron Jobs. GaugeIQ will then run its weather check automatically every <?= $checkMinutes ?> minutes.</p>
+                <h2 id="cronSetupTitle">Monitoring setup</h2>
+                <p class="muted">GaugeIQ has not seen a recent successful scheduled check. Make sure the cPanel Cron Job is configured to run every <?= $checkMinutes ?> minutes.</p>
             </div>
-            <span class="status-pill status-warn">● Setup required</span>
+            <span class="status-pill status-warn">● Cron check needed</span>
         </div>
         <div class="cron-command-wrap">
             <code id="cronCommand"><?= htmlspecialchars($cronCommand, ENT_QUOTES) ?></code>
             <button type="button" class="secondary cron-copy-button" id="cronCopyButton">Copy command</button>
         </div>
-        <p class="cron-help">In cPanel, open <strong>Cron Jobs</strong>, choose <strong>Every <?= $checkMinutes ?> minutes</strong>, paste the command above, and save it. You only need to do this once.</p>
+        <p class="cron-help">In cPanel, open <strong>Cron Jobs</strong>, choose <strong>Every <?= $checkMinutes ?> minutes</strong>, paste the command above, and save it. You only need to do this once. Once a scheduled check succeeds, this setup reminder will disappear.</p>
         <p id="cronCopyStatus" class="cron-copy-status" role="status"></p>
     </section>
     <?php endif; ?>
