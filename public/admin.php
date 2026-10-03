@@ -348,11 +348,6 @@ $enabledRuleCount = count(array_filter($allRules, static fn(array $rule): bool =
 
 <script src="js/admin.js" defer></script>
 <script src="js/alerts.js" defer></script>
-<script>
-document.querySelectorAll('[data-edit-alert]').forEach(b=>b.addEventListener('click',()=>{const c=b.closest('[data-alert-card]');c.querySelector('[data-edit-form]').hidden=false;b.hidden=true;c.classList.add('editing')}));
-document.querySelectorAll('[data-cancel-edit]').forEach(b=>b.addEventListener('click',()=>{const c=b.closest('[data-alert-card]');c.querySelector('[data-edit-form]').hidden=true;c.querySelector('[data-edit-alert]').hidden=false;c.classList.remove('editing')}));
-document.querySelectorAll('[data-edit-form]').forEach(f=>{const m=f.querySelector('[data-edit-metric]'),c=f.querySelector('[data-edit-condition]'),v=f.querySelector('[data-edit-value-field]'),d=f.querySelector('[data-edit-degrees-field]'),sp=f.querySelector('[data-edit-speed-field]'),fr=f.querySelector('[data-edit-from-field]'),to=f.querySelector('[data-edit-to-field]');const r=()=>{const w=m.value==='wind',dir=m.value==='wind_direction',combo=w&&c.value==='speed_and_direction';d.hidden=!(dir&&c.value==='specific');v.hidden=dir||combo;sp.hidden=!combo;fr.hidden=!combo;to.hidden=!combo;[...c.options].forEach(o=>o.hidden=dir?!['change','specific'].includes(o.value):w?o.value!=='speed_and_direction':['specific','speed_and_direction'].includes(o.value))};m.addEventListener('change',r);c.addEventListener('change',r);r()});
-</script>
 </main>
 </body>
 </html>
