@@ -16,7 +16,7 @@ try {
     // observed_at comes from the weather provider's configured timezone and
     // therefore should not be used for the UTC history window.
     $stmt = $db->pdo()->prepare(
-        'SELECT pressure_hpa, humidity_percent, wind_speed_kmh,
+        'SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh,
                 wind_direction_degrees, observed_at, created_at
          FROM gaugeiq_pressure_readings
          WHERE created_at >= ?
