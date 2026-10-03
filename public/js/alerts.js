@@ -61,27 +61,29 @@ refreshCompass();
 
 
 function setupAlertEditing() {
-    document.querySelectorAll('[data-edit-alert]').forEach(button => {
-        button.addEventListener('click', () => {
-            const card = button.closest('[data-alert-card]');
-            const form = card?.querySelector('[data-edit-form]');
-            if (!card || !form) return;
-            form.hidden = false;
-            button.hidden = true;
-            card.classList.add('editing');
-        });
+    document.addEventListener('click', event => {
+        const button = event.target.closest('[data-edit-alert]');
+        if (!button) return;
+        const card = button.closest('[data-alert-card]');
+        const form = card?.querySelector('[data-edit-form]');
+        if (!card || !form) return;
+        event.preventDefault();
+        form.hidden = false;
+        button.hidden = true;
+        card.classList.add('editing');
     });
 
-    document.querySelectorAll('[data-cancel-edit]').forEach(button => {
-        button.addEventListener('click', () => {
-            const card = button.closest('[data-alert-card]');
-            const form = card?.querySelector('[data-edit-form]');
-            const editButton = card?.querySelector('[data-edit-alert]');
-            if (!card || !form || !editButton) return;
-            form.hidden = true;
-            editButton.hidden = false;
-            card.classList.remove('editing');
-        });
+    document.addEventListener('click', event => {
+        const button = event.target.closest('[data-cancel-edit]');
+        if (!button) return;
+        const card = button.closest('[data-alert-card]');
+        const form = card?.querySelector('[data-edit-form]');
+        const editButton = card?.querySelector('[data-edit-alert]');
+        if (!card || !form || !editButton) return;
+        event.preventDefault();
+        form.hidden = true;
+        editButton.hidden = false;
+        card.classList.remove('editing');
     });
 
     document.querySelectorAll('[data-edit-form]').forEach(form => {
