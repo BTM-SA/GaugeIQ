@@ -13,7 +13,7 @@ final class PressureService
         $lon = rawurlencode((string)$this->config['pressure']['longitude']);
 
         $url = "https://api.open-meteo.com/v1/forecast?latitude={$lat}&longitude={$lon}"
-            . "&current=surface_pressure,relative_humidity_2m,wind_speed_10m,wind_direction_10m"
+            . "&current=temperature_2m,dew_point_2m,surface_pressure,relative_humidity_2m,wind_speed_10m,wind_direction_10m"
             . "&wind_speed_unit=kmh&timezone=auto";
 
         if (!function_exists('curl_init')) {
@@ -55,6 +55,8 @@ final class PressureService
         $current = $data['current'] ?? [];
 
         foreach ([
+            'temperature_2m' => 'Temperature',
+            'dew_point_2m' => 'Dew point',
             'surface_pressure' => 'Pressure',
             'relative_humidity_2m' => 'Humidity',
             'wind_speed_10m' => 'Wind speed',
@@ -66,6 +68,8 @@ final class PressureService
         }
 
         return [
+            'temperature_c' => (float)$current['temperature_2m'],
+            'dew_point_c' => (float)$current['dew_point_2m'],
             'pressure_hpa' => (float)$current['surface_pressure'],
             'humidity_percent' => (float)$current['relative_humidity_2m'],
             'wind_speed_kmh' => (float)$current['wind_speed_10m'],
@@ -77,7 +81,7 @@ final class PressureService
     public function record(array $current): ?array
     {
         $previous = $this->db->query(
-            'SELECT pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees
+            'SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees
              FROM gaugeiq_pressure_readings ORDER BY id DESC LIMIT 1'
         )->fetch();
 
@@ -87,6 +91,8 @@ final class PressureService
              VALUES (?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
+            $current['temperature_c'],
+            $current['dew_point_c'],
             $current['pressure_hpa'],
             $current['humidity_percent'],
             $current['wind_speed_kmh'],
