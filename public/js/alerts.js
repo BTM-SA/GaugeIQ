@@ -4,7 +4,6 @@ const valueField = document.getElementById('valueField');
 const degreesField = document.getElementById('degreesField');
 const speedField = document.getElementById('speedField');
 const fromField = document.getElementById('fromField');
-const toField = document.getElementById('toField');
 
 function refreshFields() {
     const m = metric.value;
@@ -16,7 +15,6 @@ function refreshFields() {
     valueField.hidden = direction || combined;
     speedField.hidden = !combined;
     fromField.hidden = !combined;
-    toField.hidden = !combined;
 
     [...condition.options].forEach(option => {
         option.hidden =
