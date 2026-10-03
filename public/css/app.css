@@ -174,4 +174,46 @@ button:disabled { opacity: .55; cursor: default; }
 @media(max-width:700px){.wind-gauge-card{padding:18px}.wind-gauge{width:min(100%,330px)}.wind-gauge-scale{width:min(100%,330px)}}
 
 
-.climate-gauge-card{margin-top:16px}.climate-gauge-layout{display:grid;grid-template-columns:minmax(250px,340px) 1fr;align-items:center;justify-content:center;gap:28px;margin-top:14px}.climate-gauge{position:relative;width:min(100%,330px);aspect-ratio:1;margin:auto}.climate-gauge svg{display:block;width:100%;height:100%}.climate-temp-track,.climate-temp-fill{fill:none;stroke-width:7;transform:rotate(135deg);transform-origin:50% 50%;stroke-linecap:round}.climate-temp-track{stroke:var(--surface)}.climate-temp-fill{stroke:var(--accent);transition:stroke-dasharray .7s ease}.climate-dew-ring{fill:var(--card);stroke:var(--border);stroke-width:1.2}.climate-scale-labels{fill:var(--muted);font-size:4px;font-weight:800;text-anchor:middle;dominant-baseline:middle}.climate-gauge-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}.climate-gauge-center strong{font-size:38px;line-height:1;letter-spacing:-.05em;color:var(--text)}.climate-gauge-center strong span{font-size:12px;letter-spacing:0;color:var(--muted);margin-left:2px}.climate-gauge-center b{margin-top:9px;font-size:14px;color:var(--muted)}.humidity-zone-panel{display:grid;gap:12px;min-width:0}.humidity-digital,.humidity-zone,.climate-readout{border:1px solid var(--border);background:var(--surface);border-radius:16px;padding:15px 17px}.humidity-digital>span,.humidity-zone>span,.climate-readout span{display:block;color:var(--muted);font-size:12px;font-weight:700}.humidity-digital strong{display:block;margin-top:3px;font-size:42px;line-height:1;letter-spacing:-.04em}.humidity-digital small{font-size:17px;color:var(--muted);margin-left:3px}.humidity-zone{display:flex;align-items:center;justify-content:space-between;gap:12px}.humidity-zone strong{font-size:16px}.humidity-zone.dry{border-color:#f59e0b}.humidity-zone.comfortable{border-color:#22c55e}.humidity-zone.humid{border-color:#60a5fa}.humidity-zone.condensation-risk{border-color:#ef4444}.climate-readout{display:grid;grid-template-columns:1fr 1fr;gap:14px}.climate-readout strong{display:block;margin-top:3px;font-size:15px}.climate-readout span{font-size:11px}@media(max-width:700px){.climate-gauge-layout{grid-template-columns:1fr;gap:14px}.climate-gauge{width:min(100%,340px)}}@media(max-width:420px){.climate-readout{grid-template-columns:1fr}}
+.climate-gauge-card{margin-top:16px;overflow:hidden}
+.climate-gauge-wrap{display:flex;flex-direction:column;align-items:center;margin-top:12px}
+.climate-gauge{position:relative;width:min(100%,430px);aspect-ratio:1;margin:auto}
+.climate-gauge svg{display:block;width:100%;height:100%;overflow:visible}
+.climate-outer-track,.climate-temp-arc{fill:none;stroke-width:5.2;stroke-linecap:round}
+.climate-outer-track{stroke:var(--surface)}
+.climate-temp-arc{stroke:url(#climateTempArc);stroke-dasharray:235.62 314.16}
+.climate-inner-track{fill:none;stroke:var(--border);stroke-width:3.2;stroke-linecap:round;stroke-dasharray:183.78 245.04}
+.climate-temperature-ticks,.climate-dew-ticks{fill:var(--text);text-anchor:middle;dominant-baseline:middle;font-weight:800}
+.climate-temperature-ticks line{stroke:var(--muted);stroke-width:.65}
+.climate-temperature-ticks line.major{stroke:var(--text);stroke-width:1.15}
+.climate-temperature-ticks text{font-size:3.45px}
+.climate-dew-ticks line{stroke:var(--muted);stroke-width:.55}
+.climate-dew-ticks line.major{stroke:var(--text);stroke-width:.9}
+.climate-dew-ticks text{font-size:2.8px;fill:var(--muted)}
+.climate-needle{fill:none;stroke-linecap:round}
+.climate-temperature-needle{stroke:var(--text);stroke-width:1.7}
+.climate-temperature-needle circle{fill:var(--text);stroke:var(--card);stroke-width:.8}
+.climate-dew-needle{stroke:var(--climate-dew);stroke-width:1.05}
+.climate-center-disc{fill:var(--card);stroke:var(--border);stroke-width:1}
+.climate-center-readout{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;padding-top:7%}
+.climate-rh-label{font-size:8px;letter-spacing:.12em;font-weight:800;color:var(--muted)}
+.climate-center-readout>strong{font-size:clamp(43px,11vw,62px);line-height:.92;letter-spacing:-.055em;color:var(--text);margin-top:4px}
+.climate-center-readout>strong small{font-size:.38em;letter-spacing:0;color:var(--muted);margin-left:2px}
+.climate-center-readout .humidity-zone{margin-top:7px;padding:5px 10px;border-radius:999px;font-size:10px;line-height:1;font-weight:800;border:1px solid var(--border);background:var(--surface);color:var(--text)}
+.climate-center-readout .humidity-zone.dry{border-color:#f59e0b;color:#b45309}
+.climate-center-readout .humidity-zone.comfortable{border-color:#22c55e;color:#15803d}
+.climate-center-readout .humidity-zone.humid{border-color:#60a5fa;color:#2563eb}
+.climate-center-readout .humidity-zone.condensation-risk{border-color:#ef4444;color:#dc2626}
+.climate-center-values{display:flex;gap:15px;margin-top:9px}
+.climate-center-values span{display:flex;flex-direction:column;align-items:center;gap:2px}
+.climate-center-values i{font-style:normal;font-size:8px;color:var(--muted)}
+.climate-center-values strong{font-size:10px;color:var(--text)}
+.climate-gauge-legend{display:flex;justify-content:center;gap:24px;margin-top:-18px;padding-bottom:2px}
+.climate-gauge-legend>div{display:grid;grid-template-columns:auto auto;column-gap:7px;align-items:center;font-size:11px}
+.climate-gauge-legend>div>span:last-child{grid-column:2;color:var(--muted);font-size:10px}
+.climate-gauge-legend strong{font-size:11px}
+.legend-line{width:18px;height:3px;border-radius:999px;grid-row:1 / span 2}
+.legend-line.temperature{background:var(--text)}
+.legend-line.dew{background:var(--climate-dew)}
+:root{--climate-dew:#2563eb;--climate-cool:#60a5fa;--climate-neutral:#94a3b8;--climate-warm:#ef4444}
+:root[data-theme="dark"]{--climate-dew:#60a5fa;--climate-cool:#38bdf8;--climate-neutral:#94a3b8;--climate-warm:#fb7185}
+@media(max-width:560px){.climate-gauge{width:min(100%,390px)}.climate-gauge-legend{gap:16px}.climate-center-readout>strong{font-size:clamp(40px,12vw,56px)}}
