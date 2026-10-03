@@ -163,43 +163,104 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     $humidityPercent = $current ? max(0.0, min(100.0, (float)$current['humidity_percent'])) : 0.0;
     $humidityZone = !$current ? 'Unavailable' : ($humidityPercent < 40 ? 'Dry' : ($humidityPercent < 60 ? 'Comfortable' : ($humidityPercent < 75 ? 'Humid' : 'Condensation risk')));
     $humidityZoneClass = strtolower(str_replace(' ', '-', $humidityZone));
-    $tempPercent = $current ? max(0.0, min(100.0, (($temperatureC + 10.0) / 50.0) * 100.0)) : 0.0;
+
+    // Both environmental scales use a 270° instrument arc. Temperature is -10…50°C;
+    // dew point is -10…40°C. The tick geometry is generated from the same scale
+    // definition as the pointers so the readings always line up with the markings.
+    $climateGaugeStart = 135.0;
+    $climateGaugeSweep = 270.0;
+    $temperatureMin = -10.0;
+    $temperatureMax = 50.0;
+    $dewMin = -10.0;
+    $dewMax = 40.0;
+    $climateGaugePoint = static function (float $angle, float $radius): array {
+        $radians = deg2rad($angle);
+        return [50.0 + cos($radians) * $radius, 50.0 + sin($radians) * $radius];
+    };
+    $temperatureRatio = $current ? max(0.0, min(1.0, ($temperatureC - $temperatureMin) / ($temperatureMax - $temperatureMin))) : 0.0;
+    $dewRatio = $current ? max(0.0, min(1.0, ($dewPointC - $dewMin) / ($dewMax - $dewMin))) : 0.0;
+    $temperatureAngle = $climateGaugeStart + ($temperatureRatio * $climateGaugeSweep);
+    $dewAngle = $climateGaugeStart + ($dewRatio * $climateGaugeSweep);
+    [$tempNeedleX, $tempNeedleY] = $climateGaugePoint($temperatureAngle, 28.0);
+    [$dewNeedleX, $dewNeedleY] = $climateGaugePoint($dewAngle, 23.0);
     ?>
     <section class="card climate-gauge-card" aria-labelledby="climateGaugeTitle">
         <div class="section-heading">
             <div>
                 <h2 id="climateGaugeTitle">Temperature &amp; Dew point</h2>
-                <p class="muted">Thermal comfort and moisture conditions</p>
+                <p class="muted">Dual-scale environmental gauge · temperature outer scale · dew point inner scale</p>
             </div>
         </div>
-        <div class="climate-gauge-layout">
-            <div class="climate-gauge" role="img" aria-label="<?= $current ? htmlspecialchars(number_format($temperatureC, 1) . ' degrees Celsius, dew point ' . number_format($dewPointC, 1) . ' degrees Celsius, relative humidity ' . number_format($humidityPercent, 0) . ' percent, ' . $humidityZone, ENT_QUOTES) : 'Temperature, dew point and humidity unavailable' ?>">
+
+        <div class="climate-gauge-wrap">
+            <div class="climate-gauge" role="img" aria-label="<?= $current ? htmlspecialchars('Relative humidity ' . number_format($humidityPercent, 0) . ' percent, ' . $humidityZone . '. Temperature ' . number_format($temperatureC, 1) . ' degrees Celsius. Dew point ' . number_format($dewPointC, 1) . ' degrees Celsius.', ENT_QUOTES) : 'Temperature, dew point and humidity unavailable' ?>">
                 <svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
-                    <circle class="climate-temp-track" cx="50" cy="50" r="40" pathLength="100"></circle>
-                    <circle class="climate-temp-fill" cx="50" cy="50" r="40" pathLength="100" stroke-dasharray="<?= number_format($tempPercent, 2, '.', '') ?> 100"></circle>
-                    <circle class="climate-dew-ring" cx="50" cy="50" r="31"></circle>
-                    <g class="climate-scale-labels">
-                        <text x="50" y="17">50°</text><text x="81" y="53">30°</text><text x="50" y="89">10°</text><text x="19" y="53">−10°</text>
+                    <defs>
+                        <linearGradient id="climateTempArc" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0" stop-color="var(--climate-cool)"/>
+                            <stop offset=".52" stop-color="var(--climate-neutral)"/>
+                            <stop offset="1" stop-color="var(--climate-warm)"/>
+                        </linearGradient>
+                    </defs>
+
+                    <path class="climate-outer-track" d="M 14.644 85.356 A 50 50 0 1 1 85.356 85.356"></path>
+                    <path class="climate-temp-arc" d="M 14.644 85.356 A 50 50 0 1 1 85.356 85.356"></path>
+                    <path class="climate-inner-track" d="M 22.423 77.577 A 39 39 0 1 1 77.577 77.577"></path>
+
+                    <g class="climate-temperature-ticks">
+                        <?php for ($value = -10; $value <= 50; $value += 5):
+                            $ratio = ($value - $temperatureMin) / ($temperatureMax - $temperatureMin);
+                            $angle = $climateGaugeStart + ($ratio * $climateGaugeSweep);
+                            $outerStart = $climateGaugePoint($angle, $47.5);
+                            $outerEnd = $climateGaugePoint($angle, $value % 10 === 0 ? 43.5 : 45.0);
+                            [$labelX, $labelY] = $climateGaugePoint($angle, 40.5);
+                        ?>
+                            <line class="<?= $value % 10 === 0 ? 'major' : '' ?>" x1="<?= number_format($outerStart[0], 3, '.', '') ?>" y1="<?= number_format($outerStart[1], 3, '.', '') ?>" x2="<?= number_format($outerEnd[0], 3, '.', '') ?>" y2="<?= number_format($outerEnd[1], 3, '.', '') ?>"></line>
+                            <?php if ($value % 10 === 0): ?>
+                                <text x="<?= number_format($labelX, 3, '.', '') ?>" y="<?= number_format($labelY, 3, '.', '') ?>"><?= $value ?>°</text>
+                            <?php endif; ?>
+                        <?php endfor; ?>
                     </g>
+
+                    <g class="climate-dew-ticks">
+                        <?php for ($value = -10; $value <= 40; $value += 5):
+                            $ratio = ($value - $dewMin) / ($dewMax - $dewMin);
+                            $angle = $climateGaugeStart + ($ratio * $climateGaugeSweep);
+                            $innerStart = $climateGaugePoint($angle, 36.5);
+                            $innerEnd = $climateGaugePoint($angle, $value % 10 === 0 ? 32.5 : 34.0);
+                            [$labelX, $labelY] = $climateGaugePoint($angle, 29.5);
+                        ?>
+                            <line class="<?= $value % 10 === 0 ? 'major' : '' ?>" x1="<?= number_format($innerStart[0], 3, '.', '') ?>" y1="<?= number_format($innerStart[1], 3, '.', '') ?>" x2="<?= number_format($innerEnd[0], 3, '.', '') ?>" y2="<?= number_format($innerEnd[1], 3, '.', '') ?>"></line>
+                            <?php if ($value % 10 === 0): ?>
+                                <text x="<?= number_format($labelX, 3, '.', '') ?>" y="<?= number_format($labelY, 3, '.', '') ?>"><?= $value ?>°</text>
+                            <?php endif; ?>
+                        <?php endfor; ?>
+                    </g>
+
+                    <g class="climate-needle climate-temperature-needle">
+                        <line x1="50" y1="50" x2="<?= number_format($tempNeedleX, 3, '.', '') ?>" y2="<?= number_format($tempNeedleY, 3, '.', '') ?>"></line>
+                        <circle cx="50" cy="50" r="2.8"></circle>
+                    </g>
+                    <g class="climate-needle climate-dew-needle">
+                        <line x1="50" y1="50" x2="<?= number_format($dewNeedleX, 3, '.', '') ?>" y2="<?= number_format($dewNeedleY, 3, '.', '') ?>"></line>
+                    </g>
+                    <circle class="climate-center-disc" cx="50" cy="50" r="20.5"></circle>
                 </svg>
-                <div class="climate-gauge-center">
-                    <strong><?= $current ? number_format($temperatureC, 1) : '—' ?><span>°C</span></strong>
-                    <b><?= $current ? 'Dew ' . number_format($dewPointC, 1) . '°' : 'Dew point —' ?></b>
+
+                <div class="climate-center-readout">
+                    <span class="climate-rh-label">RELATIVE HUMIDITY</span>
+                    <strong><?= $current ? number_format($humidityPercent, 0) : '—' ?><small>%</small></strong>
+                    <b class="humidity-zone <?= htmlspecialchars($humidityZoneClass, ENT_QUOTES) ?>"><?= htmlspecialchars($humidityZone, ENT_QUOTES) ?></b>
+                    <div class="climate-center-values">
+                        <span><i>Temp</i><strong><?= $current ? number_format($temperatureC, 1) . '°C' : '—' ?></strong></span>
+                        <span><i>Dew point</i><strong><?= $current ? number_format($dewPointC, 1) . '°C' : '—' ?></strong></span>
+                    </div>
                 </div>
             </div>
-            <div class="humidity-zone-panel">
-                <div class="humidity-digital">
-                    <span>Relative humidity</span>
-                    <strong><?= $current ? number_format($humidityPercent, 0) : '—' ?><small>%</small></strong>
-                </div>
-                <div class="humidity-zone <?= htmlspecialchars($humidityZoneClass, ENT_QUOTES) ?>">
-                    <span>Humidity zone</span>
-                    <strong><?= htmlspecialchars($humidityZone, ENT_QUOTES) ?></strong>
-                </div>
-                <div class="climate-readout">
-                    <div><span>Temperature</span><strong><?= $current ? number_format($temperatureC, 1) . ' °C' : '—' ?></strong></div>
-                    <div><span>Dew point</span><strong><?= $current ? number_format($dewPointC, 1) . ' °C' : '—' ?></strong></div>
-                </div>
+
+            <div class="climate-gauge-legend" aria-hidden="true">
+                <div><span class="legend-line temperature"></span><strong>Temperature</strong><span>−10 to 50°C</span></div>
+                <div><span class="legend-line dew"></span><strong>Dew point</strong><span>−10 to 40°C</span></div>
             </div>
         </div>
     </section>
