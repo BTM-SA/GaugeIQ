@@ -373,3 +373,85 @@ document.addEventListener('visibilitychange', () => {
 window.addEventListener('pageshow', () => {
     refreshGaugeIqWhenReturning();
 });
+
+
+const deviceViewButton = document.getElementById('deviceViewButton');
+const deviceList = document.getElementById('deviceList');
+
+function formatDeviceDate(value) {
+    if (!value) return 'Not recorded';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? value : date.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+}
+
+async function getCurrentPushEndpointHash() {
+    try {
+        if (!('PushManager' in window)) return null;
+        const registration = await getRegistration();
+        const subscription = await registration.pushManager.getSubscription();
+        if (!subscription) return null;
+        const bytes = new TextEncoder().encode(subscription.endpoint);
+        const digest = await crypto.subtle.digest('SHA-256', bytes);
+        return [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, '0')).join('');
+    } catch {
+        return null;
+    }
+}
+
+async function loadDeviceList() {
+    deviceList.innerHTML = '<p class="muted">Loading devices…</p>';
+    try {
+        const response = await fetch('../api/push-devices.php', { cache: 'no-store' });
+        if (!response.ok) throw new Error('Unable to load registered devices.');
+        const data = await response.json();
+        const currentHash = await getCurrentPushEndpointHash();
+        const devices = Array.isArray(data.devices) ? data.devices : [];
+
+        if (!devices.length) {
+            deviceList.innerHTML = '<p class="muted">No registered notification devices.</p>';
+            return;
+        }
+
+        deviceList.innerHTML = devices.map(device => {
+            const current = currentHash && currentHash === device.endpoint_hash;
+            const pushStatus = device.last_push_status === 'sent'
+                ? 'Last notification accepted by push service'
+                : device.last_push_status === 'failed'
+                    ? 'Last notification failed: ' + (device.last_push_error || 'unknown error')
+                    : 'No notification delivery attempt recorded yet';
+
+            return '<div class="device-item">' +
+                '<div class="device-item-heading"><strong>' + device.device + (current ? ' · This device' : '') + '</strong><button type="button" class="device-delete" data-device-id="' + device.id + '">Delete</button></div>' +
+                '<div class="device-details"><span>Browser</span><strong>' + device.browser + '</strong><span>Registered</span><strong>' + formatDeviceDate(device.created_at) + '</strong><span>Last seen</span><strong>' + formatDeviceDate(device.last_seen_at || device.updated_at) + '</strong><span>Delivery</span><strong>' + pushStatus + '</strong></div>' +
+                '</div>';
+        }).join('');
+
+        deviceList.querySelectorAll('.device-delete').forEach(button => {
+            button.addEventListener('click', async () => {
+                if (!window.confirm('Delete this notification device?')) return;
+                try {
+                    const csrf = document.querySelector('input[name="csrf"]')?.value || '';
+                    const body = new URLSearchParams({ id: button.dataset.deviceId, csrf });
+                    const response = await fetch('../api/push-devices.php', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body });
+                    if (!response.ok) throw new Error('Unable to delete the device.');
+                    await loadDeviceList();
+                    status.textContent = 'Notification device removed.';
+                } catch (error) {
+                    status.textContent = error instanceof Error ? error.message : 'Unable to delete the device.';
+                }
+            });
+        });
+    } catch (error) {
+        deviceList.innerHTML = '<p class="muted">' + (error instanceof Error ? error.message : 'Unable to load devices.') + '</p>';
+    }
+}
+
+if (deviceViewButton && deviceList) {
+    deviceViewButton.addEventListener('click', async () => {
+        const open = deviceList.hidden;
+        deviceList.hidden = !open;
+        deviceViewButton.setAttribute('aria-expanded', open ? 'true' : 'false');
+        deviceViewButton.textContent = open ? 'Hide' : 'View';
+        if (open) await loadDeviceList();
+    });
+}
