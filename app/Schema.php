@@ -168,25 +168,6 @@ SQL);
     }
 
 
-    if ($version === 4) {
-        if ($driver === 'mysql') {
-            $db->exec("ALTER TABLE gaugeiq_push_subscriptions
-                ADD COLUMN user_agent VARCHAR(512) NULL,
-                ADD COLUMN last_seen_at VARCHAR(64) NULL,
-                ADD COLUMN last_push_at VARCHAR(64) NULL,
-                ADD COLUMN last_push_status VARCHAR(32) NULL,
-                ADD COLUMN last_push_error TEXT NULL");
-        } else {
-            $db->exec("ALTER TABLE gaugeiq_push_subscriptions ADD COLUMN user_agent TEXT NULL");
-            $db->exec("ALTER TABLE gaugeiq_push_subscriptions ADD COLUMN last_seen_at TEXT NULL");
-            $db->exec("ALTER TABLE gaugeiq_push_subscriptions ADD COLUMN last_push_at TEXT NULL");
-            $db->exec("ALTER TABLE gaugeiq_push_subscriptions ADD COLUMN last_push_status TEXT NULL");
-            $db->exec("ALTER TABLE gaugeiq_push_subscriptions ADD COLUMN last_push_error TEXT NULL");
-        }
-        $db->exec("UPDATE gaugeiq_schema SET version = 5");
-        $version = 5;
-    }
-
     if ($version === 3) {
         if ($driver === 'mysql') {
             $db->exec(<<<'SQL'
@@ -210,5 +191,26 @@ CREATE TABLE IF NOT EXISTS gaugeiq_admin_users (
 SQL);
         }
         $db->exec("UPDATE gaugeiq_schema SET version = 4");
+        $version = 4;
     }
+
+    if ($version === 4) {
+        if ($driver === 'mysql') {
+            $db->exec("ALTER TABLE gaugeiq_push_subscriptions
+                ADD COLUMN user_agent VARCHAR(512) NULL,
+                ADD COLUMN last_seen_at VARCHAR(64) NULL,
+                ADD COLUMN last_push_at VARCHAR(64) NULL,
+                ADD COLUMN last_push_status VARCHAR(32) NULL,
+                ADD COLUMN last_push_error TEXT NULL");
+        } else {
+            $db->exec("ALTER TABLE gaugeiq_push_subscriptions ADD COLUMN user_agent TEXT NULL");
+            $db->exec("ALTER TABLE gaugeiq_push_subscriptions ADD COLUMN last_seen_at TEXT NULL");
+            $db->exec("ALTER TABLE gaugeiq_push_subscriptions ADD COLUMN last_push_at TEXT NULL");
+            $db->exec("ALTER TABLE gaugeiq_push_subscriptions ADD COLUMN last_push_status TEXT NULL");
+            $db->exec("ALTER TABLE gaugeiq_push_subscriptions ADD COLUMN last_push_error TEXT NULL");
+        }
+        $db->exec("UPDATE gaugeiq_schema SET version = 5");
+        $version = 5;
+    }
+
 }
