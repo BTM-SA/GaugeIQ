@@ -326,7 +326,7 @@ $enabledRuleCount = count(array_filter($allRules, static fn(array $rule): bool =
                 <button type="submit">Save changes</button>
             </form>
         </article>
-
+    <?php endforeach; ?>
 </section>
 
 <section class="card admin-updates">
