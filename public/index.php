@@ -211,7 +211,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                         <?php for ($value = -10; $value <= 50; $value += 5):
                             $ratio = ($value - $temperatureMin) / ($temperatureMax - $temperatureMin);
                             $angle = $climateGaugeStart + ($ratio * $climateGaugeSweep);
-                            $outerStart = $climateGaugePoint($angle, $47.5);
+                            $outerStart = $climateGaugePoint($angle, 47.5);
                             $outerEnd = $climateGaugePoint($angle, $value % 10 === 0 ? 43.5 : 45.0);
                             [$labelX, $labelY] = $climateGaugePoint($angle, 40.5);
                         ?>
