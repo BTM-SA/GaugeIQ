@@ -44,6 +44,7 @@ $subscription = [
 $db = new Database($config);
 $pdo = $db->pdo();
 $now = gmdate('c');
+$userAgent = substr(trim((string)($_SERVER['HTTP_USER_AGENT'] ?? '')), 0, 512);
 
 $table = 'gaugeiq_push_subscriptions';
 $json = json_encode($subscription, JSON_THROW_ON_ERROR);
@@ -54,15 +55,15 @@ $id = $existing->fetchColumn();
 
 if ($id === false) {
     $stmt = $pdo->prepare(
-        "INSERT INTO {$table} (endpoint, subscription_json, created_at, updated_at)
-         VALUES (?, ?, ?, ?)"
+        "INSERT INTO {$table} (endpoint, subscription_json, created_at, updated_at, user_agent, last_seen_at)
+         VALUES (?, ?, ?, ?, ?, ?)"
     );
-    $stmt->execute([$endpoint, $json, $now, $now]);
+    $stmt->execute([$endpoint, $json, $now, $now, $userAgent !== '' ? $userAgent : null, $now]);
 } else {
     $stmt = $pdo->prepare(
-        "UPDATE {$table} SET subscription_json = ?, updated_at = ? WHERE id = ?"
+        "UPDATE {$table} SET subscription_json = ?, updated_at = ?, user_agent = ?, last_seen_at = ? WHERE id = ?"
     );
-    $stmt->execute([$json, $now, (int)$id]);
+    $stmt->execute([$json, $now, $userAgent !== '' ? $userAgent : null, $now, (int)$id]);
 }
 
 echo json_encode(['ok' => true]);
