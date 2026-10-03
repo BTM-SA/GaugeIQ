@@ -53,9 +53,13 @@ try {
 }
 
 $checkMinutes = max(1, (int)$config['pressure']['check_interval_minutes']);
-$nextMonitorAt = $lastMonitorAt ? strtotime($lastMonitorAt) + ($checkMinutes * 60) : null;
+// The cPanel cron is scheduled hourly in production. Keep monitoring health
+// separate from the weather/alert check interval so an hourly cron is not
+// incorrectly reported as overdue.
+$monitorCronMinutes = 60;
+$nextMonitorAt = $lastMonitorAt ? strtotime($lastMonitorAt) + ($monitorCronMinutes * 60) : null;
 $monitorAge = $lastMonitorAt ? time() - (int)strtotime($lastMonitorAt) : null;
-$monitorHealthy = $monitorAge !== null && $monitorAge <= ($checkMinutes * 60 * 3);
+$monitorHealthy = $monitorAge !== null && $monitorAge <= ($monitorCronMinutes * 60 * 1.5);
 $cronScript = realpath(__DIR__ . '/../cron/check-pressure.php') ?: (__DIR__ . '/../cron/check-pressure.php');
 $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 ?><!doctype html>
