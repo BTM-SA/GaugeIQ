@@ -137,12 +137,6 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         <div class="chart-block"><h3>Wind speed</h3><canvas id="windChart" height="220"></canvas></div>
     </section>
 
-    <section class="card">
-        <div class="row"><span>Pressure alert</span><strong>±<?= number_format((float)$config['pressure']['threshold_hpa'], 1) ?> hPa</strong></div>
-        <div class="row"><span>Checks</span><strong>Every <?= (int)$config['pressure']['check_interval_minutes'] ?> minutes</strong></div>
-        <div class="row"><span>Custom alerts</span><strong><a href="login.php">Manage in Admin</a></strong></div>
-    </section>
-
     <?php if (!$monitorHealthy): ?>
     <section class="card cron-setup-card" aria-labelledby="cronSetupTitle">
         <div class="section-heading">
