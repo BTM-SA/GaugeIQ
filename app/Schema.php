@@ -13,6 +13,8 @@ CREATE TABLE IF NOT EXISTS gaugeiq_schema (
 
 CREATE TABLE IF NOT EXISTS gaugeiq_pressure_readings (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    temperature_c DOUBLE NULL,
+    dew_point_c DOUBLE NULL,
     pressure_hpa DOUBLE NOT NULL,
     humidity_percent DOUBLE NULL,
     wind_speed_kmh DOUBLE NULL,
@@ -44,6 +46,8 @@ CREATE TABLE IF NOT EXISTS gaugeiq_schema (
 
 CREATE TABLE IF NOT EXISTS gaugeiq_pressure_readings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    temperature_c REAL NULL,
+    dew_point_c REAL NULL,
     pressure_hpa REAL NOT NULL,
     humidity_percent REAL NULL,
     wind_speed_kmh REAL NULL,
@@ -211,6 +215,20 @@ SQL);
         }
         $db->exec("UPDATE gaugeiq_schema SET version = 5");
         $version = 5;
+    }
+
+
+    if ($version === 5) {
+        if ($driver === 'mysql') {
+            $db->exec("ALTER TABLE gaugeiq_pressure_readings
+                ADD COLUMN temperature_c DOUBLE NULL,
+                ADD COLUMN dew_point_c DOUBLE NULL");
+        } else {
+            $db->exec("ALTER TABLE gaugeiq_pressure_readings ADD COLUMN temperature_c REAL NULL");
+            $db->exec("ALTER TABLE gaugeiq_pressure_readings ADD COLUMN dew_point_c REAL NULL");
+        }
+        $db->exec("UPDATE gaugeiq_schema SET version = 6");
+        $version = 6;
     }
 
 }
