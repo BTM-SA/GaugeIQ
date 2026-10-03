@@ -215,25 +215,40 @@ function drawChart(canvas, values, unit, decimals = 1, hours = 24) {
     if (points.length > 1) {
         ctx.moveTo(points[0].x, points[0].y);
 
-        // Smooth each transition independently between two real readings.
-        // Equal readings remain perfectly horizontal; changing readings are
-        // connected with a simple cubic curve that always reaches both points.
+        // Connect real readings with a smooth curve without horizontal
+        // plateaus at either endpoint. The control points follow the slope
+        // through neighboring readings so the line begins and ends moving
+        // naturally instead of pausing horizontally before changing value.
         for (let index = 0; index < points.length - 1; index += 1) {
             const current = points[index];
             const next = points[index + 1];
-            const dx = next.x - current.x;
 
             if (Math.abs(next.y - current.y) < 0.001) {
                 ctx.lineTo(next.x, next.y);
                 continue;
             }
 
-            const curve = dx / 3;
+            const previous = points[index - 1] || current;
+            const following = points[index + 2] || next;
+
+            const incomingSlope = (next.y - previous.y) / Math.max(1, next.x - previous.x);
+            const outgoingSlope = (following.y - current.y) / Math.max(1, following.x - current.x);
+            const handle = (next.x - current.x) / 3;
+
+            const cp1 = {
+                x: current.x + handle,
+                y: current.y + incomingSlope * handle
+            };
+            const cp2 = {
+                x: next.x - handle,
+                y: next.y - outgoingSlope * handle
+            };
+
             ctx.bezierCurveTo(
-                current.x + curve,
-                current.y,
-                next.x - curve,
-                next.y,
+                cp1.x,
+                cp1.y,
+                cp2.x,
+                cp2.y,
                 next.x,
                 next.y
             );
