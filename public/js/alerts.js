@@ -58,3 +58,74 @@ compassChoices.forEach(button => {
 });
 
 refreshCompass();
+
+
+function setupAlertEditing() {
+    document.querySelectorAll('[data-edit-alert]').forEach(button => {
+        button.addEventListener('click', () => {
+            const card = button.closest('[data-alert-card]');
+            const form = card?.querySelector('[data-edit-form]');
+            if (!card || !form) return;
+            form.hidden = false;
+            button.hidden = true;
+            card.classList.add('editing');
+        });
+    });
+
+    document.querySelectorAll('[data-cancel-edit]').forEach(button => {
+        button.addEventListener('click', () => {
+            const card = button.closest('[data-alert-card]');
+            const form = card?.querySelector('[data-edit-form]');
+            const editButton = card?.querySelector('[data-edit-alert]');
+            if (!card || !form || !editButton) return;
+            form.hidden = true;
+            editButton.hidden = false;
+            card.classList.remove('editing');
+        });
+    });
+
+    document.querySelectorAll('[data-edit-form]').forEach(form => {
+        const metric = form.querySelector('[data-edit-metric]');
+        const condition = form.querySelector('[data-edit-condition]');
+        const valueField = form.querySelector('[data-edit-value-field]');
+        const degreesField = form.querySelector('[data-edit-degrees-field]');
+        const speedField = form.querySelector('[data-edit-speed-field]');
+        const fromField = form.querySelector('[data-edit-from-field]');
+        const toField = form.querySelector('[data-edit-to-field]');
+        if (!metric || !condition) return;
+
+        const refresh = () => {
+            const isWind = metric.value === 'wind';
+            const isDirection = metric.value === 'wind_direction';
+            const combined = isWind && condition.value === 'speed_and_direction';
+
+            degreesField.hidden = !(isDirection && condition.value === 'specific');
+            valueField.hidden = isDirection || combined;
+            speedField.hidden = !combined;
+            fromField.hidden = !combined;
+            toField.hidden = !combined;
+
+            [...condition.options].forEach(option => {
+                option.hidden = isDirection
+                    ? !['change', 'specific'].includes(option.value)
+                    : isWind
+                        ? option.value !== 'speed_and_direction'
+                        : ['specific', 'speed_and_direction'].includes(option.value);
+            });
+
+            if (isWind) {
+                condition.value = 'speed_and_direction';
+            } else if (isDirection && !['change', 'specific'].includes(condition.value)) {
+                condition.value = 'change';
+            } else if (!isDirection && ['specific', 'speed_and_direction'].includes(condition.value)) {
+                condition.value = 'change';
+            }
+        };
+
+        metric.addEventListener('change', refresh);
+        condition.addEventListener('change', refresh);
+        refresh();
+    });
+}
+
+setupAlertEditing();
