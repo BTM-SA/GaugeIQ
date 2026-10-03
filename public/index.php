@@ -157,6 +157,53 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         </article>
     </section>
 
+    <?php
+    $temperatureC = $current ? (float)($current['temperature_c'] ?? 0.0) : 0.0;
+    $dewPointC = $current ? (float)($current['dew_point_c'] ?? 0.0) : 0.0;
+    $humidityPercent = $current ? max(0.0, min(100.0, (float)$current['humidity_percent'])) : 0.0;
+    $humidityZone = !$current ? 'Unavailable' : ($humidityPercent < 40 ? 'Dry' : ($humidityPercent < 60 ? 'Comfortable' : ($humidityPercent < 75 ? 'Humid' : 'Condensation risk')));
+    $humidityZoneClass = strtolower(str_replace(' ', '-', $humidityZone));
+    $tempPercent = $current ? max(0.0, min(100.0, (($temperatureC + 10.0) / 50.0) * 100.0)) : 0.0;
+    ?>
+    <section class="card climate-gauge-card" aria-labelledby="climateGaugeTitle">
+        <div class="section-heading">
+            <div>
+                <h2 id="climateGaugeTitle">Temperature &amp; Dew point</h2>
+                <p class="muted">Thermal comfort and moisture conditions</p>
+            </div>
+        </div>
+        <div class="climate-gauge-layout">
+            <div class="climate-gauge" role="img" aria-label="<?= $current ? htmlspecialchars(number_format($temperatureC, 1) . ' degrees Celsius, dew point ' . number_format($dewPointC, 1) . ' degrees Celsius, relative humidity ' . number_format($humidityPercent, 0) . ' percent, ' . $humidityZone, ENT_QUOTES) : 'Temperature, dew point and humidity unavailable' ?>">
+                <svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+                    <circle class="climate-temp-track" cx="50" cy="50" r="40" pathLength="100"></circle>
+                    <circle class="climate-temp-fill" cx="50" cy="50" r="40" pathLength="100" stroke-dasharray="<?= number_format($tempPercent, 2, '.', '') ?> 100"></circle>
+                    <circle class="climate-dew-ring" cx="50" cy="50" r="31"></circle>
+                    <g class="climate-scale-labels">
+                        <text x="50" y="17">50°</text><text x="81" y="53">30°</text><text x="50" y="89">10°</text><text x="19" y="53">−10°</text>
+                    </g>
+                </svg>
+                <div class="climate-gauge-center">
+                    <strong><?= $current ? number_format($temperatureC, 1) : '—' ?><span>°C</span></strong>
+                    <b><?= $current ? 'Dew ' . number_format($dewPointC, 1) . '°' : 'Dew point —' ?></b>
+                </div>
+            </div>
+            <div class="humidity-zone-panel">
+                <div class="humidity-digital">
+                    <span>Relative humidity</span>
+                    <strong><?= $current ? number_format($humidityPercent, 0) : '—' ?><small>%</small></strong>
+                </div>
+                <div class="humidity-zone <?= htmlspecialchars($humidityZoneClass, ENT_QUOTES) ?>">
+                    <span>Humidity zone</span>
+                    <strong><?= htmlspecialchars($humidityZone, ENT_QUOTES) ?></strong>
+                </div>
+                <div class="climate-readout">
+                    <div><span>Temperature</span><strong><?= $current ? number_format($temperatureC, 1) . ' °C' : '—' ?></strong></div>
+                    <div><span>Dew point</span><strong><?= $current ? number_format($dewPointC, 1) . ' °C' : '—' ?></strong></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <section class="card satellite-card" aria-labelledby="satelliteTitle">
         <div class="section-heading">
             <div>
