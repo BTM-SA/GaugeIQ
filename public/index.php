@@ -116,7 +116,16 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         $windSpeed = $current ? max(0.0, (float)$current['wind_speed_kmh']) : 0.0;
         $windDegrees = $current ? fmod((float)$current['wind_direction_degrees'] + 360.0, 360.0) : 0.0;
         $windDirection = $current ? PressureService::directionLabel($windDegrees) : '—';
-        $windSpeedPercent = min(100.0, ($windSpeed / 120.0) * 100.0);
+        $windSpeedMax = 120.0;
+        $windSpeedPercent = min(100.0, ($windSpeed / $windSpeedMax) * 100.0);
+        $windGaugeStart = 135.0;
+        $windGaugeSweep = 270.0;
+        $windGaugePoint = static function (float $angle, float $radius): array {
+            $radians = deg2rad($angle);
+            return [50.0 + cos($radians) * $radius, 50.0 + sin($radians) * $radius];
+        };
+        $windGaugeArcPoint = $windGaugePoint($windGaugeStart + (($windSpeedPercent / 100.0) * $windGaugeSweep), 40.0);
+        $windGaugeArcLarge = $windSpeedPercent * $windGaugeSweep > 180.0 ? 1 : 0;
         ?>
         <article class="card metric-card wind-gauge-card">
             <div class="wind-gauge-heading">
@@ -128,32 +137,58 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
             </div>
             <div class="wind-gauge" role="img" aria-label="<?= $current ? htmlspecialchars(number_format($windSpeed, 1) . ' kilometers per hour, ' . $windDirection . ', ' . number_format($windDegrees, 0) . ' degrees', ENT_QUOTES) : 'Wind data unavailable' ?>">
                 <svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
-                    <circle class="wind-speed-track" cx="50" cy="50" r="40" pathLength="100"></circle>
-                    <circle class="wind-speed-fill" cx="50" cy="50" r="40" pathLength="100" stroke-dasharray="<?= number_format($windSpeedPercent, 2, '.', '') ?> 100"></circle>
+                    <path class="wind-speed-track" d="M 21.716 78.284 A 40 40 0 1 1 78.284 78.284"></path>
+                    <path class="wind-speed-fill" pathLength="100" stroke-dasharray="<?= number_format($windSpeedPercent, 2, '.', '') ?> 100" d="M 21.716 78.284 A 40 40 0 1 1 <?= number_format($windGaugeArcPoint[0], 3, '.', '') ?> <?= number_format($windGaugeArcPoint[1], 3, '.', '') ?>" <?= $current && $windSpeedPercent > 0 ? 'data-active="true"' : '' ?>></path>
+
+                    <g class="wind-speed-ticks">
+                        <?php for ($value = 0; $value <= 120; $value += 10):
+                            $ratio = $value / $windSpeedMax;
+                            $angle = $windGaugeStart + ($ratio * $windGaugeSweep);
+                            $tickOuter = $windGaugePoint($angle, 47.0);
+                            $tickInner = $windGaugePoint($angle, $value % 20 === 0 ? 43.0 : 44.5);
+                            [$labelX, $labelY] = $windGaugePoint($angle, 38.5);
+                        ?>
+                            <line class="<?= $value % 20 === 0 ? 'major' : '' ?>" x1="<?= number_format($tickOuter[0], 3, '.', '') ?>" y1="<?= number_format($tickOuter[1], 3, '.', '') ?>" x2="<?= number_format($tickInner[0], 3, '.', '') ?>" y2="<?= number_format($tickInner[1], 3, '.', '') ?>"></line>
+                            <?php if ($value % 20 === 0): ?>
+                                <text x="<?= number_format($labelX, 3, '.', '') ?>" y="<?= number_format($labelY, 3, '.', '') ?>"><?= $value ?></text>
+                            <?php endif; ?>
+                        <?php endfor; ?>
+                    </g>
+
                     <circle class="wind-compass-ring" cx="50" cy="50" r="31"></circle>
+                    <g class="wind-compass-ticks">
+                        <?php
+                        $compassLabels = [
+                            0 => 'N', 45 => 'NE', 90 => 'E', 135 => 'SE',
+                            180 => 'S', 225 => 'SW', 270 => 'W', 315 => 'NW'
+                        ];
+                        for ($degree = 0; $degree < 360; $degree += 15):
+                            $tickStart = $windGaugePoint($degree, $degree % 45 === 0 ? 33.5 : 32.2);
+                            $tickEnd = $windGaugePoint($degree, 30.0);
+                        ?>
+                            <line class="<?= $degree % 45 === 0 ? 'major' : '' ?>" x1="<?= number_format($tickStart[0], 3, '.', '') ?>" y1="<?= number_format($tickStart[1], 3, '.', '') ?>" x2="<?= number_format($tickEnd[0], 3, '.', '') ?>" y2="<?= number_format($tickEnd[1], 3, '.', '') ?>"></line>
+                        <?php endfor; ?>
+                    </g>
                     <g class="wind-compass-labels">
-                        <text x="50" y="18">N</text>
-                        <text x="82" y="53">E</text>
-                        <text x="50" y="88">S</text>
-                        <text x="18" y="53">W</text>
-                        <text class="minor" x="73" y="29">NE</text>
-                        <text class="minor" x="73" y="78">SE</text>
-                        <text class="minor" x="27" y="78">SW</text>
-                        <text class="minor" x="27" y="29">NW</text>
+                        <?php foreach ($compassLabels as $degree => $label):
+                            [$labelX, $labelY] = $windGaugePoint($degree, 26.5);
+                        ?>
+                            <text class="<?= strlen($label) > 1 ? 'minor' : '' ?>" x="<?= number_format($labelX, 3, '.', '') ?>" y="<?= number_format($labelY, 3, '.', '') ?>"><?= $label ?></text>
+                        <?php endforeach; ?>
                     </g>
+
+                    <circle class="wind-center" cx="50" cy="50" r="18.5"></circle>
                     <g class="wind-direction-arrow" transform="rotate(<?= number_format($windDegrees, 2, '.', '') ?> 50 50)">
-                        <path d="M50 23 L54 50 L50 46 L46 50 Z"></path>
-                        <circle cx="50" cy="50" r="2.7"></circle>
+                        <path d="M50 24 L54 51 L50 46 L46 51 Z"></path>
+                        <circle cx="50" cy="50" r="2.8"></circle>
                     </g>
-                    <circle class="wind-center" cx="50" cy="50" r="19"></circle>
                 </svg>
                 <div class="wind-gauge-center">
-                    <strong><?= $current ? number_format($windSpeed, 1) : '—' ?><span> km/h</span></strong>
+                    <strong><?= $current ? number_format($windSpeed, 1) : '—' ?><span>km/h</span></strong>
                     <b><?= htmlspecialchars($windDirection, ENT_QUOTES) ?></b>
                     <small><?= $current ? number_format($windDegrees, 0) . '°' : '—' ?></small>
                 </div>
             </div>
-            <div class="wind-gauge-scale"><span>0</span><span>30</span><span>60</span><span>90</span><span>120 km/h</span></div>
         </article>
     </section>
 
