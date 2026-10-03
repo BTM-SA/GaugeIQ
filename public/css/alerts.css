@@ -1,4 +1,6 @@
 .admin-shell{max-width:820px}
+.admin-header .button-link,
+.admin-updates .button-link{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:9px 12px;border:0;border-radius:12px;background:var(--accent);color:#fff;font:inherit;font-weight:700;line-height:normal;text-decoration:none;white-space:nowrap;cursor:pointer}
 .admin-header{margin-bottom:20px}
 .admin-hero{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:26px}
 .admin-hero h2{margin:2px 0 6px;font-size:30px}
