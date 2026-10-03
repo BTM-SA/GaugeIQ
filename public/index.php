@@ -128,7 +128,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         </div>
         <div class="satellite-player">
             <iframe
-                src="https://www.youtube.com/embed/live_stream?channel=UCiN59j5b1fAGnXVzIYFpaMw&autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1"
+                src="https://www.youtube.com/embed/U3jRSL3y8Vc?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1"
                 title="EUMETSAT Earth view - Africa"
                 loading="lazy"
                 allow="autoplay; encrypted-media; picture-in-picture"
