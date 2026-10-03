@@ -347,7 +347,7 @@ $enabledRuleCount = count(array_filter($allRules, static fn(array $rule): bool =
 </section>
 
 <script src="js/admin.js" defer></script>
-<script src="js/alerts.js?v=3" defer></script>
+<script src="js/alerts.js?v=4" defer></script>
 </main>
 </body>
 </html>
