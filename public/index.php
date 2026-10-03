@@ -112,10 +112,48 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
             <p class="metric-caption">Relative humidity</p>
         </article>
 
-        <article class="card metric-card">
-            <p class="label">Wind</p>
-            <div class="metric-value"><?= $current ? number_format($current['wind_speed_kmh'], 1) : '—' ?><span> km/h</span></div>
-            <p class="metric-caption"><?= $current ? htmlspecialchars(PressureService::directionLabel($current['wind_direction_degrees']), ENT_QUOTES) . ' · ' . number_format($current['wind_direction_degrees'], 0) . '°' : 'Direction unavailable' ?></p>
+        <?php
+        $windSpeed = $current ? max(0.0, (float)$current['wind_speed_kmh']) : 0.0;
+        $windDegrees = $current ? fmod((float)$current['wind_direction_degrees'] + 360.0, 360.0) : 0.0;
+        $windDirection = $current ? PressureService::directionLabel($windDegrees) : '—';
+        $windSpeedPercent = min(100.0, ($windSpeed / 120.0) * 100.0);
+        ?>
+        <article class="card metric-card wind-gauge-card">
+            <div class="wind-gauge-heading">
+                <div>
+                    <p class="label">Wind</p>
+                    <p class="metric-caption">Speed &amp; direction</p>
+                </div>
+                <span class="wind-gauge-live"><?= $current ? 'Live' : 'Unavailable' ?></span>
+            </div>
+            <div class="wind-gauge" role="img" aria-label="<?= $current ? htmlspecialchars(number_format($windSpeed, 1) . ' kilometers per hour, ' . $windDirection . ', ' . number_format($windDegrees, 0) . ' degrees', ENT_QUOTES) : 'Wind data unavailable' ?>">
+                <svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+                    <circle class="wind-speed-track" cx="50" cy="50" r="40" pathLength="100"></circle>
+                    <circle class="wind-speed-fill" cx="50" cy="50" r="40" pathLength="100" stroke-dasharray="<?= number_format($windSpeedPercent, 2, '.', '') ?> 100"></circle>
+                    <circle class="wind-compass-ring" cx="50" cy="50" r="31"></circle>
+                    <g class="wind-compass-labels">
+                        <text x="50" y="18">N</text>
+                        <text x="82" y="53">E</text>
+                        <text x="50" y="88">S</text>
+                        <text x="18" y="53">W</text>
+                        <text class="minor" x="73" y="29">NE</text>
+                        <text class="minor" x="73" y="78">SE</text>
+                        <text class="minor" x="27" y="78">SW</text>
+                        <text class="minor" x="27" y="29">NW</text>
+                    </g>
+                    <g class="wind-direction-arrow" transform="rotate(<?= number_format($windDegrees, 2, '.', '') ?> 50 50)">
+                        <path d="M50 23 L54 50 L50 46 L46 50 Z"></path>
+                        <circle cx="50" cy="50" r="2.7"></circle>
+                    </g>
+                    <circle class="wind-center" cx="50" cy="50" r="19"></circle>
+                </svg>
+                <div class="wind-gauge-center">
+                    <strong><?= $current ? number_format($windSpeed, 1) : '—' ?><span> km/h</span></strong>
+                    <b><?= htmlspecialchars($windDirection, ENT_QUOTES) ?></b>
+                    <small><?= $current ? number_format($windDegrees, 0) . '°' : '—' ?></small>
+                </div>
+            </div>
+            <div class="wind-gauge-scale"><span>0</span><span>30</span><span>60</span><span>90</span><span>120 km/h</span></div>
         </article>
     </section>
 
