@@ -268,11 +268,11 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     <g class="climate-needle climate-dew-needle">
                         <line x1="50" y1="50" x2="<?= number_format($dewNeedleX, 3, '.', '') ?>" y2="<?= number_format($dewNeedleY, 3, '.', '') ?>"></line>
                     </g>
-                    <circle class="climate-center-disc" cx="50" cy="50" r="22"></circle>
+                    <circle class="climate-center-disc" cx="50" cy="50" r="23"></circle>
                 </svg>
 
                 <div class="climate-center-readout">
-                    <span class="climate-rh-label">RELATIVE HUMIDITY</span>
+                    <span class="climate-rh-label">Humidity</span>
                     <strong><?= $current ? number_format($humidityPercent, 0) : '—' ?><small>%</small></strong>
                     <b class="humidity-zone <?= htmlspecialchars($humidityZoneClass, ENT_QUOTES) ?>"><?= htmlspecialchars($humidityZone, ENT_QUOTES) ?></b>
                 </div>
