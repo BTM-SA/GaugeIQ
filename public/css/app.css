@@ -183,10 +183,10 @@ button:disabled { opacity: .55; cursor: default; }
 .climate-gauge-wrap{display:flex;flex-direction:column;align-items:center;margin-top:12px}
 .climate-gauge{position:relative;width:min(100%,430px);aspect-ratio:1;margin:auto}
 .climate-gauge svg{display:block;width:100%;height:100%;overflow:visible}
-.climate-outer-track,.climate-temp-arc{fill:none;stroke-width:5.2;stroke-linecap:round}
-.climate-outer-track{stroke:var(--surface)}
-.climate-temp-arc{stroke:url(#climateTempArc);stroke-dasharray:235.62 314.16}
-.climate-inner-track{fill:none;stroke:var(--border);stroke-width:3.2;stroke-linecap:round;stroke-dasharray:183.78 245.04}
+.climate-outer-track,.climate-temp-arc,.climate-comfort-zone{fill:none;stroke-linecap:round}
+.climate-outer-track{stroke:var(--surface);stroke-width:5.2}
+.climate-temp-arc{stroke:url(#climateTempArc);stroke-width:5.2;stroke-dasharray:235.62 314.16}
+.climate-comfort-zone{stroke:#22c55e;stroke-width:5.2;opacity:.5}.climate-inner-track{fill:none;stroke:var(--border);stroke-width:3.2;stroke-linecap:round;stroke-dasharray:183.78 245.04}
 .climate-temperature-ticks,.climate-dew-ticks{fill:var(--text);text-anchor:middle;dominant-baseline:middle;font-weight:800}
 .climate-temperature-ticks line{stroke:var(--muted);stroke-width:.65}
 .climate-temperature-ticks line.major{stroke:var(--text);stroke-width:1.15}
@@ -195,7 +195,7 @@ button:disabled { opacity: .55; cursor: default; }
 .climate-dew-ticks line.major{stroke:var(--text);stroke-width:.9}
 .climate-dew-ticks text{font-size:2.8px;fill:var(--muted)}
 .climate-needle{fill:none;stroke-linecap:round}
-.climate-temperature-needle{stroke:var(--text);stroke-width:1.7}
+.climate-temperature-needle{stroke:var(--text);stroke-width:3.4}
 .climate-temperature-needle circle{fill:var(--text);stroke:var(--card);stroke-width:.8}
 .climate-dew-needle{stroke:var(--climate-dew);stroke-width:1.05}
 .climate-center-disc{fill:var(--card);stroke:var(--border);stroke-width:1}
