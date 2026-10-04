@@ -327,8 +327,8 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     <section class="card satellite-card" aria-labelledby="satelliteTitle">
         <div class="section-heading">
             <div>
-                <h2 id="satelliteTitle">Satellite</h2>
-                <p class="muted">Southern Africa · Meteosat-12 · updated every 10 minutes</p>
+                <h2 id="satelliteTitle">MeteoSat-12</h2>
+                <p class="muted">Updated every 10 minutes</p>
             </div>
         </div>
         <div class="satellite-player">
