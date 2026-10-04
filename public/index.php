@@ -268,7 +268,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                             $isMajor = ($value % 5 === 0);
                             $tickOuter = $climateGaugePoint($angle, 47.5);
                             $tickInner = $climateGaugePoint($angle, $isMajor ? 41.5 : 44.8);
-                            [$labelX, $labelY] = $climateGaugePoint($angle, 38.8);
+                            [$labelX, $labelY] = $climateGaugePoint($angle, 36.8);
                         ?>
                             <line class="<?= $isMajor ? 'major' : '' ?>" x1="<?= number_format($tickOuter[0], 3, '.', '') ?>" y1="<?= number_format($tickOuter[1], 3, '.', '') ?>" x2="<?= number_format($tickInner[0], 3, '.', '') ?>" y2="<?= number_format($tickInner[1], 3, '.', '') ?>"></line>
                             <?php if ($isMajor): ?>
@@ -277,7 +277,6 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                         <?php endfor; ?>
                     </g>
 
-                    <circle class="climate-center-disc" cx="50" cy="50" r="23"></circle>
                     <g class="climate-needle climate-temperature-needle">
                         <polygon points="<?= number_format($tempBaseAX, 3, '.', '') ?>,<?= number_format($tempBaseAY, 3, '.', '') ?> <?= number_format($tempTipX, 3, '.', '') ?>,<?= number_format($tempTipY, 3, '.', '') ?> <?= number_format($tempBaseBX, 3, '.', '') ?>,<?= number_format($tempBaseBY, 3, '.', '') ?>"></polygon>
                         <circle cx="50" cy="50" r="2.8"></circle>
@@ -285,6 +284,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     <g class="climate-needle climate-dew-needle">
                         <polygon points="<?= number_format($dewBaseAX, 3, '.', '') ?>,<?= number_format($dewBaseAY, 3, '.', '') ?> <?= number_format($dewTipX, 3, '.', '') ?>,<?= number_format($dewTipY, 3, '.', '') ?> <?= number_format($dewBaseBX, 3, '.', '') ?>,<?= number_format($dewBaseBY, 3, '.', '') ?>"></polygon>
                     </g>
+                    <circle class="climate-center-disc" cx="50" cy="50" r="23"></circle>
                 </svg>
 
                 <div class="climate-center-readout">
