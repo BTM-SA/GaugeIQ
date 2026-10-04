@@ -184,7 +184,6 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                 </svg>
                 <div class="wind-gauge-center">
                     <strong><?= $current ? number_format($windSpeed, 1) : '—' ?><span>km/h</span></strong>
-                    <b><?= $current ? '' : '—' ?></b>
                     <small><?= $current ? number_format($windDegrees, 0) . '°' : '—' ?></small>
                 </div>
             </div>
