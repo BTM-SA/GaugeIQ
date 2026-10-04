@@ -213,8 +213,30 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     $comfortStartRatio = 15.0 / 40.0;
     $comfortEndRatio = 25.0 / 40.0;
     [$tempNeedleX, $tempNeedleY] = $climateGaugePoint($temperatureAngle, 45.5);
+    $tempNeedleLength = 45.5;
+    $tempNeedleBase = 3.2;
+    $tempAngleRadians = deg2rad($temperatureAngle);
+    $tempPerpX = -sin($tempAngleRadians);
+    $tempPerpY = cos($tempAngleRadians);
+    $tempTipX = 50.0 + cos($tempAngleRadians) * $tempNeedleLength;
+    $tempTipY = 50.0 + sin($tempAngleRadians) * $tempNeedleLength;
+    $tempBaseAX = 50.0 + $tempPerpX * $tempNeedleBase;
+    $tempBaseAY = 50.0 + $tempPerpY * $tempNeedleBase;
+    $tempBaseBX = 50.0 - $tempPerpX * $tempNeedleBase;
+    $tempBaseBY = 50.0 - $tempPerpY * $tempNeedleBase;
     // Dew point marker is shorter and sits above the temperature marker so overlaps remain visible.
     [$dewNeedleX, $dewNeedleY] = $climateGaugePoint($dewAngle, 34.125);
+    $dewNeedleLength = 34.125;
+    $dewNeedleBase = 2.2;
+    $dewAngleRadians = deg2rad($dewAngle);
+    $dewPerpX = -sin($dewAngleRadians);
+    $dewPerpY = cos($dewAngleRadians);
+    $dewTipX = 50.0 + cos($dewAngleRadians) * $dewNeedleLength;
+    $dewTipY = 50.0 + sin($dewAngleRadians) * $dewNeedleLength;
+    $dewBaseAX = 50.0 + $dewPerpX * $dewNeedleBase;
+    $dewBaseAY = 50.0 + $dewPerpY * $dewNeedleBase;
+    $dewBaseBX = 50.0 - $dewPerpX * $dewNeedleBase;
+    $dewBaseBY = 50.0 - $dewPerpY * $dewNeedleBase;
     ?>
     <section class="card climate-gauge-card" aria-labelledby="climateGaugeTitle">
         <div class="section-heading">
@@ -255,21 +277,24 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                         <?php endfor; ?>
                     </g>
 
+                    <circle class="climate-center-disc" cx="50" cy="50" r="23"></circle>
                     <g class="climate-needle climate-temperature-needle">
-                        <line x1="50" y1="50" x2="<?= number_format($tempNeedleX, 3, '.', '') ?>" y2="<?= number_format($tempNeedleY, 3, '.', '') ?>"></line>
+                        <polygon points="<?= number_format($tempBaseAX, 3, '.', '') ?>,<?= number_format($tempBaseAY, 3, '.', '') ?> <?= number_format($tempTipX, 3, '.', '') ?>,<?= number_format($tempTipY, 3, '.', '') ?> <?= number_format($tempBaseBX, 3, '.', '') ?>,<?= number_format($tempBaseBY, 3, '.', '') ?>"></polygon>
                         <circle cx="50" cy="50" r="2.8"></circle>
                     </g>
                     <g class="climate-needle climate-dew-needle">
-                        <line x1="50" y1="50" x2="<?= number_format($dewNeedleX, 3, '.', '') ?>" y2="<?= number_format($dewNeedleY, 3, '.', '') ?>"></line>
+                        <polygon points="<?= number_format($dewBaseAX, 3, '.', '') ?>,<?= number_format($dewBaseAY, 3, '.', '') ?> <?= number_format($dewTipX, 3, '.', '') ?>,<?= number_format($dewTipY, 3, '.', '') ?> <?= number_format($dewBaseBX, 3, '.', '') ?>,<?= number_format($dewBaseBY, 3, '.', '') ?>"></polygon>
                     </g>
-                    <circle class="climate-center-disc" cx="50" cy="50" r="23"></circle>
                 </svg>
 
                 <div class="climate-center-readout">
                     <span class="climate-rh-label">Humidity</span>
                     <strong><?= $current ? number_format($humidityPercent, 0) : '—' ?><small>%</small></strong>
-                    <b class="humidity-zone <?= htmlspecialchars($humidityZoneClass, ENT_QUOTES) ?>"><?= htmlspecialchars($humidityZone, ENT_QUOTES) ?></b>
                 </div>
+            </div>
+
+            <div class="humidity-zone-row">
+                <b class="humidity-zone <?= htmlspecialchars($humidityZoneClass, ENT_QUOTES) ?>"><?= htmlspecialchars($humidityZone, ENT_QUOTES) ?></b>
             </div>
 
             <div class="climate-gauge-legend" aria-label="Current temperature and dew point">
