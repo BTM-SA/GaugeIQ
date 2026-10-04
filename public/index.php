@@ -116,7 +116,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         $windSpeed = $current ? max(0.0, (float)$current['wind_speed_kmh']) : 0.0;
         $windDegrees = $current ? fmod((float)$current['wind_direction_degrees'] + 360.0, 360.0) : 0.0;
         $windDirection = $current ? PressureService::directionLabel($windDegrees) : '—';
-        $windSpeedMax = 120.0;
+        $windSpeedMax = 40.0;
         $windSpeedPercent = min(100.0, ($windSpeed / $windSpeedMax) * 100.0);
         $windGaugeStart = 135.0;
         $windGaugeSweep = 270.0;
@@ -141,14 +141,14 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     <path class="wind-speed-fill" pathLength="100" stroke-dasharray="<?= number_format($windSpeedPercent, 2, '.', '') ?> 100" d="M 21.716 78.284 A 40 40 0 1 1 78.284 78.284" <?= $current && $windSpeedPercent > 0 ? 'data-active="true"' : '' ?>></path>
 
                     <g class="wind-speed-ticks">
-                        <?php for ($value = 0; $value <= 120; $value += 10):
+                        <?php for ($value = 0; $value <= 40; $value += 5):
                             $ratio = $value / $windSpeedMax;
                             $angle = $windGaugeStart + ($ratio * $windGaugeSweep);
                             $tickOuter = $windGaugePoint($angle, 47.0);
-                            $tickInner = $windGaugePoint($angle, $value % 20 === 0 ? 43.0 : 44.5);
+                            $tickInner = $windGaugePoint($angle, $value % 10 === 0 ? 43.0 : 44.5);
                             [$labelX, $labelY] = $windGaugePoint($angle, 38.5);
                         ?>
-                            <line class="<?= $value % 20 === 0 ? 'major' : '' ?>" x1="<?= number_format($tickOuter[0], 3, '.', '') ?>" y1="<?= number_format($tickOuter[1], 3, '.', '') ?>" x2="<?= number_format($tickInner[0], 3, '.', '') ?>" y2="<?= number_format($tickInner[1], 3, '.', '') ?>"></line>
+                            <line class="<?= $value % 10 === 0 ? 'major' : '' ?>" x1="<?= number_format($tickOuter[0], 3, '.', '') ?>" y1="<?= number_format($tickOuter[1], 3, '.', '') ?>" x2="<?= number_format($tickInner[0], 3, '.', '') ?>" y2="<?= number_format($tickInner[1], 3, '.', '') ?>"></line>
                             <?php if ($value % 20 === 0): ?>
                                 <text x="<?= number_format($labelX, 3, '.', '') ?>" y="<?= number_format($labelY, 3, '.', '') ?>"><?= $value ?></text>
                             <?php endif; ?>
