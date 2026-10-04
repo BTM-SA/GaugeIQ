@@ -275,16 +275,12 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     <span class="climate-rh-label">RELATIVE HUMIDITY</span>
                     <strong><?= $current ? number_format($humidityPercent, 0) : '—' ?><small>%</small></strong>
                     <b class="humidity-zone <?= htmlspecialchars($humidityZoneClass, ENT_QUOTES) ?>"><?= htmlspecialchars($humidityZone, ENT_QUOTES) ?></b>
-                    <div class="climate-center-values">
-                        <span><i>Temp</i><strong><?= $current ? number_format($temperatureC, 1) . '°C' : '—' ?></strong></span>
-                        <span><i>Dew point</i><strong><?= $current ? number_format($dewPointC, 1) . '°C' : '—' ?></strong></span>
-                    </div>
                 </div>
             </div>
 
-            <div class="climate-gauge-legend" aria-hidden="true">
-                <div><span class="legend-line temperature"></span><strong>Temperature</strong><span>0 to 40°C</span></div>
-                <div><span class="legend-line dew"></span><strong>Dew point</strong><span>0 to 40°C</span></div>
+            <div class="climate-gauge-legend" aria-label="Current temperature and dew point">
+                <div><span class="legend-line temperature"></span><strong>Temperature</strong><span class="climate-gauge-reading"><?= $current ? number_format($temperatureC, 1) . '°C' : '—' ?></span></div>
+                <div><span class="legend-line dew"></span><strong>Dew point</strong><span class="climate-gauge-reading"><?= $current ? number_format($dewPointC, 1) . '°C' : '—' ?></span></div>
             </div>
         </div>
     </section>
