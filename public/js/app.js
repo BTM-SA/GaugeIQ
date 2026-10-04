@@ -41,10 +41,24 @@ const windGauge = document.querySelector('.wind-gauge');
 const windCompassStatus = document.getElementById('windCompassStatus');
 const windCompassButton = document.getElementById('windCompassButton');
 
+const WIND_COMPASS_STORAGE_KEY = 'gaugeiq-compass-enabled';
+const WIND_COMPASS_SMOOTHING = 0.18;
+const WIND_COMPASS_NORTH_BUFFER = 6;
+
+let windCompassEnabled = localStorage.getItem(WIND_COMPASS_STORAGE_KEY) !== 'false';
+let windCompassListening = false;
+let windCompassHeading = null;
+let windCompassTargetHeading = null;
+let windCompassAnimationFrame = null;
+
 function normalizeCompassHeading(value) {
     const heading = Number(value);
     if (!Number.isFinite(heading)) return null;
     return ((heading % 360) + 360) % 360;
+}
+
+function shortestCompassDelta(from, to) {
+    return ((to - from + 540) % 360) - 180;
 }
 
 function compassDirectionLabel(degrees) {
@@ -53,25 +67,63 @@ function compassDirectionLabel(degrees) {
 }
 
 function applyWindCompassHeading(heading) {
-    if (!windGauge || !Number.isFinite(heading)) return;
+    if (!windGauge || !Number.isFinite(heading) || !windCompassEnabled) return;
 
     const normalized = normalizeCompassHeading(heading);
     if (normalized === null) return;
 
-    windGauge.style.setProperty('--wind-compass-heading', normalized.toFixed(2) + 'deg');
+    windCompassTargetHeading = normalized;
 
-    const windMarker = windGauge.querySelector('.wind-direction-marker');
-    const windDegrees = Number(windMarker?.dataset.windDegrees);
-    if (windMarker && Number.isFinite(windDegrees)) {
-        windMarker.style.transform = 'rotate(' + (windDegrees - normalized).toFixed(2) + 'deg)';
+    if (windCompassHeading === null) {
+        windCompassHeading = normalized;
     }
 
-    if (windCompassStatus) {
-        windCompassStatus.textContent = 'Heading ' + Math.round(normalized) + '° · ' + compassDirectionLabel(normalized);
+    if (windCompassAnimationFrame === null) {
+        const animate = () => {
+            if (!windCompassEnabled || windCompassHeading === null || windCompassTargetHeading === null) {
+                windCompassAnimationFrame = null;
+                return;
+            }
+
+            const delta = shortestCompassDelta(windCompassHeading, windCompassTargetHeading);
+
+            // North is a circular boundary. When both readings are close to
+            // 0/360, deliberately settle through north instead of allowing
+            // sensor noise to make the compass choose opposite directions.
+            const nearNorth =
+                (windCompassHeading <= WIND_COMPASS_NORTH_BUFFER || windCompassHeading >= 360 - WIND_COMPASS_NORTH_BUFFER) &&
+                (windCompassTargetHeading <= WIND_COMPASS_NORTH_BUFFER || windCompassTargetHeading >= 360 - WIND_COMPASS_NORTH_BUFFER);
+
+            const smoothing = nearNorth ? 0.10 : WIND_COMPASS_SMOOTHING;
+            windCompassHeading = normalizeCompassHeading(windCompassHeading + (delta * smoothing));
+
+            if (Math.abs(delta) < 0.08) {
+                windCompassHeading = windCompassTargetHeading;
+            }
+
+            windGauge.style.setProperty('--wind-compass-heading', windCompassHeading.toFixed(2) + 'deg');
+
+            const windMarker = windGauge.querySelector('.wind-direction-marker');
+            const windDegrees = Number(windMarker?.dataset.windDegrees);
+            if (windMarker && Number.isFinite(windDegrees)) {
+                const markerDelta = shortestCompassDelta(windCompassHeading, windDegrees);
+                windMarker.style.transform = 'rotate(' + markerDelta.toFixed(2) + 'deg)';
+            }
+
+            if (windCompassStatus) {
+                windCompassStatus.textContent = 'Heading ' + Math.round(windCompassHeading) + '° · ' + compassDirectionLabel(windCompassHeading);
+            }
+
+            windCompassAnimationFrame = requestAnimationFrame(animate);
+        };
+
+        windCompassAnimationFrame = requestAnimationFrame(animate);
     }
 }
 
 function handleWindDeviceOrientation(event) {
+    if (!windCompassEnabled) return;
+
     let heading = null;
 
     if (Number.isFinite(event.webkitCompassHeading)) {
@@ -86,6 +138,35 @@ function handleWindDeviceOrientation(event) {
     if (heading !== null) {
         applyWindCompassHeading(heading);
     }
+}
+
+function updateWindCompassButton() {
+    if (!windCompassButton) return;
+
+    windCompassButton.textContent = windCompassEnabled ? 'Turn compass off' : 'Turn compass on';
+    windCompassButton.setAttribute('aria-pressed', windCompassEnabled ? 'true' : 'false');
+}
+
+function disableWindCompass() {
+    windCompassEnabled = false;
+    localStorage.setItem(WIND_COMPASS_STORAGE_KEY, 'false');
+
+    if (windCompassListening) {
+        window.removeEventListener('deviceorientation', handleWindDeviceOrientation, true);
+        window.removeEventListener('deviceorientationabsolute', handleWindDeviceOrientation, true);
+        windCompassListening = false;
+    }
+
+    if (windCompassAnimationFrame !== null) {
+        cancelAnimationFrame(windCompassAnimationFrame);
+        windCompassAnimationFrame = null;
+    }
+
+    windCompassTargetHeading = null;
+    windCompassHeading = null;
+
+    if (windCompassStatus) windCompassStatus.textContent = 'Compass off';
+    updateWindCompassButton();
 }
 
 async function enableWindCompass() {
@@ -103,13 +184,16 @@ async function enableWindCompass() {
             }
         }
 
-        window.addEventListener('deviceorientation', handleWindDeviceOrientation, true);
-        window.addEventListener('deviceorientationabsolute', handleWindDeviceOrientation, true);
+        windCompassEnabled = true;
+        localStorage.setItem(WIND_COMPASS_STORAGE_KEY, 'true');
 
-        if (windCompassButton) {
-            windCompassButton.textContent = 'Compass on';
-            windCompassButton.disabled = true;
+        if (!windCompassListening) {
+            window.addEventListener('deviceorientation', handleWindDeviceOrientation, true);
+            window.addEventListener('deviceorientationabsolute', handleWindDeviceOrientation, true);
+            windCompassListening = true;
         }
+
+        updateWindCompassButton();
         if (windCompassStatus) windCompassStatus.textContent = 'Finding heading…';
     } catch (error) {
         if (windCompassStatus) {
@@ -125,12 +209,23 @@ if (windGauge) {
     }
 
     if (windCompassButton) {
-        windCompassButton.addEventListener('click', enableWindCompass);
+        windCompassButton.addEventListener('click', async () => {
+            if (windCompassEnabled) {
+                disableWindCompass();
+                return;
+            }
+
+            await enableWindCompass();
+        });
+        updateWindCompassButton();
     }
 
-    if (typeof DeviceOrientationEvent !== 'undefined' &&
+    if (windCompassEnabled &&
+        typeof DeviceOrientationEvent !== 'undefined' &&
         typeof DeviceOrientationEvent.requestPermission !== 'function') {
         enableWindCompass();
+    } else if (!windCompassEnabled && windCompassStatus) {
+        windCompassStatus.textContent = 'Compass off';
     }
 }
 
