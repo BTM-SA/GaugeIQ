@@ -178,7 +178,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     </g>
 
                     <circle class="wind-center" cx="50" cy="50" r="18.5"></circle>
-                    <g class="wind-direction-marker" transform="rotate(<?= number_format($windDegrees, 2, '.', '') ?> 50 50)">
+                    <g class="wind-direction-marker" transform="rotate(<?= number_format($windDegrees - 90.0, 2, '.', '') ?> 50 50)">
                         <path d="M50 25 L53.5 30 L46.5 30 Z"></path>
                     </g>
                 </svg>
