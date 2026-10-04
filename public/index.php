@@ -284,7 +284,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     <g class="climate-needle climate-dew-needle">
                         <polygon points="<?= number_format($dewBaseAX, 3, '.', '') ?>,<?= number_format($dewBaseAY, 3, '.', '') ?> <?= number_format($dewTipX, 3, '.', '') ?>,<?= number_format($dewTipY, 3, '.', '') ?> <?= number_format($dewBaseBX, 3, '.', '') ?>,<?= number_format($dewBaseBY, 3, '.', '') ?>"></polygon>
                     </g>
-                    <circle class="climate-center-disc" cx="50" cy="50" r="19.5"></circle>
+                    <circle class="climate-center-disc" cx="50" cy="50" r="17"></circle>
                 </svg>
 
                 <div class="climate-center-readout">
