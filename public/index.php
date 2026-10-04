@@ -197,35 +197,29 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     $humidityZone = !$current ? 'Unavailable' : ($humidityPercent < 40 ? 'Dry' : ($humidityPercent < 60 ? 'Comfortable' : ($humidityPercent < 75 ? 'Humid' : 'Condensation risk')));
     $humidityZoneClass = strtolower(str_replace(' ', '-', $humidityZone));
 
-    // Both environmental scales use a 270° instrument arc. Temperature is -10…50°C;
-    // dew point is -10…40°C. The tick geometry is generated from the same scale
-    // definition as the pointers so the readings always line up with the markings.
+    // Temperature and dew point share one 0-40°C instrument scale and ring.
     $climateGaugeStart = 135.0;
     $climateGaugeSweep = 270.0;
     $temperatureMin = 0.0;
     $temperatureMax = 40.0;
-    $dewMin = 0.0;
-    $dewMax = 40.0;
     $climateGaugePoint = static function (float $angle, float $radius): array {
         $radians = deg2rad($angle);
         return [50.0 + cos($radians) * $radius, 50.0 + sin($radians) * $radius];
     };
     $temperatureRatio = $current ? max(0.0, min(1.0, ($temperatureC - $temperatureMin) / ($temperatureMax - $temperatureMin))) : 0.0;
-    $dewRatio = $current ? max(0.0, min(1.0, ($dewPointC - $dewMin) / ($dewMax - $dewMin))) : 0.0;
+    $dewRatio = $current ? max(0.0, min(1.0, ($dewPointC - $temperatureMin) / ($temperatureMax - $temperatureMin))) : 0.0;
     $temperatureAngle = $climateGaugeStart + ($temperatureRatio * $climateGaugeSweep);
+    $dewAngle = $climateGaugeStart + ($dewRatio * $climateGaugeSweep);
     $comfortStartRatio = 15.0 / 40.0;
     $comfortEndRatio = 25.0 / 40.0;
-    $dewAngle = $climateGaugeStart + ($dewRatio * $climateGaugeSweep);
-    $comfortStartAngle = $climateGaugeStart + ($comfortStartRatio * $climateGaugeSweep);
-    $comfortEndAngle = $climateGaugeStart + ($comfortEndRatio * $climateGaugeSweep);
-    [$tempNeedleX, $tempNeedleY] = $climateGaugePoint($temperatureAngle, 28.0);
-    [$dewNeedleX, $dewNeedleY] = $climateGaugePoint($dewAngle, 23.0);
+    [$tempNeedleX, $tempNeedleY] = $climateGaugePoint($temperatureAngle, 45.5);
+    [$dewNeedleX, $dewNeedleY] = $climateGaugePoint($dewAngle, 45.5);
     ?>
     <section class="card climate-gauge-card" aria-labelledby="climateGaugeTitle">
         <div class="section-heading">
             <div>
                 <h2 id="climateGaugeTitle">Temperature &amp; Dew point</h2>
-                <p class="muted">Dual-scale environmental gauge · temperature outer scale · dew point inner scale</p>
+                <p class="muted">Shared 0-40°C scale - temperature and dew point on one ring</p>
             </div>
         </div>
 
@@ -243,33 +237,18 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     <path class="climate-outer-track" d="M 14.644 85.356 A 50 50 0 1 1 85.356 85.356"></path>
                     <path class="climate-comfort-zone" d="M 14.644 85.356 A 50 50 0 1 1 85.356 85.356" pathLength="100" stroke-dasharray="<?= number_format(($comfortEndRatio - $comfortStartRatio) * 100, 2, '.', '') ?> <?= number_format(100 - (($comfortEndRatio - $comfortStartRatio) * 100), 2, '.', '') ?>" stroke-dashoffset="<?= number_format(-$comfortStartRatio * 100, 2, '.', '') ?>"></path>
                     <path class="climate-temp-arc" d="M 14.644 85.356 A 50 50 0 1 1 85.356 85.356"></path>
-                    <path class="climate-inner-track" d="M 22.423 77.577 A 39 39 0 1 1 77.577 77.577"></path>
 
                     <g class="climate-temperature-ticks">
-                        <?php for ($value = 0; $value <= 40; $value += 5):
-                            $ratio = ($value - $temperatureMin) / ($temperatureMax - $temperatureMin);
+                        <?php for ($value = 0; $value <= 40; $value++):
+                            $ratio = $value / 40.0;
                             $angle = $climateGaugeStart + ($ratio * $climateGaugeSweep);
-                            $outerStart = $climateGaugePoint($angle, 47.5);
-                            $outerEnd = $climateGaugePoint($angle, $value % 10 === 0 ? 43.5 : 45.0);
-                            [$labelX, $labelY] = $climateGaugePoint($angle, 40.5);
+                            $isMajor = in_array($value, [5, 15, 25, 35], true);
+                            $tickOuter = $climateGaugePoint($angle, 47.5);
+                            $tickInner = $climateGaugePoint($angle, $isMajor ? 41.5 : 44.8);
+                            [$labelX, $labelY] = $climateGaugePoint($angle, 38.8);
                         ?>
-                            <line class="<?= $value % 10 === 0 ? 'major' : '' ?>" x1="<?= number_format($outerStart[0], 3, '.', '') ?>" y1="<?= number_format($outerStart[1], 3, '.', '') ?>" x2="<?= number_format($outerEnd[0], 3, '.', '') ?>" y2="<?= number_format($outerEnd[1], 3, '.', '') ?>"></line>
-                            <?php if ($value % 10 === 0): ?>
-                                <text x="<?= number_format($labelX, 3, '.', '') ?>" y="<?= number_format($labelY, 3, '.', '') ?>"><?= $value ?>°</text>
-                            <?php endif; ?>
-                        <?php endfor; ?>
-                    </g>
-
-                    <g class="climate-dew-ticks">
-                        <?php for ($value = 0; $value <= 40; $value += 5):
-                            $ratio = ($value - $dewMin) / ($dewMax - $dewMin);
-                            $angle = $climateGaugeStart + ($ratio * $climateGaugeSweep);
-                            $innerStart = $climateGaugePoint($angle, 36.5);
-                            $innerEnd = $climateGaugePoint($angle, $value % 10 === 0 ? 32.5 : 34.0);
-                            [$labelX, $labelY] = $climateGaugePoint($angle, 29.5);
-                        ?>
-                            <line class="<?= $value % 10 === 0 ? 'major' : '' ?>" x1="<?= number_format($innerStart[0], 3, '.', '') ?>" y1="<?= number_format($innerStart[1], 3, '.', '') ?>" x2="<?= number_format($innerEnd[0], 3, '.', '') ?>" y2="<?= number_format($innerEnd[1], 3, '.', '') ?>"></line>
-                            <?php if ($value % 10 === 0): ?>
+                            <line class="<?= $isMajor ? 'major' : '' ?>" x1="<?= number_format($tickOuter[0], 3, '.', '') ?>" y1="<?= number_format($tickOuter[1], 3, '.', '') ?>" x2="<?= number_format($tickInner[0], 3, '.', '') ?>" y2="<?= number_format($tickInner[1], 3, '.', '') ?>"></line>
+                            <?php if ($isMajor): ?>
                                 <text x="<?= number_format($labelX, 3, '.', '') ?>" y="<?= number_format($labelY, 3, '.', '') ?>"><?= $value ?>°</text>
                             <?php endif; ?>
                         <?php endfor; ?>
