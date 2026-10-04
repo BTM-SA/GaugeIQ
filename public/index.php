@@ -138,7 +138,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
             <div class="wind-gauge" role="img" aria-label="<?= $current ? htmlspecialchars(number_format($windSpeed, 1) . ' kilometers per hour, ' . $windDirection . ', ' . number_format($windDegrees, 0) . ' degrees', ENT_QUOTES) : 'Wind data unavailable' ?>">
                 <svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
                     <path class="wind-speed-track" d="M 21.716 78.284 A 40 40 0 1 1 78.284 78.284"></path>
-                    <path class="wind-speed-fill" pathLength="100" stroke-dasharray="<?= number_format($windSpeedPercent, 2, '.', '') ?> 100" d="M 21.716 78.284 A 40 40 0 1 1 <?= number_format($windGaugeArcPoint[0], 3, '.', '') ?> <?= number_format($windGaugeArcPoint[1], 3, '.', '') ?>" <?= $current && $windSpeedPercent > 0 ? 'data-active="true"' : '' ?>></path>
+                    <path class="wind-speed-fill" pathLength="100" stroke-dasharray="<?= number_format($windSpeedPercent, 2, '.', '') ?> 100" d="M 21.716 78.284 A 40 40 0 1 1 78.284 78.284" <?= $current && $windSpeedPercent > 0 ? 'data-active="true"' : '' ?>></path>
 
                     <g class="wind-speed-ticks">
                         <?php for ($value = 0; $value <= 120; $value += 10):
