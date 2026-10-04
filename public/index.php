@@ -92,7 +92,6 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         </div>
     </header>
 
-
     <section class="card climate-gauge-card" aria-labelledby="climateGaugeTitle">
         <div class="section-heading">
             <div>
@@ -211,7 +210,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         $windGaugeArcPoint = $windGaugePoint($windGaugeStart + (($windSpeedPercent / 100.0) * $windGaugeSweep), 40.0);
         $windGaugeArcLarge = $windSpeedPercent * $windGaugeSweep > 180.0 ? 1 : 0;
         ?>
-
+        <article class="card metric-card wind-gauge-card">
             <div class="wind-gauge-heading">
                 <div>
                     <p class="label">Wind</p>
@@ -280,7 +279,40 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         </article>
     </section>
 
->
+    <?php
+    $temperatureC = $current ? (float)($current['temperature_c'] ?? 0.0) : 0.0;
+    $dewPointC = $current ? (float)($current['dew_point_c'] ?? 0.0) : 0.0;
+    $humidityPercent = $current ? max(0.0, min(100.0, (float)$current['humidity_percent'])) : 0.0;
+    $humidityZone = !$current ? 'Unavailable' : ($humidityPercent < 40 ? 'Dry' : ($humidityPercent < 60 ? 'Comfortable' : ($humidityPercent < 75 ? 'Humid' : 'Condensation risk')));
+    $humidityZoneClass = strtolower(str_replace(' ', '-', $humidityZone));
+
+    // Three-in-one aircraft-style environmental instrument.
+    // Temperature is the dominant upper dial; dew point and humidity sit below,
+    // with their scales opening away from one another.
+    $climateGaugePoint = static function (float $cx, float $cy, float $angle, float $radius): array {
+        $radians = deg2rad($angle);
+        return [$cx + cos($radians) * $radius, $cy + sin($radians) * $radius];
+    };
+    $tempRatio = $current ? max(0.0, min(1.0, $temperatureC / 40.0)) : 0.0;
+    $dewRatio = $current ? max(0.0, min(1.0, $dewPointC / 40.0)) : 0.0;
+    $humidityRatio = $current ? $humidityPercent / 100.0 : 0.0;
+
+    $tempStart = 135.0; $tempSweep = 270.0;
+    $dewStart = 225.0; $dewSweep = 270.0;
+    $humidityStart = -45.0; $humiditySweep = 270.0;
+    $tempAngle = $tempStart + $tempRatio * $tempSweep;
+    $dewAngle = $dewStart + $dewRatio * $dewSweep;
+    $humidityAngle = $humidityStart + $humidityRatio * $humiditySweep;
+
+    $tempCx = 50.0; $tempCy = 32.0; $tempR = 27.0;
+    $dewCx = 29.0; $dewCy = 70.0; $smallR = 19.0;
+    $humidityCx = 71.0; $humidityCy = 70.0;
+
+    [$tempTipX,$tempTipY] = $climateGaugePoint($tempCx,$tempCy,$tempAngle,$tempR-3.0);
+    [$dewTipX,$dewTipY] = $climateGaugePoint($dewCx,$dewCy,$dewAngle,$smallR-2.5);
+    [$humidityTipX,$humidityTipY] = $climateGaugePoint($humidityCx,$humidityCy,$humidityAngle,$smallR-2.5);
+    ?> 
+
 
     <section class="card history-card">
         <div class="section-heading">
