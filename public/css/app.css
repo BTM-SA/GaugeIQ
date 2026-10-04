@@ -156,7 +156,7 @@ button:disabled { opacity: .55; cursor: default; }
 .wind-compass-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .wind-compass-status{font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--muted);white-space:nowrap}
 .wind-compass-button{padding:7px 10px;font-size:11px}
-.wind-compass-orientation{transform:rotate(calc(-1 * var(--wind-compass-heading, 0deg)));transform-origin:50px 50px;transition:transform .25s ease}
+.wind-compass-orientation{transform:rotate(calc(-1 * var(--wind-compass-heading, 0deg)));transform-origin:50px 50px;transition:transform .25s ease}.wind-compass-button[aria-pressed="true"]{background:var(--surface);color:var(--text);border:1px solid var(--border)}
 
 .wind-gauge-live{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:5px 8px;border:1px solid var(--border);border-radius:999px;background:var(--surface)}
 .wind-gauge{position:relative;width:min(100%,330px);margin:10px auto 0;aspect-ratio:1;filter:drop-shadow(0 10px 18px rgba(17,24,39,.08))}
@@ -201,7 +201,7 @@ button:disabled { opacity: .55; cursor: default; }
 .climate-temperature-needle circle{fill:var(--text);stroke:var(--card);stroke-width:.8}
 .climate-dew-needle{fill:var(--climate-dew);stroke:var(--card);stroke-width:.35}
 .climate-center-disc{fill:var(--card);stroke:var(--border);stroke-width:1}
-.climate-center-readout{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;padding-top:0}
+.climate-center-readout{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;padding-top:2%}
 .climate-rh-label{font-size:8.5px;letter-spacing:.12em;font-weight:800;color:var(--muted)}
  .climate-center-readout>strong{font-size:clamp(32px,8vw,44px);line-height:.92;letter-spacing:-.045em;color:var(--text);margin-top:4px;display:flex;flex-direction:column;align-items:center}
 .climate-center-readout>strong small{display:block;font-size:.28em;line-height:1;letter-spacing:0;color:var(--muted);margin:3px 0 0}
