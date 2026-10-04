@@ -191,9 +191,9 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                         <?php endfor; ?>
                     </g>
 
-                    <line class="aircraft-needle temp-needle" x1="<?= number_format($tempCx,3,'.','') ?>" y1="<?= number_format($tempCy,3,'.','')" x2="<?= number_format($tempTipX,3,'.','') ?>" y2="<?= number_format($tempTipY,3,'.','') ?>"></line>
-                    <line class="aircraft-needle dew-needle" x1="<?= number_format($dewCx,3,'.','') ?>" y1="<?= number_format($dewCy,3,'.','')" x2="<?= number_format($dewTipX,3,'.','') ?>" y2="<?= number_format($dewTipY,3,'.','') ?>"></line>
-                    <line class="aircraft-needle humidity-needle" x1="<?= number_format($humidityCx,3,'.','') ?>" y1="<?= number_format($humidityCy,3,'.','')" x2="<?= number_format($humidityTipX,3,'.','') ?>" y2="<?= number_format($humidityTipY,3,'.','') ?>"></line>
+                    <line class="aircraft-needle temp-needle" x1="<?= number_format($tempCx,3,'.','') ?>" y1="<?= number_format($tempCy,3,'.','') ?>" x2="<?= number_format($tempTipX,3,'.','') ?>" y2="<?= number_format($tempTipY,3,'.','') ?>"></line>
+                    <line class="aircraft-needle dew-needle" x1="<?= number_format($dewCx,3,'.','') ?>" y1="<?= number_format($dewCy,3,'.','') ?>" x2="<?= number_format($dewTipX,3,'.','') ?>" y2="<?= number_format($dewTipY,3,'.','') ?>"></line>
+                    <line class="aircraft-needle humidity-needle" x1="<?= number_format($humidityCx,3,'.','') ?>" y1="<?= number_format($humidityCy,3,'.','') ?>" x2="<?= number_format($humidityTipX,3,'.','') ?>" y2="<?= number_format($humidityTipY,3,'.','') ?>"></line>
 
                     <circle class="aircraft-hub" cx="50" cy="30" r="2.8"></circle>
                     <circle class="aircraft-hub small" cx="31" cy="68" r="2.1"></circle>
