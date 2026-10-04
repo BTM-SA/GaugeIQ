@@ -163,22 +163,23 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                             180 => 'S', 225 => 'SW', 270 => 'W', 315 => 'NW'
                         ];
                         for ($degree = 0; $degree < 360; $degree += 15):
-                            $tickStart = $windGaugePoint($degree, $degree % 45 === 0 ? 33.5 : 32.2);
-                            $tickEnd = $windGaugePoint($degree, 30.0);
+                            $svgAngle = $degree - 90.0;
+                            $tickStart = $windGaugePoint($svgAngle, $degree % 45 === 0 ? 33.5 : 32.2);
+                            $tickEnd = $windGaugePoint($svgAngle, 30.0);
                         ?>
                             <line class="<?= $degree % 45 === 0 ? 'major' : '' ?>" x1="<?= number_format($tickStart[0], 3, '.', '') ?>" y1="<?= number_format($tickStart[1], 3, '.', '') ?>" x2="<?= number_format($tickEnd[0], 3, '.', '') ?>" y2="<?= number_format($tickEnd[1], 3, '.', '') ?>"></line>
                         <?php endfor; ?>
                     </g>
                     <g class="wind-compass-labels">
                         <?php foreach ($compassLabels as $degree => $label):
-                            [$labelX, $labelY] = $windGaugePoint($degree, 26.5);
+                            [$labelX, $labelY] = $windGaugePoint($degree - 90.0, 26.5);
                         ?>
                             <text class="<?= strlen($label) > 1 ? 'minor' : '' ?>" x="<?= number_format($labelX, 3, '.', '') ?>" y="<?= number_format($labelY, 3, '.', '') ?>"><?= $label ?></text>
                         <?php endforeach; ?>
                     </g>
 
                     <circle class="wind-center" cx="50" cy="50" r="18.5"></circle>
-                    <g class="wind-direction-marker" transform="rotate(<?= number_format($windDegrees - 90.0, 2, '.', '') ?> 50 50)">
+                    <g class="wind-direction-marker" transform="rotate(<?= number_format($windDegrees, 2, '.', '') ?> 50 50)">
                         <path d="M50 25 L53.5 30 L46.5 30 Z"></path>
                     </g>
                 </svg>
