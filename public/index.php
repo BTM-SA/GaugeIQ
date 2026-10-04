@@ -183,9 +183,6 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     </section>
 
     <section class="measurement-grid">
-        <article class="card metric-card wind-gauge-card">
-
-    <section class="measurement-grid">
         <article class="card metric-card pressure-card">
             <p class="label">Air pressure</p>
             <?php if ($current): ?>
