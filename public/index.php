@@ -197,57 +197,42 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     $humidityZone = !$current ? 'Unavailable' : ($humidityPercent < 40 ? 'Dry' : ($humidityPercent < 60 ? 'Comfortable' : ($humidityPercent < 75 ? 'Humid' : 'Condensation risk')));
     $humidityZoneClass = strtolower(str_replace(' ', '-', $humidityZone));
 
-    // Temperature and dew point share one 0-40°C instrument scale and ring.
-    $climateGaugeStart = 135.0;
-    $climateGaugeSweep = 270.0;
-    $temperatureMin = 0.0;
-    $temperatureMax = 40.0;
-    $climateGaugePoint = static function (float $angle, float $radius): array {
+    // Three-in-one aircraft-style environmental instrument.
+    // Temperature is the dominant upper dial; dew point and humidity sit below,
+    // with their scales opening away from one another.
+    $climateGaugePoint = static function (float $cx, float $cy, float $angle, float $radius): array {
         $radians = deg2rad($angle);
-        return [50.0 + cos($radians) * $radius, 50.0 + sin($radians) * $radius];
+        return [$cx + cos($radians) * $radius, $cy + sin($radians) * $radius];
     };
-    $temperatureRatio = $current ? max(0.0, min(1.0, ($temperatureC - $temperatureMin) / ($temperatureMax - $temperatureMin))) : 0.0;
-    $dewRatio = $current ? max(0.0, min(1.0, ($dewPointC - $temperatureMin) / ($temperatureMax - $temperatureMin))) : 0.0;
-    $temperatureAngle = $climateGaugeStart + ($temperatureRatio * $climateGaugeSweep);
-    $dewAngle = $climateGaugeStart + ($dewRatio * $climateGaugeSweep);
-    $comfortStartRatio = 15.0 / 40.0;
-    $comfortEndRatio = 25.0 / 40.0;
-    [$tempNeedleX, $tempNeedleY] = $climateGaugePoint($temperatureAngle, 45.5);
-    $tempNeedleLength = 45.5;
-    $tempNeedleBase = 3.2;
-    $tempAngleRadians = deg2rad($temperatureAngle);
-    $tempPerpX = -sin($tempAngleRadians);
-    $tempPerpY = cos($tempAngleRadians);
-    $tempTipX = 50.0 + cos($tempAngleRadians) * $tempNeedleLength;
-    $tempTipY = 50.0 + sin($tempAngleRadians) * $tempNeedleLength;
-    $tempBaseAX = 50.0 + $tempPerpX * $tempNeedleBase;
-    $tempBaseAY = 50.0 + $tempPerpY * $tempNeedleBase;
-    $tempBaseBX = 50.0 - $tempPerpX * $tempNeedleBase;
-    $tempBaseBY = 50.0 - $tempPerpY * $tempNeedleBase;
-    // Dew point marker is shorter and sits above the temperature marker so overlaps remain visible.
-    [$dewNeedleX, $dewNeedleY] = $climateGaugePoint($dewAngle, 34.125);
-    $dewNeedleLength = 34.125;
-    $dewNeedleBase = 2.2;
-    $dewAngleRadians = deg2rad($dewAngle);
-    $dewPerpX = -sin($dewAngleRadians);
-    $dewPerpY = cos($dewAngleRadians);
-    $dewTipX = 50.0 + cos($dewAngleRadians) * $dewNeedleLength;
-    $dewTipY = 50.0 + sin($dewAngleRadians) * $dewNeedleLength;
-    $dewBaseAX = 50.0 + $dewPerpX * $dewNeedleBase;
-    $dewBaseAY = 50.0 + $dewPerpY * $dewNeedleBase;
-    $dewBaseBX = 50.0 - $dewPerpX * $dewNeedleBase;
-    $dewBaseBY = 50.0 - $dewPerpY * $dewNeedleBase;
-    ?>
+    $tempRatio = $current ? max(0.0, min(1.0, $temperatureC / 40.0)) : 0.0;
+    $dewRatio = $current ? max(0.0, min(1.0, $dewPointC / 40.0)) : 0.0;
+    $humidityRatio = $current ? $humidityPercent / 100.0 : 0.0;
+
+    $tempStart = 135.0; $tempSweep = 270.0;
+    $dewStart = 225.0; $dewSweep = 270.0;
+    $humidityStart = -45.0; $humiditySweep = 270.0;
+    $tempAngle = $tempStart + $tempRatio * $tempSweep;
+    $dewAngle = $dewStart + $dewRatio * $dewSweep;
+    $humidityAngle = $humidityStart + $humidityRatio * $humiditySweep;
+
+    $tempCx = 50.0; $tempCy = 32.0; $tempR = 27.0;
+    $dewCx = 29.0; $dewCy = 70.0; $smallR = 19.0;
+    $humidityCx = 71.0; $humidityCy = 70.0;
+
+    [$tempTipX,$tempTipY] = $climateGaugePoint($tempCx,$tempCy,$tempAngle,$tempR-3.0);
+    [$dewTipX,$dewTipY] = $climateGaugePoint($dewCx,$dewCy,$dewAngle,$smallR-2.5);
+    [$humidityTipX,$humidityTipY] = $climateGaugePoint($humidityCx,$humidityCy,$humidityAngle,$smallR-2.5);
+    ?> 
     <section class="card climate-gauge-card" aria-labelledby="climateGaugeTitle">
         <div class="section-heading">
             <div>
-                <h2 id="climateGaugeTitle">Temperature &amp; Dew point</h2>
-                <p class="muted">Shared 0-40°C scale - temperature and dew point on one ring</p>
+                <h2 id="climateGaugeTitle">Temperature, Dew Point &amp; Humidity</h2>
+                <p class="muted">Three-in-one environmental instrument</p>
             </div>
         </div>
 
         <div class="climate-gauge-wrap">
-            <div class="climate-gauge" role="img" aria-label="<?= $current ? htmlspecialchars('Relative humidity ' . number_format($humidityPercent, 0) . ' percent, ' . $humidityZone . '. Temperature ' . number_format($temperatureC, 1) . ' degrees Celsius. Dew point ' . number_format($dewPointC, 1) . ' degrees Celsius.', ENT_QUOTES) : 'Temperature, dew point and humidity unavailable' ?>">
+            <div class="climate-triple-gauge" role="img" aria-label="<?= $current ? htmlspecialchars('Temperature ' . number_format($temperatureC, 1) . ' degrees Celsius. Dew point ' . number_format($dewPointC, 1) . ' degrees Celsius. Relative humidity ' . number_format($humidityPercent, 0) . ' percent.', ENT_QUOTES) : 'Temperature, dew point and humidity unavailable' ?>">
                 <svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
                     <defs>
                         <linearGradient id="climateTempArc" x1="0" y1="0" x2="1" y2="1">
@@ -257,54 +242,71 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                         </linearGradient>
                     </defs>
 
-                    <path class="climate-outer-track" d="M 14.644 85.356 A 50 50 0 1 1 85.356 85.356"></path>
-                    <path class="climate-comfort-zone" d="M 14.644 85.356 A 50 50 0 1 1 85.356 85.356" pathLength="100" stroke-dasharray="<?= number_format(($comfortEndRatio - $comfortStartRatio) * 100, 2, '.', '') ?> <?= number_format(100 - (($comfortEndRatio - $comfortStartRatio) * 100), 2, '.', '') ?>" stroke-dashoffset="<?= number_format(-$comfortStartRatio * 100, 2, '.', '') ?>"></path>
-                    <path class="climate-temp-arc" d="M 14.644 85.356 A 50 50 0 1 1 85.356 85.356"></path>
-
-                    <g class="climate-temperature-ticks">
-                        <?php for ($value = 0; $value <= 40; $value++):
-                            $ratio = $value / 40.0;
-                            $angle = $climateGaugeStart + ($ratio * $climateGaugeSweep);
-                            $isMajor = ($value % 5 === 0);
-                            $tickOuter = $climateGaugePoint($angle, 47.5);
-                            $tickInner = $climateGaugePoint($angle, $isMajor ? 41.5 : 44.8);
-                            [$labelX, $labelY] = $climateGaugePoint($angle, 36.8);
+                    <!-- Large upper temperature instrument -->
+                    <circle class="aircraft-dial-shell temp-shell" cx="50" cy="32" r="29"></circle>
+                    <path class="aircraft-dial-track" d="M 30.908 51.092 A 27 27 0 1 1 69.092 51.092"></path>
+                    <path class="aircraft-dial-temp" d="M 30.908 51.092 A 27 27 0 1 1 69.092 51.092"></path>
+                    <g class="aircraft-ticks">
+                        <?php for ($value = 0; $value <= 40; $value += 5):
+                            $angle = $tempStart + ($value / 40.0) * $tempSweep;
+                            $outer = $climateGaugePoint($tempCx,$tempCy,$angle,25.8);
+                            $inner = $climateGaugePoint($tempCx,$tempCy,$angle,22.2);
+                            [$lx,$ly] = $climateGaugePoint($tempCx,$tempCy,$angle,19.0);
                         ?>
-                            <line class="<?= $isMajor ? 'major' : '' ?>" x1="<?= number_format($tickOuter[0], 3, '.', '') ?>" y1="<?= number_format($tickOuter[1], 3, '.', '') ?>" x2="<?= number_format($tickInner[0], 3, '.', '') ?>" y2="<?= number_format($tickInner[1], 3, '.', '') ?>"></line>
-                            <?php if ($isMajor): ?>
-                                <text x="<?= number_format($labelX, 3, '.', '') ?>" y="<?= number_format($labelY, 3, '.', '') ?>"><?= $value ?>°</text>
-                            <?php endif; ?>
+                            <line class="<?= $value % 10 === 0 ? 'major' : '' ?>" x1="<?= number_format($outer[0],3,'.','') ?>" y1="<?= number_format($outer[1],3,'.','') ?>" x2="<?= number_format($inner[0],3,'.','') ?>" y2="<?= number_format($inner[1],3,'.','') ?>"></line>
+                            <?php if ($value % 10 === 0): ?><text x="<?= number_format($lx,3,'.','') ?>" y="<?= number_format($ly,3,'.','') ?>"><?= $value ?>°</text><?php endif; ?>
                         <?php endfor; ?>
                     </g>
+                    <line class="aircraft-needle temp-needle" x1="50" y1="32" x2="<?= number_format($tempTipX,3,'.','') ?>" y2="<?= number_format($tempTipY,3,'.','') ?>"></line>
+                    <circle class="aircraft-hub" cx="50" cy="32" r="3.1"></circle>
+                    <text class="aircraft-dial-title" x="50" y="29">TEMPERATURE</text>
+                    <text class="aircraft-dial-value temp-value" x="50" y="38"><?= $current ? number_format($temperatureC,1) . '°C' : '—' ?></text>
 
-                    <g class="climate-needle climate-temperature-needle">
-                        <polygon points="<?= number_format($tempBaseAX, 3, '.', '') ?>,<?= number_format($tempBaseAY, 3, '.', '') ?> <?= number_format($tempTipX, 3, '.', '') ?>,<?= number_format($tempTipY, 3, '.', '') ?> <?= number_format($tempBaseBX, 3, '.', '') ?>,<?= number_format($tempBaseBY, 3, '.', '') ?>"></polygon>
-                        <circle cx="50" cy="50" r="2.8"></circle>
+                    <!-- Lower-left dew point instrument, opening outward -->
+                    <circle class="aircraft-dial-shell" cx="29" cy="70" r="21"></circle>
+                    <path class="aircraft-dial-track" d="M 15.565 83.435 A 19 19 0 1 1 42.435 83.435"></path>
+                    <g class="aircraft-ticks small">
+                        <?php for ($value = 0; $value <= 40; $value += 10):
+                            $angle = $dewStart + ($value / 40.0) * $dewSweep;
+                            $outer = $climateGaugePoint($dewCx,$dewCy,$angle,18.0);
+                            $inner = $climateGaugePoint($dewCx,$dewCy,$angle,15.2);
+                            [$lx,$ly] = $climateGaugePoint($dewCx,$dewCy,$angle,12.7);
+                        ?>
+                            <line class="major" x1="<?= number_format($outer[0],3,'.','') ?>" y1="<?= number_format($outer[1],3,'.','') ?>" x2="<?= number_format($inner[0],3,'.','') ?>" y2="<?= number_format($inner[1],3,'.','') ?>"></line>
+                            <text x="<?= number_format($lx,3,'.','') ?>" y="<?= number_format($ly,3,'.','') ?>"><?= $value ?>°</text>
+                        <?php endfor; ?>
                     </g>
-                    <g class="climate-needle climate-dew-needle">
-                        <polygon points="<?= number_format($dewBaseAX, 3, '.', '') ?>,<?= number_format($dewBaseAY, 3, '.', '') ?> <?= number_format($dewTipX, 3, '.', '') ?>,<?= number_format($dewTipY, 3, '.', '') ?> <?= number_format($dewBaseBX, 3, '.', '') ?>,<?= number_format($dewBaseBY, 3, '.', '') ?>"></polygon>
+                    <line class="aircraft-needle dew-needle" x1="29" y1="70" x2="<?= number_format($dewTipX,3,'.','') ?>" y2="<?= number_format($dewTipY,3,'.','') ?>"></line>
+                    <circle class="aircraft-hub small" cx="29" cy="70" r="2.5"></circle>
+                    <text class="aircraft-dial-title small" x="29" y="69">DEW POINT</text>
+                    <text class="aircraft-dial-value small" x="29" y="75"><?= $current ? number_format($dewPointC,1) . '°C' : '—' ?></text>
+
+                    <!-- Lower-right humidity instrument, opening outward -->
+                    <circle class="aircraft-dial-shell" cx="71" cy="70" r="21"></circle>
+                    <path class="aircraft-dial-track" d="M 57.565 56.565 A 19 19 0 1 1 84.435 56.565"></path>
+                    <g class="aircraft-ticks small">
+                        <?php for ($value = 0; $value <= 100; $value += 20):
+                            $angle = $humidityStart + ($value / 100.0) * $humiditySweep;
+                            $outer = $climateGaugePoint($humidityCx,$humidityCy,$angle,18.0);
+                            $inner = $climateGaugePoint($humidityCx,$humidityCy,$angle,15.2);
+                            [$lx,$ly] = $climateGaugePoint($humidityCx,$humidityCy,$angle,12.7);
+                        ?>
+                            <line class="major" x1="<?= number_format($outer[0],3,'.','') ?>" y1="<?= number_format($outer[1],3,'.','') ?>" x2="<?= number_format($inner[0],3,'.','') ?>" y2="<?= number_format($inner[1],3,'.','') ?>"></line>
+                            <text x="<?= number_format($lx,3,'.','') ?>" y="<?= number_format($ly,3,'.','') ?>"><?= $value ?></text>
+                        <?php endfor; ?>
                     </g>
-                    <circle class="climate-center-disc" cx="50" cy="50" r="17"></circle>
+                    <line class="aircraft-needle humidity-needle" x1="71" y1="70" x2="<?= number_format($humidityTipX,3,'.','') ?>" y2="<?= number_format($humidityTipY,3,'.','') ?>"></line>
+                    <circle class="aircraft-hub small" cx="71" cy="70" r="2.5"></circle>
+                    <text class="aircraft-dial-title small" x="71" y="69">HUMIDITY</text>
+                    <text class="aircraft-dial-value small" x="71" y="75"><?= $current ? number_format($humidityPercent,0) . '%' : '—' ?></text>
                 </svg>
-
-                <div class="climate-center-readout">
-                    <span class="climate-rh-label">Humidity</span>
-                    <strong><?= $current ? number_format($humidityPercent, 0) : '—' ?><small>%</small></strong>
-                </div>
             </div>
 
             <div class="humidity-zone-row">
                 <b class="humidity-zone <?= htmlspecialchars($humidityZoneClass, ENT_QUOTES) ?>"><?= htmlspecialchars($humidityZone, ENT_QUOTES) ?></b>
             </div>
-
-            <div class="climate-gauge-legend" aria-label="Current temperature and dew point">
-                <div><span class="legend-line temperature"></span><strong>Temperature</strong><span class="climate-gauge-reading"><?= $current ? number_format($temperatureC, 1) . '°C' : '—' ?></span></div>
-                <div><span class="legend-line dew"></span><strong>Dew point</strong><span class="climate-gauge-reading"><?= $current ? number_format($dewPointC, 1) . '°C' : '—' ?></span></div>
-            </div>
         </div>
     </section>
-
-
 
     <section class="card history-card">
         <div class="section-heading">
