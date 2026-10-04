@@ -226,3 +226,21 @@ button:disabled { opacity: .55; cursor: default; }
 :root{--climate-dew:#2563eb;--climate-cool:#60a5fa;--climate-neutral:#94a3b8;--climate-warm:#ef4444}
 :root[data-theme="dark"]{--climate-dew:#60a5fa;--climate-cool:#38bdf8;--climate-neutral:#94a3b8;--climate-warm:#fb7185}
 @media(max-width:560px){.climate-gauge{width:min(100%,390px)}.climate-gauge-legend{gap:16px}.climate-center-readout>strong{font-size:clamp(30px,9vw,40px)}}
+
+
+.alert-history-delete{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:34px;
+  height:34px;
+  padding:0;
+  margin-top:8px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:#fff;
+  color:#dc2626;
+  cursor:pointer;
+}
+.alert-history-delete:hover{background:#f8fafc;color:#b91c1c}
+.alert-history-delete svg{width:17px;height:17px;fill:currentColor}
