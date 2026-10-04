@@ -202,9 +202,9 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     // definition as the pointers so the readings always line up with the markings.
     $climateGaugeStart = 135.0;
     $climateGaugeSweep = 270.0;
-    $temperatureMin = -10.0;
-    $temperatureMax = 50.0;
-    $dewMin = -10.0;
+    $temperatureMin = 0.0;
+    $temperatureMax = 40.0;
+    $dewMin = 0.0;
     $dewMax = 40.0;
     $climateGaugePoint = static function (float $angle, float $radius): array {
         $radians = deg2rad($angle);
@@ -213,7 +213,11 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     $temperatureRatio = $current ? max(0.0, min(1.0, ($temperatureC - $temperatureMin) / ($temperatureMax - $temperatureMin))) : 0.0;
     $dewRatio = $current ? max(0.0, min(1.0, ($dewPointC - $dewMin) / ($dewMax - $dewMin))) : 0.0;
     $temperatureAngle = $climateGaugeStart + ($temperatureRatio * $climateGaugeSweep);
+    $comfortStartRatio = 15.0 / 40.0;
+    $comfortEndRatio = 25.0 / 40.0;
     $dewAngle = $climateGaugeStart + ($dewRatio * $climateGaugeSweep);
+    $comfortStartAngle = $climateGaugeStart + ($comfortStartRatio * $climateGaugeSweep);
+    $comfortEndAngle = $climateGaugeStart + ($comfortEndRatio * $climateGaugeSweep);
     [$tempNeedleX, $tempNeedleY] = $climateGaugePoint($temperatureAngle, 28.0);
     [$dewNeedleX, $dewNeedleY] = $climateGaugePoint($dewAngle, 23.0);
     ?>
@@ -237,11 +241,12 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     </defs>
 
                     <path class="climate-outer-track" d="M 14.644 85.356 A 50 50 0 1 1 85.356 85.356"></path>
+                    <path class="climate-comfort-zone" d="M 14.644 85.356 A 50 50 0 1 1 85.356 85.356" pathLength="100" stroke-dasharray="<?= number_format(($comfortEndRatio - $comfortStartRatio) * 100, 2, '.', '') ?> <?= number_format(100 - (($comfortEndRatio - $comfortStartRatio) * 100), 2, '.', '') ?>" stroke-dashoffset="<?= number_format(-$comfortStartRatio * 100, 2, '.', '') ?>"></path>
                     <path class="climate-temp-arc" d="M 14.644 85.356 A 50 50 0 1 1 85.356 85.356"></path>
                     <path class="climate-inner-track" d="M 22.423 77.577 A 39 39 0 1 1 77.577 77.577"></path>
 
                     <g class="climate-temperature-ticks">
-                        <?php for ($value = -10; $value <= 50; $value += 5):
+                        <?php for ($value = 0; $value <= 40; $value += 5):
                             $ratio = ($value - $temperatureMin) / ($temperatureMax - $temperatureMin);
                             $angle = $climateGaugeStart + ($ratio * $climateGaugeSweep);
                             $outerStart = $climateGaugePoint($angle, 47.5);
@@ -256,7 +261,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     </g>
 
                     <g class="climate-dew-ticks">
-                        <?php for ($value = -10; $value <= 40; $value += 5):
+                        <?php for ($value = 0; $value <= 40; $value += 5):
                             $ratio = ($value - $dewMin) / ($dewMax - $dewMin);
                             $angle = $climateGaugeStart + ($ratio * $climateGaugeSweep);
                             $innerStart = $climateGaugePoint($angle, 36.5);
@@ -292,8 +297,8 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
             </div>
 
             <div class="climate-gauge-legend" aria-hidden="true">
-                <div><span class="legend-line temperature"></span><strong>Temperature</strong><span>−10 to 50°C</span></div>
-                <div><span class="legend-line dew"></span><strong>Dew point</strong><span>−10 to 40°C</span></div>
+                <div><span class="legend-line temperature"></span><strong>Temperature</strong><span>0 to 40°C</span></div>
+                <div><span class="legend-line dew"></span><strong>Dew point</strong><span>0 to 40°C</span></div>
             </div>
         </div>
     </section>
