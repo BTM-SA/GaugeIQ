@@ -179,12 +179,12 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 
                     <circle class="wind-center" cx="50" cy="50" r="18.5"></circle>
                     <g class="wind-direction-marker" transform="rotate(<?= number_format($windDegrees, 2, '.', '') ?> 50 50)">
-                        <path d="M50 31 L53.5 27 L46.5 27 Z"></path>
+                        <path d="M50 25 L53.5 30 L46.5 30 Z"></path>
                     </g>
                 </svg>
                 <div class="wind-gauge-center">
                     <strong><?= $current ? number_format($windSpeed, 1) : '—' ?><span>km/h</span></strong>
-                    <b><?= htmlspecialchars($windDirection, ENT_QUOTES) ?></b>
+                    <b><?= $current ? '' : '—' ?></b>
                     <small><?= $current ? number_format($windDegrees, 0) . '°' : '—' ?></small>
                 </div>
             </div>
