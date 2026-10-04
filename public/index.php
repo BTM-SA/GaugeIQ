@@ -213,7 +213,8 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     $comfortStartRatio = 15.0 / 40.0;
     $comfortEndRatio = 25.0 / 40.0;
     [$tempNeedleX, $tempNeedleY] = $climateGaugePoint($temperatureAngle, 45.5);
-    [$dewNeedleX, $dewNeedleY] = $climateGaugePoint($dewAngle, 45.5);
+    // Dew point marker is shorter and sits above the temperature marker so overlaps remain visible.
+    [$dewNeedleX, $dewNeedleY] = $climateGaugePoint($dewAngle, 34.125);
     ?>
     <section class="card climate-gauge-card" aria-labelledby="climateGaugeTitle">
         <div class="section-heading">
@@ -242,7 +243,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                         <?php for ($value = 0; $value <= 40; $value++):
                             $ratio = $value / 40.0;
                             $angle = $climateGaugeStart + ($ratio * $climateGaugeSweep);
-                            $isMajor = in_array($value, [5, 15, 25, 35], true);
+                            $isMajor = ($value % 5 === 0);
                             $tickOuter = $climateGaugePoint($angle, 47.5);
                             $tickInner = $climateGaugePoint($angle, $isMajor ? 41.5 : 44.8);
                             [$labelX, $labelY] = $climateGaugePoint($angle, 38.8);
@@ -261,7 +262,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     <g class="climate-needle climate-dew-needle">
                         <line x1="50" y1="50" x2="<?= number_format($dewNeedleX, 3, '.', '') ?>" y2="<?= number_format($dewNeedleY, 3, '.', '') ?>"></line>
                     </g>
-                    <circle class="climate-center-disc" cx="50" cy="50" r="20.5"></circle>
+                    <circle class="climate-center-disc" cx="50" cy="50" r="22"></circle>
                 </svg>
 
                 <div class="climate-center-readout">
