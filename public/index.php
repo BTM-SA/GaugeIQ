@@ -92,35 +92,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         </div>
     </header>
 
-    <section class="measurement-grid">
-        <article class="card metric-card pressure-card">
-            <p class="label">Air pressure</p>
-            <?php if ($current): ?>
-                <div class="metric-value"><?= number_format($current['pressure_hpa'], 1) ?><span> hPa</span></div>
-                <div class="metric-trend <?= $change > 0 ? 'rise' : ($change < 0 ? 'fall' : 'steady') ?>">
-                    <?= $change > 0 ? '↑ Rising' : ($change < 0 ? '↓ Falling' : '→ Stable') ?>
-                    <?php if ($latest): ?><strong><?= $change >= 0 ? '+' : '' ?><?= number_format($change, 1) ?> hPa</strong><?php endif; ?>
-                </div>
-            <?php else: ?>
-                <div class="metric-unavailable">Unavailable</div>
-            <?php endif; ?>
-        </article>
 
-        <?php
-        $windSpeed = $current ? max(0.0, (float)$current['wind_speed_kmh']) : 0.0;
-        $windDegrees = $current ? fmod((float)$current['wind_direction_degrees'] + 360.0, 360.0) : 0.0;
-        $windDirection = $current ? PressureService::directionLabel($windDegrees) : '—';
-        $windSpeedMax = 40.0;
-        $windSpeedPercent = min(100.0, ($windSpeed / $windSpeedMax) * 100.0);
-        $windGaugeStart = 135.0;
-        $windGaugeSweep = 270.0;
-        $windGaugePoint = static function (float $angle, float $radius): array {
-            $radians = deg2rad($angle);
-            return [50.0 + cos($radians) * $radius, 50.0 + sin($radians) * $radius];
-        };
-        $windGaugeArcPoint = $windGaugePoint($windGaugeStart + (($windSpeedPercent / 100.0) * $windGaugeSweep), 40.0);
-        $windGaugeArcLarge = $windSpeedPercent * $windGaugeSweep > 180.0 ? 1 : 0;
-        ?>
     <section class="card climate-gauge-card" aria-labelledby="climateGaugeTitle">
         <div class="section-heading">
             <div>
@@ -208,8 +180,41 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                 <b class="humidity-zone <?= htmlspecialchars($humidityZoneClass, ENT_QUOTES) ?>"><?= htmlspecialchars($humidityZone, ENT_QUOTES) ?></b>
             </div>
         </div>
-    </section
+    </section>
+
+    <section class="measurement-grid">
         <article class="card metric-card wind-gauge-card">
+
+    <section class="measurement-grid">
+        <article class="card metric-card pressure-card">
+            <p class="label">Air pressure</p>
+            <?php if ($current): ?>
+                <div class="metric-value"><?= number_format($current['pressure_hpa'], 1) ?><span> hPa</span></div>
+                <div class="metric-trend <?= $change > 0 ? 'rise' : ($change < 0 ? 'fall' : 'steady') ?>">
+                    <?= $change > 0 ? '↑ Rising' : ($change < 0 ? '↓ Falling' : '→ Stable') ?>
+                    <?php if ($latest): ?><strong><?= $change >= 0 ? '+' : '' ?><?= number_format($change, 1) ?> hPa</strong><?php endif; ?>
+                </div>
+            <?php else: ?>
+                <div class="metric-unavailable">Unavailable</div>
+            <?php endif; ?>
+        </article>
+
+        <?php
+        $windSpeed = $current ? max(0.0, (float)$current['wind_speed_kmh']) : 0.0;
+        $windDegrees = $current ? fmod((float)$current['wind_direction_degrees'] + 360.0, 360.0) : 0.0;
+        $windDirection = $current ? PressureService::directionLabel($windDegrees) : '—';
+        $windSpeedMax = 40.0;
+        $windSpeedPercent = min(100.0, ($windSpeed / $windSpeedMax) * 100.0);
+        $windGaugeStart = 135.0;
+        $windGaugeSweep = 270.0;
+        $windGaugePoint = static function (float $angle, float $radius): array {
+            $radians = deg2rad($angle);
+            return [50.0 + cos($radians) * $radius, 50.0 + sin($radians) * $radius];
+        };
+        $windGaugeArcPoint = $windGaugePoint($windGaugeStart + (($windSpeedPercent / 100.0) * $windGaugeSweep), 40.0);
+        $windGaugeArcLarge = $windSpeedPercent * $windGaugeSweep > 180.0 ? 1 : 0;
+        ?>
+
             <div class="wind-gauge-heading">
                 <div>
                     <p class="label">Wind</p>
@@ -278,39 +283,6 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         </article>
     </section>
 
-    <?php
-    $temperatureC = $current ? (float)($current['temperature_c'] ?? 0.0) : 0.0;
-    $dewPointC = $current ? (float)($current['dew_point_c'] ?? 0.0) : 0.0;
-    $humidityPercent = $current ? max(0.0, min(100.0, (float)$current['humidity_percent'])) : 0.0;
-    $humidityZone = !$current ? 'Unavailable' : ($humidityPercent < 40 ? 'Dry' : ($humidityPercent < 60 ? 'Comfortable' : ($humidityPercent < 75 ? 'Humid' : 'Condensation risk')));
-    $humidityZoneClass = strtolower(str_replace(' ', '-', $humidityZone));
-
-    // Three-in-one aircraft-style environmental instrument.
-    // Temperature is the dominant upper dial; dew point and humidity sit below,
-    // with their scales opening away from one another.
-    $climateGaugePoint = static function (float $cx, float $cy, float $angle, float $radius): array {
-        $radians = deg2rad($angle);
-        return [$cx + cos($radians) * $radius, $cy + sin($radians) * $radius];
-    };
-    $tempRatio = $current ? max(0.0, min(1.0, $temperatureC / 40.0)) : 0.0;
-    $dewRatio = $current ? max(0.0, min(1.0, $dewPointC / 40.0)) : 0.0;
-    $humidityRatio = $current ? $humidityPercent / 100.0 : 0.0;
-
-    $tempStart = 135.0; $tempSweep = 270.0;
-    $dewStart = 225.0; $dewSweep = 270.0;
-    $humidityStart = -45.0; $humiditySweep = 270.0;
-    $tempAngle = $tempStart + $tempRatio * $tempSweep;
-    $dewAngle = $dewStart + $dewRatio * $dewSweep;
-    $humidityAngle = $humidityStart + $humidityRatio * $humiditySweep;
-
-    $tempCx = 50.0; $tempCy = 32.0; $tempR = 27.0;
-    $dewCx = 29.0; $dewCy = 70.0; $smallR = 19.0;
-    $humidityCx = 71.0; $humidityCy = 70.0;
-
-    [$tempTipX,$tempTipY] = $climateGaugePoint($tempCx,$tempCy,$tempAngle,$tempR-3.0);
-    [$dewTipX,$dewTipY] = $climateGaugePoint($dewCx,$dewCy,$dewAngle,$smallR-2.5);
-    [$humidityTipX,$humidityTipY] = $climateGaugePoint($humidityCx,$humidityCy,$humidityAngle,$smallR-2.5);
-    ?> 
 >
 
     <section class="card history-card">
