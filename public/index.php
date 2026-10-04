@@ -304,23 +304,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         </div>
     </section>
 
-    <section class="card satellite-card" aria-labelledby="satelliteTitle">
-        <div class="section-heading">
-            <div>
-                <h2 id="satelliteTitle">Satellite</h2>
-                <p class="muted">Southern Africa · Meteosat-12 · updated every 10 minutes</p>
-            </div>
-        </div>
-        <div class="satellite-player">
-            <iframe
-                src="https://www.youtube.com/embed/U3jRSL3y8Vc?autoplay=1&mute=1&rel=0&playsinline=1&controls=1&enablejsapi=1"
-                title="EUMETSAT Earth view - Africa"
-                loading="lazy"
-                allow="autoplay; encrypted-media; picture-in-picture"
-                allowfullscreen></iframe>
-        </div>
-        <p class="satellite-caption">Live Earth imagery from EUMETSAT's Meteosat-12 Africa stream.</p>
-    </section>
+
 
     <section class="card history-card">
         <div class="section-heading">
@@ -338,6 +322,24 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         <div class="chart-block"><h3>Pressure</h3><canvas id="pressureChart" height="220"></canvas></div>
         <div class="chart-block"><h3>Humidity</h3><canvas id="humidityChart" height="220"></canvas></div>
         <div class="chart-block"><h3>Wind speed</h3><canvas id="windChart" height="220"></canvas></div>
+    </section>
+
+    <section class="card satellite-card" aria-labelledby="satelliteTitle">
+        <div class="section-heading">
+            <div>
+                <h2 id="satelliteTitle">Satellite</h2>
+                <p class="muted">Southern Africa · Meteosat-12 · updated every 10 minutes</p>
+            </div>
+        </div>
+        <div class="satellite-player">
+            <iframe
+                src="https://www.youtube.com/embed/U3jRSL3y8Vc?autoplay=1&mute=1&rel=0&playsinline=1&controls=1&enablejsapi=1"
+                title="EUMETSAT Earth view - Africa"
+                loading="lazy"
+                allow="autoplay; encrypted-media; picture-in-picture"
+                allowfullscreen></iframe>
+        </div>
+        <p class="satellite-caption">Live Earth imagery from EUMETSAT's Meteosat-12 Africa stream.</p>
     </section>
 
     <?php if (!$monitorHealthy): ?>
