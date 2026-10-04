@@ -195,26 +195,27 @@ button:disabled { opacity: .55; cursor: default; }
 .climate-temperature-ticks{fill:var(--text);text-anchor:middle;dominant-baseline:middle;font-weight:800}
 .climate-temperature-ticks line{stroke:var(--muted);stroke-width:.38}
 .climate-temperature-ticks line.major{stroke:var(--text);stroke-width:1.05}
-.climate-temperature-ticks text{font-size:4.05px}
-.climate-needle{fill:none;stroke-linecap:round}
-.climate-temperature-needle{stroke:var(--text);stroke-width:3.4}
+ .climate-temperature-ticks text{font-size:5px}
+.climate-needle{stroke-linejoin:round}
+.climate-temperature-needle{fill:var(--text);stroke:var(--card);stroke-width:.45}
 .climate-temperature-needle circle{fill:var(--text);stroke:var(--card);stroke-width:.8}
-.climate-dew-needle{stroke:var(--climate-dew);stroke-width:2.1}
+.climate-dew-needle{fill:var(--climate-dew);stroke:var(--card);stroke-width:.35}
 .climate-center-disc{fill:var(--card);stroke:var(--border);stroke-width:1}
 .climate-center-readout{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;padding-top:7%}
 .climate-rh-label{font-size:8.5px;letter-spacing:.12em;font-weight:800;color:var(--muted)}
-.climate-center-readout>strong{font-size:clamp(43px,11vw,62px);line-height:.92;letter-spacing:-.055em;color:var(--text);margin-top:4px}
+ .climate-center-readout>strong{font-size:clamp(32px,8vw,44px);line-height:.92;letter-spacing:-.045em;color:var(--text);margin-top:4px}
 .climate-center-readout>strong small{font-size:.38em;letter-spacing:0;color:var(--muted);margin-left:2px}
-.climate-center-readout .humidity-zone{margin-top:7px;padding:5px 10px;border-radius:999px;font-size:10px;line-height:1;font-weight:800;border:1px solid var(--border);background:var(--surface);color:var(--text)}
-.climate-center-readout .humidity-zone.dry{border-color:#f59e0b;color:#b45309}
-.climate-center-readout .humidity-zone.comfortable{border-color:#22c55e;color:#15803d}
-.climate-center-readout .humidity-zone.humid{border-color:#60a5fa;color:#2563eb}
-.climate-center-readout .humidity-zone.condensation-risk{border-color:#ef4444;color:#dc2626}
+.humidity-zone-row{display:flex;justify-content:center;min-height:24px;margin-top:-8px;margin-bottom:4px}
+.humidity-zone{display:inline-flex;align-items:center;justify-content:center;padding:5px 10px;border-radius:999px;font-size:10px;line-height:1;font-weight:800;border:1px solid var(--border);background:var(--surface);color:var(--text)}
+.humidity-zone.dry{border-color:#f59e0b;color:#b45309}
+.humidity-zone.comfortable{border-color:#22c55e;color:#15803d}
+.humidity-zone.humid{border-color:#60a5fa;color:#2563eb}
+.humidity-zone.condensation-risk{border-color:#ef4444;color:#dc2626}
 .climate-center-values{display:flex;gap:15px;margin-top:9px}
 .climate-center-values span{display:flex;flex-direction:column;align-items:center;gap:2px}
 .climate-center-values i{font-style:normal;font-size:8px;color:var(--muted)}
 .climate-center-values strong{font-size:10px;color:var(--text)}
-.climate-gauge-legend{display:flex;justify-content:center;gap:24px;margin-top:-18px;padding-bottom:2px}
+.climate-gauge-legend{display:flex;justify-content:center;gap:24px;margin-top:0;padding-bottom:2px}
 .climate-gauge-legend>div{display:grid;grid-template-columns:auto auto;column-gap:7px;align-items:center;font-size:11px}
 .climate-gauge-legend>div>span:last-child{grid-column:2;color:var(--muted);font-size:10px}
 .climate-gauge-legend strong{font-size:11px}
@@ -224,4 +225,4 @@ button:disabled { opacity: .55; cursor: default; }
 .legend-line.dew{background:var(--climate-dew)}
 :root{--climate-dew:#2563eb;--climate-cool:#60a5fa;--climate-neutral:#94a3b8;--climate-warm:#ef4444}
 :root[data-theme="dark"]{--climate-dew:#60a5fa;--climate-cool:#38bdf8;--climate-neutral:#94a3b8;--climate-warm:#fb7185}
-@media(max-width:560px){.climate-gauge{width:min(100%,390px)}.climate-gauge-legend{gap:16px}.climate-center-readout>strong{font-size:clamp(40px,12vw,56px)}}
+@media(max-width:560px){.climate-gauge{width:min(100%,390px)}.climate-gauge-legend{gap:16px}.climate-center-readout>strong{font-size:clamp(30px,9vw,40px)}}
