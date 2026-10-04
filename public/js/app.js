@@ -45,7 +45,12 @@ const WIND_COMPASS_STORAGE_KEY = 'gaugeiq-compass-enabled';
 const WIND_COMPASS_SMOOTHING = 0.18;
 const WIND_COMPASS_NORTH_BUFFER = 6;
 
-let windCompassEnabled = localStorage.getItem(WIND_COMPASS_STORAGE_KEY) !== 'false';
+const storedWindCompassState = localStorage.getItem(WIND_COMPASS_STORAGE_KEY);
+const windCompassCanRequestPermission = typeof DeviceOrientationEvent !== 'undefined'
+    && typeof DeviceOrientationEvent.requestPermission === 'function';
+let windCompassEnabled = storedWindCompassState !== null
+    ? storedWindCompassState === 'true'
+    : !windCompassCanRequestPermission;
 let windCompassListening = false;
 let windCompassHeading = null;
 let windCompassTargetHeading = null;
