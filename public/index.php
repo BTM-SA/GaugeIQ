@@ -106,12 +106,6 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
             <?php endif; ?>
         </article>
 
-        <article class="card metric-card">
-            <p class="label">Humidity</p>
-            <div class="metric-value"><?= $current ? number_format($current['humidity_percent'], 0) : '—' ?><span>%</span></div>
-            <p class="metric-caption">Relative humidity</p>
-        </article>
-
         <?php
         $windSpeed = $current ? max(0.0, (float)$current['wind_speed_kmh']) : 0.0;
         $windDegrees = $current ? fmod((float)$current['wind_direction_degrees'] + 360.0, 360.0) : 0.0;
