@@ -218,6 +218,7 @@ button:disabled { opacity: .55; cursor: default; }
 .climate-gauge-legend>div{display:grid;grid-template-columns:auto auto;column-gap:7px;align-items:center;font-size:11px}
 .climate-gauge-legend>div>span:last-child{grid-column:2;color:var(--muted);font-size:10px}
 .climate-gauge-legend strong{font-size:11px}
+.climate-gauge-reading{font-size:13px !important;font-weight:800;color:var(--text) !important;letter-spacing:-.01em}
 .legend-line{width:18px;height:3px;border-radius:999px;grid-row:1 / span 2}
 .legend-line.temperature{background:var(--text)}
 .legend-line.dew{background:var(--climate-dew)}
