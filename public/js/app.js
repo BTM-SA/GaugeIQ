@@ -36,6 +36,104 @@ colorScheme.addEventListener?.('change', () => {
 
 applyTheme(savedTheme);
 
+
+const windGauge = document.querySelector('.wind-gauge');
+const windCompassStatus = document.getElementById('windCompassStatus');
+const windCompassButton = document.getElementById('windCompassButton');
+
+function normalizeCompassHeading(value) {
+    const heading = Number(value);
+    if (!Number.isFinite(heading)) return null;
+    return ((heading % 360) + 360) % 360;
+}
+
+function compassDirectionLabel(degrees) {
+    const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    return directions[Math.round(degrees / 45) % 8];
+}
+
+function applyWindCompassHeading(heading) {
+    if (!windGauge || !Number.isFinite(heading)) return;
+
+    const normalized = normalizeCompassHeading(heading);
+    if (normalized === null) return;
+
+    windGauge.style.setProperty('--wind-compass-heading', normalized.toFixed(2) + 'deg');
+
+    const windMarker = windGauge.querySelector('.wind-direction-marker');
+    const windDegrees = Number(windMarker?.dataset.windDegrees);
+    if (windMarker && Number.isFinite(windDegrees)) {
+        windMarker.style.transform = 'rotate(' + (windDegrees - normalized).toFixed(2) + 'deg)';
+    }
+
+    if (windCompassStatus) {
+        windCompassStatus.textContent = 'Heading ' + Math.round(normalized) + '° · ' + compassDirectionLabel(normalized);
+    }
+}
+
+function handleWindDeviceOrientation(event) {
+    let heading = null;
+
+    if (Number.isFinite(event.webkitCompassHeading)) {
+        heading = event.webkitCompassHeading;
+    } else if (Number.isFinite(event.alpha)) {
+        // Standard orientation fallback. Absolute alpha is measured clockwise
+        // from the device reference frame, so invert it to obtain a compass
+        // heading when no native compass heading is exposed.
+        heading = 360 - event.alpha;
+    }
+
+    if (heading !== null) {
+        applyWindCompassHeading(heading);
+    }
+}
+
+async function enableWindCompass() {
+    if (!('DeviceOrientationEvent' in window)) {
+        if (windCompassStatus) windCompassStatus.textContent = 'Compass unavailable';
+        if (windCompassButton) windCompassButton.disabled = true;
+        return;
+    }
+
+    try {
+        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+            const permission = await DeviceOrientationEvent.requestPermission(true);
+            if (permission !== 'granted') {
+                throw new Error('Compass permission was not granted.');
+            }
+        }
+
+        window.addEventListener('deviceorientation', handleWindDeviceOrientation, true);
+        window.addEventListener('deviceorientationabsolute', handleWindDeviceOrientation, true);
+
+        if (windCompassButton) {
+            windCompassButton.textContent = 'Compass on';
+            windCompassButton.disabled = true;
+        }
+        if (windCompassStatus) windCompassStatus.textContent = 'Finding heading…';
+    } catch (error) {
+        if (windCompassStatus) {
+            windCompassStatus.textContent = error instanceof Error ? error.message : 'Compass unavailable';
+        }
+    }
+}
+
+if (windGauge) {
+    const initialMarker = windGauge.querySelector('.wind-direction-marker');
+    if (initialMarker) {
+        initialMarker.style.transform = 'rotate(' + (Number(initialMarker.dataset.windDegrees) || 0) + 'deg)';
+    }
+
+    if (windCompassButton) {
+        windCompassButton.addEventListener('click', enableWindCompass);
+    }
+
+    if (typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof DeviceOrientationEvent.requestPermission !== 'function') {
+        enableWindCompass();
+    }
+}
+
 const status = document.getElementById('status');
 const notifyButton = document.getElementById('notifyButton');
 const historyStatus = document.getElementById('historyStatus');
