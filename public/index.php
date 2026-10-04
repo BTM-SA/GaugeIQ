@@ -179,7 +179,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 
                     <circle class="wind-center" cx="50" cy="50" r="18.5"></circle>
                     <g class="wind-direction-marker" data-wind-degrees="<?= number_format($windDegrees, 2, '.', '') ?>">
-                        <path d="M50 25 L53.5 30 L46.5 30 Z"></path>
+                        <path d="M50 20 L54 29 L50 27 L46 29 Z"></path>
                     </g>
                 </svg>
                 <div class="wind-gauge-center">
@@ -284,7 +284,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     <g class="climate-needle climate-dew-needle">
                         <polygon points="<?= number_format($dewBaseAX, 3, '.', '') ?>,<?= number_format($dewBaseAY, 3, '.', '') ?> <?= number_format($dewTipX, 3, '.', '') ?>,<?= number_format($dewTipY, 3, '.', '') ?> <?= number_format($dewBaseBX, 3, '.', '') ?>,<?= number_format($dewBaseBY, 3, '.', '') ?>"></polygon>
                     </g>
-                    <circle class="climate-center-disc" cx="50" cy="50" r="23"></circle>
+                    <circle class="climate-center-disc" cx="50" cy="50" r="19.5"></circle>
                 </svg>
 
                 <div class="climate-center-readout">
