@@ -188,11 +188,12 @@ button:disabled { opacity: .55; cursor: default; }
 .climate-gauge-wrap{display:flex;flex-direction:column;align-items:center;margin-top:12px}
 .climate-triple-gauge{position:relative;width:min(100%,430px);aspect-ratio:1;margin:auto}
 .climate-triple-gauge svg{display:block;width:100%;height:100%;overflow:visible}
-.aircraft-dial-shell{fill:var(--card);stroke:var(--border);stroke-width:1.15}
-.aircraft-dial-shell.temp-shell{stroke-width:1.35}
-.aircraft-dial-track,.aircraft-dial-temp{fill:none;stroke-linecap:round}
-.aircraft-dial-track{stroke:var(--surface);stroke-width:3.2}
-.aircraft-dial-temp{stroke:url(#climateTempArc);stroke-width:3.2}
+.aircraft-unified-track,.aircraft-unified-temp,.aircraft-unified-dew,.aircraft-unified-humidity{fill:none;stroke-linecap:round}
+.aircraft-unified-track{stroke:var(--surface);stroke-width:3.1}
+.aircraft-unified-track.temp{stroke-width:3.5}
+.aircraft-unified-temp{stroke:url(#climateTempArc);stroke-width:3.5}
+.aircraft-unified-dew{stroke:var(--climate-dew);stroke-width:3.1;transition:stroke-dasharray .7s ease}
+.aircraft-unified-humidity{stroke:var(--climate-warm);stroke-width:3.1;transition:stroke-dasharray .7s ease}
 .aircraft-ticks{fill:var(--text);text-anchor:middle;dominant-baseline:middle;font-weight:800}
 .aircraft-ticks line{stroke:var(--muted);stroke-width:.35}
 .aircraft-ticks line.major{stroke:var(--text);stroke-width:.8}
@@ -216,7 +217,7 @@ button:disabled { opacity: .55; cursor: default; }
 .humidity-zone.condensation-risk{border-color:#ef4444;color:#dc2626}
 :root{--climate-dew:#2563eb;--climate-cool:#60a5fa;--climate-neutral:#94a3b8;--climate-warm:#ef4444}
 :root[data-theme="dark"]{--climate-dew:#60a5fa;--climate-cool:#38bdf8;--climate-neutral:#94a3b8;--climate-warm:#fb7185}
-@media(max-width:560px){.climate-gauge{width:min(100%,390px)}.climate-gauge-legend{gap:16px}.climate-center-readout>strong{font-size:clamp(30px,9vw,40px)}}
+@media(max-width:560px){.climate-triple-gauge{width:min(100%,390px)}}
 
 
 .alert-history-delete{
