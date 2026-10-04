@@ -190,8 +190,8 @@ button:disabled { opacity: .55; cursor: default; }
 .climate-triple-gauge svg{display:block;width:100%;height:100%;overflow:visible}
 .aircraft-unified-track,.aircraft-unified-temp,.aircraft-unified-dew,.aircraft-unified-humidity{fill:none;stroke-linecap:round}
 .aircraft-unified-track{stroke:var(--surface);stroke-width:3.1}
-.aircraft-unified-track.temp{stroke-width:3.5}
-.aircraft-unified-temp{stroke:url(#climateTempArc);stroke-width:3.5}
+.aircraft-unified-track.temp{stroke-width:3.1}
+.aircraft-unified-temp{stroke:var(--climate-warm);stroke-width:3.1;transition:stroke-dasharray .7s ease}
 .aircraft-unified-dew{stroke:var(--climate-dew);stroke-width:3.1;transition:stroke-dasharray .7s ease}
 .aircraft-unified-humidity{stroke:var(--climate-warm);stroke-width:3.1;transition:stroke-dasharray .7s ease}
 .aircraft-ticks{fill:var(--text);text-anchor:middle;dominant-baseline:middle;font-weight:800}
