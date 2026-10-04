@@ -194,7 +194,7 @@ button:disabled { opacity: .55; cursor: default; }
 .climate-needle{fill:none;stroke-linecap:round}
 .climate-temperature-needle{stroke:var(--text);stroke-width:3.4}
 .climate-temperature-needle circle{fill:var(--text);stroke:var(--card);stroke-width:.8}
-.climate-dew-needle{stroke:var(--climate-dew);stroke-width:1.05}
+.climate-dew-needle{stroke:var(--climate-dew);stroke-width:2.1}
 .climate-center-disc{fill:var(--card);stroke:var(--border);stroke-width:1}
 .climate-center-readout{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;padding-top:7%}
 .climate-rh-label{font-size:8px;letter-spacing:.12em;font-weight:800;color:var(--muted)}
