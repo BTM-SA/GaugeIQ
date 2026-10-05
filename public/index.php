@@ -311,7 +311,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                         <path d="M50 20 L54 29 L50 27 L46 29 Z"></path>
                     </g>
                     <g class="wind-direction-to-marker" data-wind-to-degrees="<?= number_format($windToDegrees, 2, '.', '') ?>">
-                        <path d="M50 20 L54 29 L50 27 L46 29 Z"></path>
+                        <path style="fill:#22c55e" d="M50 20 L54 29 L50 27 L46 29 Z"></path>
                     </g>
                 </svg>
                 <div class="wind-gauge-center">
