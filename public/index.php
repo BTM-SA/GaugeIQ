@@ -162,7 +162,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 
                     <!-- One unified instrument face: large temperature arc above two mirrored half-arcs. -->
                     <path class="aircraft-unified-track temp" d="M 19.884 14.600 A 34.8 34.8 0 0 1 80.116 14.600"></path>
-                    <path class="aircraft-unified-temp" pathLength="100" stroke-dasharray="<?= number_format($tempRatio * 100, 2, '.', '') ?> 100" d="M 24.885 13.500 A 29 29 0 0 1 75.115 13.500"></path>
+                    <path class="aircraft-unified-temp" pathLength="100" stroke-dasharray="<?= number_format($tempRatio * 100, 2, '.', '') ?> 100" d="M 19.884 14.600 A 34.8 34.8 0 0 1 80.116 14.600"></path>
 
                     <path class="aircraft-unified-track dew" d="M 31 83.5 A 15.5 15.5 0 0 1 31 52.5"></path>
                     <path class="aircraft-unified-track humidity" d="M 69 83.5 A 15.5 15.5 0 0 1 69 52.5"></path>
