@@ -238,6 +238,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         $windSpeed = $current ? max(0.0, (float)$current['wind_speed_kmh']) : 0.0;
         $windDegrees = $current ? fmod((float)$current['wind_direction_degrees'] + 360.0, 360.0) : 0.0;
         $windDirection = $current ? PressureService::directionLabel($windDegrees) : '—';
+        $windToDegrees = fmod($windDegrees + 180.0, 360.0);
         $windSpeedMax = 40.0;
         $windSpeedPercent = min(100.0, ($windSpeed / $windSpeedMax) * 100.0);
         $windGaugeStart = 135.0;
@@ -307,6 +308,9 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 
                     <circle class="wind-center" cx="50" cy="50" r="18.5"></circle>
                     <g class="wind-direction-marker" data-wind-degrees="<?= number_format($windDegrees, 2, '.', '') ?>">
+                        <path d="M50 20 L54 29 L50 27 L46 29 Z"></path>
+                    </g>
+                    <g class="wind-direction-to-marker" data-wind-to-degrees="<?= number_format($windToDegrees, 2, '.', '') ?>">
                         <path d="M50 20 L54 29 L50 27 L46 29 Z"></path>
                     </g>
                 </svg>
