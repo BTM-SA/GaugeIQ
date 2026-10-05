@@ -122,7 +122,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     $dewCx = 31.0; $dewCy = 68.0; $smallR = 15.5;
     $humidityCx = 69.0; $humidityCy = 68.0;
 
-    [$tempTipX,$tempTipY] = $climateGaugePoint($tempCx,$tempCy,$tempAngle,$tempR - 3.5);
+    [$tempTipX,$tempTipY] = $climateGaugePoint($tempCx,$tempCy,$tempAngle,$tempR / 2.0);
     [$dewTipX,$dewTipY] = $climateGaugePoint($dewCx,$dewCy,$dewAngle,$smallR-2.5);
     [$humidityTipX,$humidityTipY] = $climateGaugePoint($humidityCx,$humidityCy,$humidityAngle,$smallR-2.5);
     ?> 
