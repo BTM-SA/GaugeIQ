@@ -236,3 +236,6 @@ button:disabled { opacity: .55; cursor: default; }
 }
 .alert-history-delete:hover{background:#f8fafc;color:#b91c1c}
 .alert-history-delete svg{width:17px;height:17px;fill:currentColor}
+
+/* Temperature dial refinements: larger upper arc, 5-degree majors with intermediate markers, longer red needle. */
+.aircraft-needle.temp-needle{stroke:var(--climate-warm);stroke-width:1.15}
