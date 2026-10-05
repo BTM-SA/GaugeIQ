@@ -214,8 +214,8 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     <circle class="aircraft-hub small" cx="31" cy="68" r="2.1"></circle>
                     <circle class="aircraft-hub small" cx="69" cy="68" r="2.1"></circle>
 
-                    <text class="aircraft-dial-title" x="50" y="34">TEMPERATURE</text>
-                    <text class="aircraft-dial-value temp-value" x="50" y="41"><?= $current ? number_format($temperatureC,1) . '°C' : '—' ?></text>
+                    <text class="aircraft-dial-title" x="50" y="37">TEMPERATURE</text>
+                    <text class="aircraft-dial-value temp-value" x="50" y="44"><?= $current ? number_format($temperatureC,1) . '°C' : '—' ?></text>
 
                     <text class="aircraft-dial-title small" x="31" y="65">DEW</text>
                     <text class="aircraft-dial-value small" x="31" y="72"><?= $current ? number_format($dewPointC,1) . '°C' : '—' ?></text>
