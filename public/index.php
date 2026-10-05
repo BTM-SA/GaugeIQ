@@ -165,9 +165,9 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     <path class="aircraft-unified-temp" pathLength="100" stroke-dasharray="<?= number_format($tempRatio * 100, 2, '.', '') ?> 100" d="M 19.884 14.600 A 34.8 34.8 0 0 1 80.116 14.600"></path>
 
                     <path class="aircraft-unified-track dew" d="M 31 83.5 A 15.5 15.5 0 0 1 31 52.5"></path>
-                    <path class="aircraft-unified-track humidity" d="M 69 83.5 A 15.5 15.5 0 0 1 69 52.5"></path>
+                    <path class="aircraft-unified-track humidity" d="M 69 83.5 A 15.5 15.5 0 0 0 69 52.5"></path>
                     <path class="aircraft-unified-dew" pathLength="100" stroke-dasharray="<?= number_format($dewRatio * 100, 2, '.', '') ?> 100" d="M 31 83.5 A 15.5 15.5 0 0 1 31 52.5"></path>
-                    <path class="aircraft-unified-humidity" pathLength="100" stroke-dasharray="<?= number_format($humidityRatio * 100, 2, '.', '') ?> 100" d="M 69 83.5 A 15.5 15.5 0 0 1 69 52.5"></path>
+                    <path class="aircraft-unified-humidity" pathLength="100" stroke-dasharray="<?= number_format($humidityRatio * 100, 2, '.', '') ?> 100" d="M 69 83.5 A 15.5 15.5 0 0 0 69 52.5"></path>
 
                     <g class="aircraft-ticks">
                         <?php for ($value = 0; $value <= 40; $value += 2.5):
