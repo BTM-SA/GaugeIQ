@@ -172,7 +172,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     <g class="aircraft-ticks">
                         <?php for ($value = 0; $value <= 40; $value += 2.5):
                             $angle = $tempStart + ($value / 40.0) * $tempSweep;
-                            $isMajor = fmod($value, 5.0) === 0.0;
+                            $isMajor = fmod($value, 10.0) === 0.0;
                             $outer = $climateGaugePoint($tempCx,$tempCy,$angle,38.0);
                             $inner = $climateGaugePoint($tempCx,$tempCy,$angle,$isMajor ? 33.2 : 35.4);
                             [$lx,$ly] = $climateGaugePoint($tempCx,$tempCy,$angle,29.8);
@@ -214,8 +214,8 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     <circle class="aircraft-hub small" cx="31" cy="68" r="2.1"></circle>
                     <circle class="aircraft-hub small" cx="69" cy="68" r="2.1"></circle>
 
-                    <text class="aircraft-dial-title" x="50" y="37">TEMPERATURE</text>
-                    <text class="aircraft-dial-value temp-value" x="50" y="44"><?= $current ? number_format($temperatureC,1) . '°C' : '—' ?></text>
+                    <text class="aircraft-dial-title" x="50" y="41">TEMPERATURE</text>
+                    <text class="aircraft-dial-value temp-value" x="50" y="48"><?= $current ? number_format($temperatureC,1) . '°C' : '—' ?></text>
 
                     <text class="aircraft-dial-title small" x="31" y="65">DEW</text>
                     <text class="aircraft-dial-value small" x="31" y="72"><?= $current ? number_format($dewPointC,1) . '°C' : '—' ?></text>
