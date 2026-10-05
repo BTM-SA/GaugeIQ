@@ -118,7 +118,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     // Humidity scale is inverted: 0% is at the bottom and 100% is at the top.
     $humidityAngle = 90.0 - $humidityRatio * 180.0;
 
-    $tempCx = 50.0; $tempCy = 28.0; $tempR = 29.0;
+    $tempCx = 50.0; $tempCy = 32.0; $tempR = 34.8;
     $dewCx = 31.0; $dewCy = 68.0; $smallR = 15.5;
     $humidityCx = 69.0; $humidityCy = 68.0;
 
@@ -161,11 +161,11 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     </defs>
 
                     <!-- One unified instrument face: large temperature arc above two mirrored half-arcs. -->
-                    <path class="aircraft-unified-track temp" d="M 24.885 13.500 A 29 29 0 0 1 75.115 13.500"></path>
+                    <path class="aircraft-unified-track temp" d="M 19.884 14.600 A 34.8 34.8 0 0 1 80.116 14.600"></path>
                     <path class="aircraft-unified-temp" pathLength="100" stroke-dasharray="<?= number_format($tempRatio * 100, 2, '.', '') ?> 100" d="M 24.885 13.500 A 29 29 0 0 1 75.115 13.500"></path>
 
                     <path class="aircraft-unified-track dew" d="M 31 83.5 A 15.5 15.5 0 0 1 31 52.5"></path>
-                    <path class="aircraft-unified-track humidity" d="M 69 52.5 A 15.5 15.5 0 0 1 69 83.5"></path>
+                    <path class="aircraft-unified-track humidity" d="M 69 83.5 A 15.5 15.5 0 0 1 69 52.5"></path>
                     <path class="aircraft-unified-dew" pathLength="100" stroke-dasharray="<?= number_format($dewRatio * 100, 2, '.', '') ?> 100" d="M 31 83.5 A 15.5 15.5 0 0 1 31 52.5"></path>
                     <path class="aircraft-unified-humidity" pathLength="100" stroke-dasharray="<?= number_format($humidityRatio * 100, 2, '.', '') ?> 100" d="M 69 83.5 A 15.5 15.5 0 0 1 69 52.5"></path>
 
@@ -173,9 +173,9 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                         <?php for ($value = 0; $value <= 40; $value += 2.5):
                             $angle = $tempStart + ($value / 40.0) * $tempSweep;
                             $isMajor = fmod($value, 5.0) === 0.0;
-                            $outer = $climateGaugePoint($tempCx,$tempCy,$angle,32.0);
-                            $inner = $climateGaugePoint($tempCx,$tempCy,$angle,$isMajor ? 27.8 : 29.5);
-                            [$lx,$ly] = $climateGaugePoint($tempCx,$tempCy,$angle,24.8);
+                            $outer = $climateGaugePoint($tempCx,$tempCy,$angle,38.0);
+                            $inner = $climateGaugePoint($tempCx,$tempCy,$angle,$isMajor ? 33.2 : 35.4);
+                            [$lx,$ly] = $climateGaugePoint($tempCx,$tempCy,$angle,29.8);
                         ?>
                             <line class="<?= $isMajor ? 'major' : '' ?>" x1="<?= number_format($outer[0],3,'.','') ?>" y1="<?= number_format($outer[1],3,'.','') ?>" x2="<?= number_format($inner[0],3,'.','') ?>" y2="<?= number_format($inner[1],3,'.','') ?>"></line>
                             <?php if ($isMajor): ?><text x="<?= number_format($lx,3,'.','') ?>" y="<?= number_format($ly,3,'.','') ?>"><?= $value ?>°</text><?php endif; ?>
@@ -210,12 +210,12 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     <line class="aircraft-needle dew-needle" x1="<?= number_format($dewCx,3,'.','') ?>" y1="<?= number_format($dewCy,3,'.','') ?>" x2="<?= number_format($dewTipX,3,'.','') ?>" y2="<?= number_format($dewTipY,3,'.','') ?>"></line>
                     <line class="aircraft-needle humidity-needle" x1="<?= number_format($humidityCx,3,'.','') ?>" y1="<?= number_format($humidityCy,3,'.','') ?>" x2="<?= number_format($humidityTipX,3,'.','') ?>" y2="<?= number_format($humidityTipY,3,'.','') ?>"></line>
 
-                    <circle class="aircraft-hub" cx="50" cy="28" r="2.6"></circle>
+                    <circle class="aircraft-hub" cx="50" cy="32" r="2.6"></circle>
                     <circle class="aircraft-hub small" cx="31" cy="68" r="2.1"></circle>
                     <circle class="aircraft-hub small" cx="69" cy="68" r="2.1"></circle>
 
-                    <text class="aircraft-dial-title" x="50" y="28">TEMPERATURE</text>
-                    <text class="aircraft-dial-value temp-value" x="50" y="35"><?= $current ? number_format($temperatureC,1) . '°C' : '—' ?></text>
+                    <text class="aircraft-dial-title" x="50" y="32">TEMPERATURE</text>
+                    <text class="aircraft-dial-value temp-value" x="50" y="39"><?= $current ? number_format($temperatureC,1) . '°C' : '—' ?></text>
 
                     <text class="aircraft-dial-title small" x="31" y="65">DEW</text>
                     <text class="aircraft-dial-value small" x="31" y="72"><?= $current ? number_format($dewPointC,1) . '°C' : '—' ?></text>
