@@ -128,6 +128,19 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     ?> 
 
 
+        <article class="card metric-card pressure-card">
+            <p class="label">Air pressure</p>
+            <?php if ($current): ?>
+                <div class="metric-value"><?= number_format($current['pressure_hpa'], 1) ?><span> hPa</span></div>
+                <div class="metric-trend <?= $change > 0 ? 'rise' : ($change < 0 ? 'fall' : 'steady') ?>">
+                    <?= $change > 0 ? '↑ Rising' : ($change < 0 ? '↓ Falling' : '→ Stable') ?>
+                    <?php if ($latest): ?><strong><?= $change >= 0 ? '+' : '' ?><?= number_format($change, 1) ?> hPa</strong><?php endif; ?>
+                </div>
+            <?php else: ?>
+                <div class="metric-unavailable">Unavailable</div>
+            <?php endif; ?>
+        </article>
+
     <section class="card climate-gauge-card" aria-labelledby="climateGaugeTitle">
         <div class="section-heading">
             <div>
@@ -219,18 +232,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     </section>
 
     <section class="measurement-grid">
-        <article class="card metric-card pressure-card">
-            <p class="label">Air pressure</p>
-            <?php if ($current): ?>
-                <div class="metric-value"><?= number_format($current['pressure_hpa'], 1) ?><span> hPa</span></div>
-                <div class="metric-trend <?= $change > 0 ? 'rise' : ($change < 0 ? 'fall' : 'steady') ?>">
-                    <?= $change > 0 ? '↑ Rising' : ($change < 0 ? '↓ Falling' : '→ Stable') ?>
-                    <?php if ($latest): ?><strong><?= $change >= 0 ? '+' : '' ?><?= number_format($change, 1) ?> hPa</strong><?php endif; ?>
-                </div>
-            <?php else: ?>
-                <div class="metric-unavailable">Unavailable</div>
-            <?php endif; ?>
-        </article>
+
 
         <?php
         $windSpeed = $current ? max(0.0, (float)$current['wind_speed_kmh']) : 0.0;
