@@ -122,7 +122,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     $dewCx = 31.0; $dewCy = 68.0; $smallR = 15.5;
     $humidityCx = 69.0; $humidityCy = 68.0;
 
-    [$tempTipX,$tempTipY] = $climateGaugePoint($tempCx,$tempCy,$tempAngle,$tempR / 2.0);
+    [$tempTipX,$tempTipY] = $climateGaugePoint($tempCx,$tempCy,$tempAngle,$tempR - 3.5);
     [$dewTipX,$dewTipY] = $climateGaugePoint($dewCx,$dewCy,$dewAngle,$smallR-2.5);
     [$humidityTipX,$humidityTipY] = $climateGaugePoint($humidityCx,$humidityCy,$humidityAngle,$smallR-2.5);
     ?> 
@@ -206,7 +206,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                         <?php endfor; ?>
                     </g>
 
-                    <line class="aircraft-needle temp-needle" x1="<?= number_format($tempCx,3,'.','') ?>" y1="<?= number_format($tempCy - 8.0,3,'.','') ?>" x2="<?= number_format($tempTipX,3,'.','') ?>" y2="<?= number_format($tempTipY,3,'.','') ?>"></line>
+                    <line class="aircraft-needle temp-needle" x1="<?= number_format($tempCx,3,'.','') ?>" y1="<?= number_format($tempCy,3,'.','') ?>" x2="<?= number_format($tempTipX,3,'.','') ?>" y2="<?= number_format($tempTipY,3,'.','') ?>"></line>
                     <line class="aircraft-needle dew-needle" x1="<?= number_format($dewCx,3,'.','') ?>" y1="<?= number_format($dewCy,3,'.','') ?>" x2="<?= number_format($dewTipX,3,'.','') ?>" y2="<?= number_format($dewTipY,3,'.','') ?>"></line>
                     <line class="aircraft-needle humidity-needle" x1="<?= number_format($humidityCx,3,'.','') ?>" y1="<?= number_format($humidityCy,3,'.','') ?>" x2="<?= number_format($humidityTipX,3,'.','') ?>" y2="<?= number_format($humidityTipY,3,'.','') ?>"></line>
 
