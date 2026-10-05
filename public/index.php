@@ -203,7 +203,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     <text class="aircraft-dial-title" x="50" y="28">TEMPERATURE</text>
                     <text class="aircraft-dial-value temp-value" x="50" y="35"><?= $current ? number_format($temperatureC,1) . '°C' : '—' ?></text>
 
-                    <text class="aircraft-dial-title small" x="31" y="67">DEW POINT</text>
+                    <text class="aircraft-dial-title small" x="31" y="65">DEW</text>
                     <text class="aircraft-dial-value small" x="31" y="72"><?= $current ? number_format($dewPointC,1) . '°C' : '—' ?></text>
 
                     <text class="aircraft-dial-title small" x="69" y="67">HUMIDITY</text>
