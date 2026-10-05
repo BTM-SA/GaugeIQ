@@ -115,7 +115,8 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     $humidityStart = -90.0; $humiditySweep = 180.0;
     $tempAngle = $tempStart + $tempRatio * $tempSweep;
     $dewAngle = $dewStart + $dewRatio * $dewSweep;
-    $humidityAngle = $humidityStart + $humidityRatio * $humiditySweep;
+    // Humidity scale is inverted: 0% is at the bottom and 100% is at the top.
+    $humidityAngle = 90.0 - $humidityRatio * 180.0;
 
     $tempCx = 50.0; $tempCy = 28.0; $tempR = 29.0;
     $dewCx = 31.0; $dewCy = 68.0; $smallR = 15.5;
@@ -153,7 +154,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     <path class="aircraft-unified-track dew" d="M 31 83.5 A 15.5 15.5 0 0 1 31 52.5"></path>
                     <path class="aircraft-unified-track humidity" d="M 69 52.5 A 15.5 15.5 0 0 1 69 83.5"></path>
                     <path class="aircraft-unified-dew" pathLength="100" stroke-dasharray="<?= number_format($dewRatio * 100, 2, '.', '') ?> 100" d="M 31 83.5 A 15.5 15.5 0 0 1 31 52.5"></path>
-                    <path class="aircraft-unified-humidity" pathLength="100" stroke-dasharray="<?= number_format($humidityRatio * 100, 2, '.', '') ?> 100" d="M 69 52.5 A 15.5 15.5 0 0 1 69 83.5"></path>
+                    <path class="aircraft-unified-humidity" pathLength="100" stroke-dasharray="<?= number_format($humidityRatio * 100, 2, '.', '') ?> 100" d="M 69 83.5 A 15.5 15.5 0 0 1 69 52.5"></path>
 
                     <g class="aircraft-ticks">
                         <?php for ($value = 0; $value <= 40; $value += 2.5):
@@ -182,7 +183,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 
                     <g class="aircraft-ticks small humidity-ticks">
                         <?php for ($value = 0; $value <= 100; $value += 20):
-                            $angle = $humidityStart + ($value / 100.0) * $humiditySweep;
+                            $angle = 90.0 - ($value / 100.0) * 180.0;
                             $outer = $climateGaugePoint($humidityCx,$humidityCy,$angle,$smallR);
                             $inner = $climateGaugePoint($humidityCx,$humidityCy,$angle,$smallR-3.0);
                             [$lx,$ly] = $climateGaugePoint($humidityCx,$humidityCy,$angle,$smallR-5.5);
@@ -206,7 +207,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     <text class="aircraft-dial-title small" x="31" y="65">DEW</text>
                     <text class="aircraft-dial-value small" x="31" y="72"><?= $current ? number_format($dewPointC,1) . '°C' : '—' ?></text>
 
-                    <text class="aircraft-dial-title small" x="69" y="67">HUMIDITY</text>
+                    <text class="aircraft-dial-title small" x="69" y="65">HUM</text>
                     <text class="aircraft-dial-value small" x="69" y="72"><?= $current ? number_format($humidityPercent,0) . '%' : '—' ?></text>
                 </svg>
             </div>
