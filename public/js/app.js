@@ -109,10 +109,16 @@ function applyWindCompassHeading(heading) {
             windGauge.style.setProperty('--wind-compass-heading', windCompassHeading.toFixed(2) + 'deg');
 
             const windMarker = windGauge.querySelector('.wind-direction-marker');
+            const windToMarker = windGauge.querySelector('.wind-direction-to-marker');
             const windDegrees = Number(windMarker?.dataset.windDegrees);
+            const windToDegrees = Number(windToMarker?.dataset.windToDegrees);
             if (windMarker && Number.isFinite(windDegrees)) {
                 const markerDelta = shortestCompassDelta(windCompassHeading, windDegrees);
                 windMarker.style.transform = 'rotate(' + markerDelta.toFixed(2) + 'deg)';
+            }
+            if (windToMarker && Number.isFinite(windToDegrees)) {
+                const markerToDelta = shortestCompassDelta(windCompassHeading, windToDegrees);
+                windToMarker.style.transform = 'rotate(' + markerToDelta.toFixed(2) + 'deg)';
             }
 
             if (windCompassStatus) {
@@ -209,8 +215,12 @@ async function enableWindCompass() {
 
 if (windGauge) {
     const initialMarker = windGauge.querySelector('.wind-direction-marker');
+    const initialToMarker = windGauge.querySelector('.wind-direction-to-marker');
     if (initialMarker) {
         initialMarker.style.transform = 'rotate(' + (Number(initialMarker.dataset.windDegrees) || 0) + 'deg)';
+    }
+    if (initialToMarker) {
+        initialToMarker.style.transform = 'rotate(' + (Number(initialToMarker.dataset.windToDegrees) || 0) + 'deg)';
     }
 
     if (windCompassButton) {
