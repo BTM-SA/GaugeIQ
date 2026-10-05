@@ -122,7 +122,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     $dewCx = 31.0; $dewCy = 68.0; $smallR = 15.5;
     $humidityCx = 69.0; $humidityCy = 68.0;
 
-    [$tempTipX,$tempTipY] = $climateGaugePoint($tempCx,$tempCy,$tempAngle,$tempR-1.5);
+    [$tempTipX,$tempTipY] = $climateGaugePoint($tempCx,$tempCy,$tempAngle,$tempR / 2.0);
     [$dewTipX,$dewTipY] = $climateGaugePoint($dewCx,$dewCy,$dewAngle,$smallR-2.5);
     [$humidityTipX,$humidityTipY] = $climateGaugePoint($humidityCx,$humidityCy,$humidityAngle,$smallR-2.5);
     ?> 
@@ -215,7 +215,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     <circle class="aircraft-hub small" cx="69" cy="68" r="2.1"></circle>
 
                     <text class="aircraft-dial-title" x="50" y="41">TEMPERATURE</text>
-                    <text class="aircraft-dial-value temp-value" x="50" y="48"><?= $current ? number_format($temperatureC,1) . '°C' : '—' ?></text>
+                    <text class="aircraft-dial-value temp-value" x="50" y="45"><?= $current ? number_format($temperatureC,1) . '°C' : '—' ?></text>
 
                     <text class="aircraft-dial-title small" x="31" y="65">DEW</text>
                     <text class="aircraft-dial-value small" x="31" y="72"><?= $current ? number_format($dewPointC,1) . '°C' : '—' ?></text>
