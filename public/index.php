@@ -102,9 +102,8 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     $humidityZone = !$current ? 'Unavailable' : ($humidityPercent < 40 ? 'Dry' : ($humidityPercent < 60 ? 'Comfortable' : ($humidityPercent < 75 ? 'Humid' : 'Condensation risk')));
     $humidityZoneClass = strtolower(str_replace(' ', '-', $humidityZone));
 
-    // Three-in-one aircraft-style environmental instrument.
-    // Temperature is the dominant upper dial; dew point and humidity sit below,
-    // with their scales opening away from one another.
+    // Two separate circular environmental instruments. Keep their centres
+    // deliberately apart so the dials and their labels share the same axis.
     $climateGaugePoint = static function (float $cx, float $cy, float $angle, float $radius): array {
         $radians = deg2rad($angle);
         return [$cx + cos($radians) * $radius, $cy + sin($radians) * $radius];
@@ -119,9 +118,8 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     $dewAngle = $dewStart + $dewRatio * $dewSweep;
     $humidityAngle = $humidityStart + $humidityRatio * $humiditySweep;
 
-    $tempCx = 50.0; $tempCy = 32.0; $tempR = 34.8;
-    $dewCx = 31.0; $dewCy = 50.0; $smallR = 20.0;
-    $humidityCx = 69.0; $humidityCy = 50.0;
+    $dewCx = 25.0; $dewCy = 50.0; $smallR = 20.0;
+    $humidityCx = 75.0; $humidityCy = 50.0;
 
     $climateNeedlePath = static function (float $cx, float $cy, float $angle, float $length): string {
         $radians = deg2rad($angle);
@@ -197,7 +195,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 
         <div class="climate-gauge-wrap">
             <div class="climate-triple-gauge" role="img" aria-label="<?= $current ? htmlspecialchars('Dew point ' . number_format($dewPointC, 1) . ' degrees Celsius. Relative humidity ' . number_format($humidityPercent, 0) . ' percent.', ENT_QUOTES) : 'Dew point and humidity unavailable' ?>">
-                <svg viewBox="0 30 100 40" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
+                <svg viewBox="0 28 100 44" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
                     <!-- Two near-complete circular instruments with a small opening at the bottom. -->
                     <path class="aircraft-unified-track dew" d="M <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart, $smallR)[1],3,'.','') ?> A <?= $smallR ?> <?= $smallR ?> 0 1 1 <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart + $dewSweep, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart + $dewSweep, $smallR)[1],3,'.','') ?>"></path>
                     <path class="aircraft-unified-dew" pathLength="100" stroke-dasharray="<?= number_format($dewRatio * 100, 2, '.', '') ?> 100" d="M <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart, $smallR)[1],3,'.','') ?> A <?= $smallR ?> <?= $smallR ?> 0 1 1 <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart + $dewSweep, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart + $dewSweep, $smallR)[1],3,'.','') ?>"></path>
@@ -232,8 +230,8 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     <path class="aircraft-needle dew-needle" d="<?= $dewNeedlePath ?>"></path>
                     <path class="aircraft-needle humidity-needle" d="<?= $humidityNeedlePath ?>"></path>
 
-                    <circle class="aircraft-hub small" cx="31" cy="68" r="2.1"></circle>
-                    <circle class="aircraft-hub small" cx="69" cy="68" r="2.1"></circle>
+                    <circle class="aircraft-hub small" cx="25" cy="50" r="2.1"></circle>
+                    <circle class="aircraft-hub small" cx="75" cy="50" r="2.1"></circle>
 
 
                 </svg>
