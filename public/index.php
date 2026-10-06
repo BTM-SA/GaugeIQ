@@ -380,19 +380,23 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
             <?php foreach ($forecast as $day):
                 $condition = $forecastCondition($day['weather_code'] ?? null);
                 $rainProbability = max(0, min(100, (int)($day['rain_probability_percent'] ?? 0)));
-                $rainExpected = $rainProbability > 0;
                 $dayLabel = date('D', strtotime((string)$day['date']));
-                $temperature = $day['temperature_max_c'] ?? null;
+                $high = $day['temperature_max_c'] ?? null;
+                $low = $day['temperature_min_c'] ?? null;
             ?>
                 <div class="forecast-day">
                     <strong class="forecast-day-name"><?= htmlspecialchars($dayLabel, ENT_QUOTES) ?></strong>
                     <span class="forecast-icon" role="img" aria-label="<?= htmlspecialchars($condition['label'], ENT_QUOTES) ?>"><?= $condition['icon'] ?></span>
-                    <?php if ($rainExpected): ?>
-                        <strong class="forecast-rain"><?= $rainProbability ?>%</strong>
-                    <?php elseif ($temperature !== null): ?>
-                        <strong class="forecast-temperature"><?= number_format((float)$temperature, 0) ?>°</strong>
+                    <strong class="forecast-temperature">
+                        <?= $high !== null ? number_format((float)$high, 0) . '°' : '—' ?>
+                        <?php if ($low !== null): ?>
+                            <span class="forecast-low">/ <?= number_format((float)$low, 0) ?>°</span>
+                        <?php endif; ?>
+                    </strong>
+                    <?php if ($rainProbability > 0): ?>
+                        <span class="forecast-rain">Rain <?= $rainProbability ?>%</span>
                     <?php else: ?>
-                        <strong class="forecast-temperature">—</strong>
+                        <span class="forecast-rain forecast-rain-empty" aria-hidden="true">&nbsp;</span>
                     <?php endif; ?>
                 </div>
             <?php endforeach; ?>
