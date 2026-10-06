@@ -112,23 +112,33 @@ function setupAlertEditing() {
         const refresh = () => {
             const isWind = metric.value === 'wind';
             const isDirection = metric.value === 'wind_direction';
+            const isWeatherChange = metric.value === 'weather_change';
             const combined = isWind && condition.value === 'speed_and_direction';
 
             degreesField.hidden = !(isDirection && condition.value === 'specific');
             valueField.hidden = isDirection || combined;
             speedField.hidden = !combined;
             fromField.hidden = !combined;
+
+            if (isWeatherChange) {
+                condition.value = 'above';
+                valueField.hidden = false;
+            }
             toField.hidden = !combined;
 
             [...condition.options].forEach(option => {
-                option.hidden = isDirection
-                    ? !['change', 'specific'].includes(option.value)
-                    : isWind
-                        ? option.value !== 'speed_and_direction'
-                        : ['specific', 'speed_and_direction'].includes(option.value);
+                option.hidden = isWeatherChange
+                    ? option.value !== 'above'
+                    : isDirection
+                        ? !['change', 'specific'].includes(option.value)
+                        : isWind
+                            ? option.value !== 'speed_and_direction'
+                            : ['specific', 'speed_and_direction'].includes(option.value);
             });
 
-            if (isWind) {
+            if (isWeatherChange) {
+                condition.value = 'above';
+            } else if (isWind) {
                 condition.value = 'speed_and_direction';
             } else if (isDirection && !['change', 'specific'].includes(condition.value)) {
                 condition.value = 'change';
