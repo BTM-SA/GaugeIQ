@@ -33,7 +33,7 @@ final class PressureService
         $lon = rawurlencode($longitude);
 
         $url = "https://api.open-meteo.com/v1/forecast?latitude={$lat}&longitude={$lon}"
-            . "&current=temperature_2m,apparent_temperature,dew_point_2m,surface_pressure,relative_humidity_2m,wind_speed_10m,wind_direction_10m&daily=temperature_2m_max,temperature_2m_min&forecast_days=1"
+            . "&current=temperature_2m,apparent_temperature,dew_point_2m,surface_pressure,relative_humidity_2m,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=4"
             . "&wind_speed_unit=kmh&timezone=auto";
 
         if (!function_exists('curl_init')) {
@@ -99,7 +99,34 @@ final class PressureService
             'wind_speed_kmh' => (float)$current['wind_speed_10m'],
             'wind_direction_degrees' => (float)$current['wind_direction_10m'],
             'observed_at' => (string)($current['time'] ?? gmdate('c')),
+            'forecast' => $this->normaliseForecast($data['daily'] ?? []),
         ];
+    }
+
+    private function normaliseForecast(array $daily): array
+    {
+        $days = [];
+        $times = $daily['time'] ?? [];
+        $codes = $daily['weather_code'] ?? [];
+        $highs = $daily['temperature_2m_max'] ?? [];
+        $lows = $daily['temperature_2m_min'] ?? [];
+        $rainProbabilities = $daily['precipitation_probability_max'] ?? [];
+
+        foreach ($times as $index => $time) {
+            if (!is_string($time) || $time === '') {
+                continue;
+            }
+
+            $days[] = [
+                'date' => $time,
+                'weather_code' => isset($codes[$index]) && is_numeric($codes[$index]) ? (int)$codes[$index] : null,
+                'temperature_max_c' => isset($highs[$index]) && is_numeric($highs[$index]) ? (float)$highs[$index] : null,
+                'temperature_min_c' => isset($lows[$index]) && is_numeric($lows[$index]) ? (float)$lows[$index] : null,
+                'rain_probability_percent' => isset($rainProbabilities[$index]) && is_numeric($rainProbabilities[$index]) ? (int)round((float)$rainProbabilities[$index]) : 0,
+            ];
+        }
+
+        return array_slice($days, 0, 4);
     }
 
     public function record(array $current): ?array
