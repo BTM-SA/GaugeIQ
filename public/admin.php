@@ -30,6 +30,26 @@ function alertLookback(PDO $pdo): int {
     return $value === false ? 3 : max(1, min(168, (int)$value));
 }
 
+function gaugeSetting(PDO $pdo, string $key, ?string $fallback = null): ?string {
+    $stmt = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1");
+    $stmt->execute([$key]);
+    $value = $stmt->fetchColumn();
+    return $value === false ? $fallback : (string)$value;
+}
+
+function saveGaugeSetting(PDO $pdo, string $key, string $value): void {
+    if ((string)$pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite') {
+        $stmt = $pdo->prepare("INSERT INTO gaugeiq_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value");
+    } else {
+        $stmt = $pdo->prepare("INSERT INTO gaugeiq_settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
+    }
+    $stmt->execute([$key, $value]);
+}
+
+$locationName = gaugeSetting($pdo, 'location_name', (string)$config['pressure']['location_name']) ?? '';
+$locationLatitude = gaugeSetting($pdo, 'location_latitude', (string)$config['pressure']['latitude']) ?? '';
+$locationLongitude = gaugeSetting($pdo, 'location_longitude', (string)$config['pressure']['longitude']) ?? '';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!AdminAuth::verifyCsrf((string)($_POST['csrf'] ?? ''))) {
         $errors[] = 'Your session expired. Please try again.';
@@ -37,7 +57,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $action = (string)($_POST['action'] ?? '');
 
-            if ($action === 'save_lookback') {
+            if ($action === 'save_location') {
+                $name = trim((string)($_POST['location_name'] ?? ''));
+                $latitude = (float)($_POST['location_latitude'] ?? 0);
+                $longitude = (float)($_POST['location_longitude'] ?? 0);
+
+                if ($name === '') {
+                    throw new InvalidArgumentException('Please enter a name for the location.');
+                }
+                if ($latitude < -90 || $latitude > 90) {
+                    throw new InvalidArgumentException('Latitude must be between -90 and 90.');
+                }
+                if ($longitude < -180 || $longitude > 180) {
+                    throw new InvalidArgumentException('Longitude must be between -180 and 180.');
+                }
+
+                saveGaugeSetting($pdo, 'location_name', $name);
+                saveGaugeSetting($pdo, 'location_latitude', number_format($latitude, 6, '.', ''));
+                saveGaugeSetting($pdo, 'location_longitude', number_format($longitude, 6, '.', ''));
+                $locationName = $name;
+                $locationLatitude = number_format($latitude, 6, '.', '');
+                $locationLongitude = number_format($longitude, 6, '.', '');
+                $notice = 'Current location saved.';
+            } elseif ($action === 'save_lookback') {
                 $hours = max(1, min(168, (int)($_POST['lookback_hours'] ?? 3)));
                 if ((string)$pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite') {
                     $stmt = $pdo->prepare("INSERT INTO gaugeiq_settings (key, value) VALUES ('alert_lookback_hours', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value");
@@ -154,6 +196,38 @@ $enabledRuleCount = count(array_filter($allRules, static fn(array $rule): bool =
 <?php endif; ?>
 <?php if ($notice): ?><div class="notice"><?= h($notice) ?></div><?php endif; ?>
 <?php if ($errors): ?><div class="error"><?php foreach ($errors as $error): ?><div><?= h($error) ?></div><?php endforeach; ?></div><?php endif; ?>
+
+<section class="card location-card">
+    <div class="section-heading">
+        <div>
+            <h2>Current location</h2>
+            <p class="muted">Change the location GaugeIQ uses for weather data and the name shown on the dashboard.</p>
+        </div>
+    </div>
+    <form method="post" class="location-form">
+        <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
+        <input type="hidden" name="action" value="save_location">
+        <div class="location-grid">
+            <div class="full">
+                <label for="location_name">Location name</label>
+                <input id="location_name" name="location_name" type="text" maxlength="120" value="<?= h($locationName) ?>" placeholder="Home">
+            </div>
+            <div>
+                <label for="location_latitude">Latitude</label>
+                <input id="location_latitude" name="location_latitude" type="number" min="-90" max="90" step="0.000001" value="<?= h($locationLatitude) ?>" required>
+            </div>
+            <div>
+                <label for="location_longitude">Longitude</label>
+                <input id="location_longitude" name="location_longitude" type="number" min="-180" max="180" step="0.000001" value="<?= h($locationLongitude) ?>" required>
+            </div>
+        </div>
+        <div class="location-actions">
+            <button type="button" class="secondary" id="useCurrentLocation">Use device location</button>
+            <button type="submit">Save location</button>
+        </div>
+        <p id="locationHelp" class="alert-help muted">Changing the location affects the next weather check. Existing historical readings remain unchanged.</p>
+    </form>
+</section>
 
 <section class="admin-hero card">
     <div>
@@ -349,5 +423,28 @@ $enabledRuleCount = count(array_filter($allRules, static fn(array $rule): bool =
 <script src="js/admin.js" defer></script>
 <script src="js/alerts.js?v=4" defer></script>
 </main>
+<script>
+document.getElementById('useCurrentLocation')?.addEventListener('click', () => {
+    const help = document.getElementById('locationHelp');
+    if (!navigator.geolocation) {
+        if (help) help.textContent = 'This browser does not provide location services.';
+        return;
+    }
+    if (help) help.textContent = 'Requesting your device location…';
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            document.getElementById('location_latitude').value = position.coords.latitude.toFixed(6);
+            document.getElementById('location_longitude').value = position.coords.longitude.toFixed(6);
+            if (help) help.textContent = 'Device coordinates loaded. Enter the location name, then save.';
+        },
+        (error) => {
+            if (help) help.textContent = error.code === 1
+                ? 'Location access was denied. You can enter the coordinates manually.'
+                : 'Could not determine your device location. You can enter the coordinates manually.';
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+    );
+});
+</script>
 </body>
 </html>
