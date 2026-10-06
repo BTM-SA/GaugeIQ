@@ -10,23 +10,38 @@ function refreshFields() {
     const c = condition.value;
     const direction = m === 'wind_direction' && c === 'specific';
     const combined = m === 'wind' && c === 'speed_and_direction';
+    const weatherChange = m === 'weather_change';
 
     degreesField.hidden = !direction;
     valueField.hidden = direction || combined;
     speedField.hidden = !combined;
     fromField.hidden = !combined;
 
+    if (weatherChange) {
+        condition.value = 'above';
+        valueField.hidden = false;
+        const help = document.getElementById('weatherChangeHelp');
+        if (help) help.hidden = false;
+    } else {
+        const help = document.getElementById('weatherChangeHelp');
+        if (help) help.hidden = true;
+    }
+
     [...condition.options].forEach(option => {
         option.hidden =
-            m === 'wind_direction'
-                ? !['change', 'specific'].includes(option.value)
-                : m === 'wind'
-                    ? option.value !== 'speed_and_direction'
-                    : ['specific', 'speed_and_direction'].includes(option.value);
+            m === 'weather_change'
+                ? option.value !== 'above'
+                : m === 'wind_direction'
+                    ? !['change', 'specific'].includes(option.value)
+                    : m === 'wind'
+                        ? option.value !== 'speed_and_direction'
+                        : ['specific', 'speed_and_direction'].includes(option.value);
     });
 
     if (m === 'wind') {
         condition.value = 'speed_and_direction';
+    } else if (m === 'weather_change') {
+        condition.value = 'above';
     } else if (m === 'wind_direction' && !['change', 'specific'].includes(condition.value)) {
         condition.value = 'change';
     } else if (m !== 'wind_direction' && ['specific', 'speed_and_direction'].includes(condition.value)) {
