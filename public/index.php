@@ -288,11 +288,9 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     </g>
 
                     <circle class="wind-center" cx="50" cy="50" r="18.5"></circle>
-                    <g class="wind-direction-marker" data-wind-degrees="<?= number_format($windDegrees, 2, '.', '') ?>">
-                        <path d="M50 20 L54 29 L50 27 L46 29 Z"></path>
-                    </g>
-                    <g class="wind-direction-to-marker" data-wind-to-degrees="<?= number_format($windToDegrees, 2, '.', '') ?>">
-                        <path style="fill:#22c55e" d="M50 20 L54 29 L50 27 L46 29 Z"></path>
+                    <g class="wind-direction-arrows" data-wind-degrees="<?= number_format($windDegrees, 2, '.', '') ?>">
+                        <path class="wind-direction-marker" d="M50 20 L54 29 L50 27 L46 29 Z"></path>
+                        <path class="wind-direction-to-marker" transform="rotate(180 50 50)" d="M50 20 L54 29 L50 27 L46 29 Z"></path>
                     </g>
                 </svg>
                 <div class="wind-gauge-center">
@@ -515,6 +513,6 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 
     <p id="status" class="status"></p>
 </main>
-<script src="js/app.js?v=20261001-compass"></script>
+<script src="js/app.js?v=20261006-compass"></script>
 </body>
 </html>
