@@ -195,8 +195,8 @@ button:disabled { opacity: .55; cursor: default; }
 .aircraft-unified-track{stroke:var(--surface);stroke-width:2.1}
 .aircraft-unified-track.temp{stroke-width:3.1}
 .aircraft-unified-temp{stroke:var(--climate-warm);stroke-width:3.1;transition:stroke-dasharray .7s ease}
-.aircraft-unified-dew{stroke:var(--climate-dew);stroke-width:2.1;transition:stroke-dasharray .7s ease}
-.aircraft-unified-humidity{stroke:var(--climate-warm);stroke-width:2.1;transition:stroke-dasharray .7s ease}
+.aircraft-unified-dew{stroke:#2563eb;stroke-width:1.1;transition:stroke-dasharray .7s ease}
+.aircraft-unified-humidity{stroke:#2563eb;stroke-width:1.1;transition:stroke-dasharray .7s ease}
 .aircraft-ticks{fill:var(--text);text-anchor:middle;dominant-baseline:middle;font-weight:800}
 .aircraft-ticks line{stroke:var(--muted);stroke-width:.35}
 .aircraft-ticks line.major{stroke:var(--text);stroke-width:.8}
@@ -204,8 +204,8 @@ button:disabled { opacity: .55; cursor: default; }
 .aircraft-ticks.small text{font-size:3px}
 .aircraft-ticks.small line{stroke-width:.3}
 .aircraft-needle{fill:currentColor;stroke:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.18))}
-.aircraft-needle.dew-needle{color:var(--climate-dew)}
-.aircraft-needle.humidity-needle{color:var(--climate-warm)}
+.aircraft-needle.dew-needle{color:#ef4444}
+.aircraft-needle.humidity-needle{color:#ef4444}
 .aircraft-hub{fill:var(--text);stroke:var(--card);stroke-width:.8}
 .aircraft-hub.small{stroke-width:.65}
 .climate-readings{display:grid;grid-template-columns:25% 50% 25%;width:100%;margin-top:10px;text-align:center}
