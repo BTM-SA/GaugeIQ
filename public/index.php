@@ -187,70 +187,6 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 
 
 
-    <section class="card climate-gauge-card" aria-labelledby="climateGaugeTitle">
-        <div class="section-heading">
-            <div>
-                <h2 id="climateGaugeTitle">Dew Point &amp; Humidity</h2>
-                <p class="muted">Environmental instrument</p>
-            </div>
-        </div>
-
-        <div class="climate-gauge-wrap">
-            <div class="climate-triple-gauge" role="img" aria-label="<?= $current ? htmlspecialchars('Dew point ' . number_format($dewPointC, 1) . ' degrees Celsius. Relative humidity ' . number_format($humidityPercent, 0) . ' percent.', ENT_QUOTES) : 'Dew point and humidity unavailable' ?>">
-                <svg viewBox="0 28 100 44" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
-                    <!-- Two near-complete circular instruments with a small opening at the bottom. -->
-                    <path class="aircraft-unified-track dew" d="M <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart, $smallR)[1],3,'.','') ?> A <?= $smallR ?> <?= $smallR ?> 0 1 1 <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart + $dewSweep, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart + $dewSweep, $smallR)[1],3,'.','') ?>"></path>
-                    <path class="aircraft-unified-dew" pathLength="100" stroke-dasharray="<?= number_format($dewRatio * 100, 2, '.', '') ?> 100" d="M <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart, $smallR)[1],3,'.','') ?> A <?= $smallR ?> <?= $smallR ?> 0 1 1 <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart + $dewSweep, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart + $dewSweep, $smallR)[1],3,'.','') ?>"></path>
-
-                    <path class="aircraft-unified-track humidity" d="M <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart, $smallR)[1],3,'.','') ?> A <?= $smallR ?> <?= $smallR ?> 0 1 1 <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart + $humiditySweep, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart + $humiditySweep, $smallR)[1],3,'.','') ?>"></path>
-                    <path class="aircraft-unified-humidity" pathLength="100" stroke-dasharray="<?= number_format($humidityRatio * 100, 2, '.', '') ?> 100" d="M <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart, $smallR)[1],3,'.','') ?> A <?= $smallR ?> <?= $smallR ?> 0 1 1 <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart + $humiditySweep, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart + $humiditySweep, $smallR)[1],3,'.','') ?>"></path>
-
-                    <g class="aircraft-ticks small dew-ticks">
-                        <?php for ($value = 0; $value <= 40; $value += 1):
-                            $angle = $dewStart + ($value / 40.0) * $dewSweep;
-                            $outer = $climateGaugePoint($dewCx,$dewCy,$angle,$smallR);
-                            $inner = $climateGaugePoint($dewCx,$dewCy,$angle,$smallR - ($value % 5 === 0 ? 3.0 : 2.0));
-                            [$lx,$ly] = $climateGaugePoint($dewCx,$dewCy,$angle,$smallR-5.5);
-                        ?>
-                            <line class="<?= $value % 5 === 0 ? 'major' : '' ?>" x1="<?= number_format($outer[0],3,'.','') ?>" y1="<?= number_format($outer[1],3,'.','') ?>" x2="<?= number_format($inner[0],3,'.','') ?>" y2="<?= number_format($inner[1],3,'.','') ?>"></line>
-                            <?php if ($value % 5 === 0): ?><text x="<?= number_format($lx,3,'.','') ?>" y="<?= number_format($ly,3,'.','') ?>"><?= $value ?></text><?php endif; ?>
-                        <?php endfor; ?>
-                    </g>
-
-                    <g class="aircraft-ticks small humidity-ticks">
-                        <?php for ($value = 0; $value <= 2*50; $value += 2):
-                            $angle = $humidityStart + ($value / 100.0) * $humiditySweep;
-                            $outer = $climateGaugePoint($humidityCx,$humidityCy,$angle,$smallR);
-                            $inner = $climateGaugePoint($humidityCx,$humidityCy,$angle,$smallR - ($value % 10 === 0 ? 3.0 : 2.0));
-                            [$lx,$ly] = $climateGaugePoint($humidityCx,$humidityCy,$angle,$smallR-5.5);
-                        ?>
-                            <line class="<?= $value % 10 === 0 ? 'major' : '' ?>" x1="<?= number_format($outer[0],3,'.','') ?>" y1="<?= number_format($outer[1],3,'.','') ?>" x2="<?= number_format($inner[0],3,'.','') ?>" y2="<?= number_format($inner[1],3,'.','') ?>"></line>
-                            <?php if ($value % 10 === 0): ?><text x="<?= number_format($lx,3,'.','') ?>" y="<?= number_format($ly,3,'.','') ?>"><?= $value ?></text><?php endif; ?>
-                        <?php endfor; ?>
-                    </g>
-
-                    <path class="aircraft-needle dew-needle" d="<?= $dewNeedlePath ?>"></path>
-                    <path class="aircraft-needle humidity-needle" d="<?= $humidityNeedlePath ?>"></path>
-
-                    <circle class="aircraft-hub small" cx="25" cy="50" r="2.1"></circle>
-                    <circle class="aircraft-hub small" cx="75" cy="50" r="2.1"></circle>
-
-
-                </svg>
-            </div>
-            <div class="climate-readings" aria-label="Current climate readings">
-                <div class="climate-reading">
-                    <span>Dew Point</span>
-                    <strong><?= $current ? number_format($dewPointC, 1) . '°C' : '—' ?></strong>
-                </div>
-                <div class="climate-reading">
-                    <span>Humidity</span>
-                    <strong><?= $current ? number_format($humidityPercent, 0) . '%' : '—' ?></strong>
-                </div>
-            </div>
-        </div>
-    </section>
-
     <section class="measurement-grid">
 
 
@@ -341,6 +277,72 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
             </div>
         </article>
     </section>
+
+    <section class="card climate-gauge-card" aria-labelledby="climateGaugeTitle">
+        <div class="section-heading">
+            <div>
+                <h2 id="climateGaugeTitle">Dew Point &amp; Humidity</h2>
+                <p class="muted">Environmental instrument</p>
+            </div>
+        </div>
+
+        <div class="climate-gauge-wrap">
+            <div class="climate-triple-gauge" role="img" aria-label="<?= $current ? htmlspecialchars('Dew point ' . number_format($dewPointC, 1) . ' degrees Celsius. Relative humidity ' . number_format($humidityPercent, 0) . ' percent.', ENT_QUOTES) : 'Dew point and humidity unavailable' ?>">
+                <svg viewBox="0 28 100 44" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
+                    <!-- Two near-complete circular instruments with a small opening at the bottom. -->
+                    <path class="aircraft-unified-track dew" d="M <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart, $smallR)[1],3,'.','') ?> A <?= $smallR ?> <?= $smallR ?> 0 1 1 <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart + $dewSweep, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart + $dewSweep, $smallR)[1],3,'.','') ?>"></path>
+                    <path class="aircraft-unified-dew" pathLength="100" stroke-dasharray="<?= number_format($dewRatio * 100, 2, '.', '') ?> 100" d="M <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart, $smallR)[1],3,'.','') ?> A <?= $smallR ?> <?= $smallR ?> 0 1 1 <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart + $dewSweep, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart + $dewSweep, $smallR)[1],3,'.','') ?>"></path>
+
+                    <path class="aircraft-unified-track humidity" d="M <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart, $smallR)[1],3,'.','') ?> A <?= $smallR ?> <?= $smallR ?> 0 1 1 <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart + $humiditySweep, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart + $humiditySweep, $smallR)[1],3,'.','') ?>"></path>
+                    <path class="aircraft-unified-humidity" pathLength="100" stroke-dasharray="<?= number_format($humidityRatio * 100, 2, '.', '') ?> 100" d="M <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart, $smallR)[1],3,'.','') ?> A <?= $smallR ?> <?= $smallR ?> 0 1 1 <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart + $humiditySweep, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart + $humiditySweep, $smallR)[1],3,'.','') ?>"></path>
+
+                    <g class="aircraft-ticks small dew-ticks">
+                        <?php for ($value = 0; $value <= 40; $value += 1):
+                            $angle = $dewStart + ($value / 40.0) * $dewSweep;
+                            $outer = $climateGaugePoint($dewCx,$dewCy,$angle,$smallR);
+                            $inner = $climateGaugePoint($dewCx,$dewCy,$angle,$smallR - ($value % 5 === 0 ? 3.0 : 2.0));
+                            [$lx,$ly] = $climateGaugePoint($dewCx,$dewCy,$angle,$smallR-5.5);
+                        ?>
+                            <line class="<?= $value % 5 === 0 ? 'major' : '' ?>" x1="<?= number_format($outer[0],3,'.','') ?>" y1="<?= number_format($outer[1],3,'.','') ?>" x2="<?= number_format($inner[0],3,'.','') ?>" y2="<?= number_format($inner[1],3,'.','') ?>"></line>
+                            <?php if ($value % 5 === 0): ?><text x="<?= number_format($lx,3,'.','') ?>" y="<?= number_format($ly,3,'.','') ?>"><?= $value ?></text><?php endif; ?>
+                        <?php endfor; ?>
+                    </g>
+
+                    <g class="aircraft-ticks small humidity-ticks">
+                        <?php for ($value = 0; $value <= 2*50; $value += 2):
+                            $angle = $humidityStart + ($value / 100.0) * $humiditySweep;
+                            $outer = $climateGaugePoint($humidityCx,$humidityCy,$angle,$smallR);
+                            $inner = $climateGaugePoint($humidityCx,$humidityCy,$angle,$smallR - ($value % 10 === 0 ? 3.0 : 2.0));
+                            [$lx,$ly] = $climateGaugePoint($humidityCx,$humidityCy,$angle,$smallR-5.5);
+                        ?>
+                            <line class="<?= $value % 10 === 0 ? 'major' : '' ?>" x1="<?= number_format($outer[0],3,'.','') ?>" y1="<?= number_format($outer[1],3,'.','') ?>" x2="<?= number_format($inner[0],3,'.','') ?>" y2="<?= number_format($inner[1],3,'.','') ?>"></line>
+                            <?php if ($value % 10 === 0): ?><text x="<?= number_format($lx,3,'.','') ?>" y="<?= number_format($ly,3,'.','') ?>"><?= $value ?></text><?php endif; ?>
+                        <?php endfor; ?>
+                    </g>
+
+                    <path class="aircraft-needle dew-needle" d="<?= $dewNeedlePath ?>"></path>
+                    <path class="aircraft-needle humidity-needle" d="<?= $humidityNeedlePath ?>"></path>
+
+                    <circle class="aircraft-hub small" cx="25" cy="50" r="2.1"></circle>
+                    <circle class="aircraft-hub small" cx="75" cy="50" r="2.1"></circle>
+
+
+                </svg>
+            </div>
+            <div class="climate-readings" aria-label="Current climate readings">
+                <div class="climate-reading">
+                    <span>Dew Point</span>
+                    <strong><?= $current ? number_format($dewPointC, 1) . '°C' : '—' ?></strong>
+                </div>
+                <div class="climate-reading">
+                    <span>Humidity</span>
+                    <strong><?= $current ? number_format($humidityPercent, 0) . '%' : '—' ?></strong>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
 
 
 
