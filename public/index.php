@@ -115,7 +115,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 
     $tempStart = 210.0; $tempSweep = 120.0;
     $dewStart = 115.0; $dewSweep = 310.0;
-    $humidityStart = 65.0; $humiditySweep = 310.0;
+    $humidityStart = 115.0; $humiditySweep = 310.0;
     $dewAngle = $dewStart + $dewRatio * $dewSweep;
     $humidityAngle = $humidityStart + $humidityRatio * $humiditySweep;
 
@@ -203,7 +203,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     <path class="aircraft-unified-dew" pathLength="100" stroke-dasharray="<?= number_format($dewRatio * 100, 2, '.', '') ?> 100" d="M <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart, $smallR)[1],3,'.','') ?> A <?= $smallR ?> <?= $smallR ?> 0 1 1 <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart + $dewSweep, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart + $dewSweep, $smallR)[1],3,'.','') ?>"></path>
 
                     <path class="aircraft-unified-track humidity" d="M <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart, $smallR)[1],3,'.','') ?> A <?= $smallR ?> <?= $smallR ?> 0 1 1 <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart + $humiditySweep, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart + $humiditySweep, $smallR)[1],3,'.','') ?>"></path>
-                    <path class="aircraft-unified-humidity" pathLength="100" stroke-dasharray="<?= number_format($humidityRatio * 100, 2, '.', '') ?> 100" d="M <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart, $smallR)[1],3,'.','') ?> A <?= $smallR ?> <?= $smallR ?> 0 1 0 <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart - $humiditySweep, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart - $humiditySweep, $smallR)[1],3,'.','') ?>"></path>
+                    <path class="aircraft-unified-humidity" pathLength="100" stroke-dasharray="<?= number_format($humidityRatio * 100, 2, '.', '') ?> 100" d="M <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart, $smallR)[1],3,'.','') ?> A <?= $smallR ?> <?= $smallR ?> 0 1 1 <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart + $humiditySweep, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart + $humiditySweep, $smallR)[1],3,'.','') ?>"></path>
 
                     <g class="aircraft-ticks small dew-ticks">
                         <?php for ($value = 0; $value <= 40; $value += 1):
