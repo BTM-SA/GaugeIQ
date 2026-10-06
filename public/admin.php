@@ -136,7 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $type = (string)$_POST['condition_type'];
                 $configuration = [];
 
-                if (in_array($metric, ['pressure', 'humidity', 'wind_speed'], true)) {
+                if (in_array($metric, ['pressure', 'humidity', 'wind_speed', 'weather_change'], true)) {
                     $configuration['value'] = (float)$_POST['value'];
                 } elseif ($metric === 'wind_direction') {
                     $configuration['degrees'] = (float)$_POST['degrees'];
