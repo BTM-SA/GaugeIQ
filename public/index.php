@@ -21,6 +21,14 @@ $service = new PressureService($config, $db->pdo());
 $pdo = $db->pdo();
 migrateDatabase($pdo);
 
+$locationName = (string)$config['pressure']['location_name'];
+$locationSetting = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = 'location_name' LIMIT 1");
+$locationSetting->execute();
+$storedLocationName = $locationSetting->fetchColumn();
+if ($storedLocationName !== false && trim((string)$storedLocationName) !== '') {
+    $locationName = (string)$storedLocationName;
+}
+
 try {
     $current = $service->fetchCurrent();
     $latest = $db->pdo()->query(
@@ -84,7 +92,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         <div>
             <p class="eyebrow">GAUGЕIQ</p>
             <h1>GaugeIQ</h1>
-            <p class="muted"><?= htmlspecialchars($config['pressure']['location_name'], ENT_QUOTES) ?></p>
+            <p class="muted"><?= htmlspecialchars($locationName, ENT_QUOTES) ?></p>
         </div>
         <div class="header-actions">
             <a href="login.php" class="secondary button-link">Admin</a>
