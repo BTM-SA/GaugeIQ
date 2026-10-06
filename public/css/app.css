@@ -275,3 +275,14 @@ button:disabled { opacity: .55; cursor: default; }
   .location-actions{flex-direction:column;align-items:stretch}
   .location-actions button{width:100%}
 }
+
+.weather-change-card{margin-top:16px}
+.weather-change-card .section-heading{align-items:center}
+.weather-change-score{flex:0 0 auto;display:flex;align-items:baseline;justify-content:center;min-width:72px;height:72px;border-radius:50%;background:var(--surface);border:2px solid var(--border);font-size:30px;font-weight:900;line-height:1;color:var(--text)}
+.weather-change-score span{font-size:12px;font-weight:800;color:var(--muted);margin-left:2px}
+.weather-change-summary{margin-top:14px;font-size:15px;font-weight:800;color:var(--text)}
+.weather-change-reasons{display:grid;gap:8px;margin-top:12px}
+.weather-change-reason{display:flex;gap:9px;align-items:flex-start;padding:10px 12px;border-radius:12px;background:var(--surface);border:1px solid var(--border);font-size:13px;line-height:1.4;color:var(--text)}
+.weather-change-reason::before{content:'•';color:#2563eb;font-size:18px;line-height:12px;font-weight:900}
+.weather-change-note{margin:12px 0 0;font-size:11px;color:var(--muted)}
+@media(max-width:560px){.weather-change-card .section-heading{align-items:flex-start}.weather-change-score{min-width:62px;width:62px;height:62px;font-size:26px}}
