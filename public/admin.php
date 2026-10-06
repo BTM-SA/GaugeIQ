@@ -300,7 +300,7 @@ $enabledRuleCount = count(array_filter($allRules, static fn(array $rule): bool =
             </div>
             <div id="valueField">
                 <label for="value">Value</label>
-                <input id="value" name="value" type="number" step="0.1" value="3">
+                <input id="value" name="value" type="number" min="1" max="10" step="1" value="3">
                 <p id="weatherChangeHelp" class="alert-help muted" hidden>Alert when the weather change detection score reaches this level (1–10).</p>
             </div>
             <div id="degreesField" class="full" hidden>
