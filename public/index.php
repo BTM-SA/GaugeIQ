@@ -117,15 +117,33 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     $dewStart = 115.0; $dewSweep = 310.0;
     $humidityStart = 65.0; $humiditySweep = 310.0;
     $dewAngle = $dewStart + $dewRatio * $dewSweep;
-    // Humidity scale is inverted: 0% is at the bottom-right and 100% is at the bottom-left.
-    $humidityAngle = $humidityStart - $humidityRatio * $humiditySweep;
+    $humidityAngle = $humidityStart + $humidityRatio * $humiditySweep;
 
     $tempCx = 50.0; $tempCy = 32.0; $tempR = 34.8;
     $dewCx = 31.0; $dewCy = 68.0; $smallR = 15.5;
     $humidityCx = 69.0; $humidityCy = 68.0;
 
-    [$dewTipX,$dewTipY] = $climateGaugePoint($dewCx,$dewCy,$dewAngle,$smallR-2.5);
-    [$humidityTipX,$humidityTipY] = $climateGaugePoint($humidityCx,$humidityCy,$humidityAngle,$smallR-2.5);
+    $climateNeedlePath = static function (float $cx, float $cy, float $angle, float $length): string {
+        $radians = deg2rad($angle);
+        $perpX = -sin($radians);
+        $perpY = cos($radians);
+        $tipX = $cx + cos($radians) * $length;
+        $tipY = $cy + sin($radians) * $length;
+        $midX = $cx + cos($radians) * ($length * 0.42);
+        $midY = $cy + sin($radians) * ($length * 0.42);
+        $baseX = $cx - cos($radians) * 1.4;
+        $baseY = $cy - sin($radians) * 1.4;
+        $fmt = static fn(array $p): string => implode(' ', array_map(static fn(float $v): string => number_format($v, 3, '.', ''), $p));
+        return 'M ' . $fmt([$baseX + $perpX * 0.9, $baseY + $perpY * 0.9])
+            . ' L ' . $fmt([$midX + $perpX * 0.28, $midY + $perpY * 0.28])
+            . ' L ' . $fmt([$tipX + $perpX * 0.045, $tipY + $perpY * 0.045])
+            . ' L ' . $fmt([$tipX - $perpX * 0.045, $tipY - $perpY * 0.045])
+            . ' L ' . $fmt([$midX - $perpX * 0.28, $midY - $perpY * 0.28])
+            . ' L ' . $fmt([$baseX - $perpX * 0.9, $baseY - $perpY * 0.9]) . ' Z';
+    };
+
+    $dewNeedlePath = $climateNeedlePath($dewCx, $dewCy, $dewAngle, $smallR - 2.5);
+    $humidityNeedlePath = $climateNeedlePath($humidityCx, $humidityCy, $humidityAngle, $smallR - 2.5);
     ?> 
 
 
@@ -184,45 +202,51 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     <path class="aircraft-unified-track dew" d="M <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart, $smallR)[1],3,'.','') ?> A <?= $smallR ?> <?= $smallR ?> 0 1 1 <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart + $dewSweep, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart + $dewSweep, $smallR)[1],3,'.','') ?>"></path>
                     <path class="aircraft-unified-dew" pathLength="100" stroke-dasharray="<?= number_format($dewRatio * 100, 2, '.', '') ?> 100" d="M <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart, $smallR)[1],3,'.','') ?> A <?= $smallR ?> <?= $smallR ?> 0 1 1 <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart + $dewSweep, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart + $dewSweep, $smallR)[1],3,'.','') ?>"></path>
 
-                    <path class="aircraft-unified-track humidity" d="M <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart, $smallR)[1],3,'.','') ?> A <?= $smallR ?> <?= $smallR ?> 0 1 0 <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart - $humiditySweep, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart - $humiditySweep, $smallR)[1],3,'.','') ?>"></path>
+                    <path class="aircraft-unified-track humidity" d="M <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart, $smallR)[1],3,'.','') ?> A <?= $smallR ?> <?= $smallR ?> 0 1 1 <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart + $humiditySweep, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart + $humiditySweep, $smallR)[1],3,'.','') ?>"></path>
                     <path class="aircraft-unified-humidity" pathLength="100" stroke-dasharray="<?= number_format($humidityRatio * 100, 2, '.', '') ?> 100" d="M <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart, $smallR)[1],3,'.','') ?> A <?= $smallR ?> <?= $smallR ?> 0 1 0 <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart - $humiditySweep, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($humidityCx,$humidityCy,$humidityStart - $humiditySweep, $smallR)[1],3,'.','') ?>"></path>
 
                     <g class="aircraft-ticks small dew-ticks">
-                        <?php for ($value = 0; $value <= 40; $value += 10):
+                        <?php for ($value = 0; $value <= 40; $value += 1):
                             $angle = $dewStart + ($value / 40.0) * $dewSweep;
                             $outer = $climateGaugePoint($dewCx,$dewCy,$angle,$smallR);
-                            $inner = $climateGaugePoint($dewCx,$dewCy,$angle,$smallR-3.0);
+                            $inner = $climateGaugePoint($dewCx,$dewCy,$angle,$smallR - ($value % 5 === 0 ? 3.0 : 2.0));
                             [$lx,$ly] = $climateGaugePoint($dewCx,$dewCy,$angle,$smallR-5.5);
                         ?>
-                            <line class="major" x1="<?= number_format($outer[0],3,'.','') ?>" y1="<?= number_format($outer[1],3,'.','') ?>" x2="<?= number_format($inner[0],3,'.','') ?>" y2="<?= number_format($inner[1],3,'.','') ?>"></line>
-                            <text x="<?= number_format($lx,3,'.','') ?>" y="<?= number_format($ly,3,'.','') ?>"><?= $value ?>°</text>
+                            <line class="<?= $value % 5 === 0 ? 'major' : '' ?>" x1="<?= number_format($outer[0],3,'.','') ?>" y1="<?= number_format($outer[1],3,'.','') ?>" x2="<?= number_format($inner[0],3,'.','') ?>" y2="<?= number_format($inner[1],3,'.','') ?>"></line>
+                            <?php if ($value % 5 === 0): ?><text x="<?= number_format($lx,3,'.','') ?>" y="<?= number_format($ly,3,'.','') ?>"><?= $value ?></text><?php endif; ?>
                         <?php endfor; ?>
                     </g>
 
                     <g class="aircraft-ticks small humidity-ticks">
-                        <?php for ($value = 0; $value <= 100; $value += 20):
-                            $angle = $humidityStart - ($value / 100.0) * $humiditySweep;
+                        <?php for ($value = 0; $value <= 2*50; $value += 2):
+                            $angle = $humidityStart + ($value / 100.0) * $humiditySweep;
                             $outer = $climateGaugePoint($humidityCx,$humidityCy,$angle,$smallR);
-                            $inner = $climateGaugePoint($humidityCx,$humidityCy,$angle,$smallR-3.0);
+                            $inner = $climateGaugePoint($humidityCx,$humidityCy,$angle,$smallR - ($value % 10 === 0 ? 3.0 : 2.0));
                             [$lx,$ly] = $climateGaugePoint($humidityCx,$humidityCy,$angle,$smallR-5.5);
                         ?>
-                            <line class="major" x1="<?= number_format($outer[0],3,'.','') ?>" y1="<?= number_format($outer[1],3,'.','') ?>" x2="<?= number_format($inner[0],3,'.','') ?>" y2="<?= number_format($inner[1],3,'.','') ?>"></line>
-                            <text x="<?= number_format($lx,3,'.','') ?>" y="<?= number_format($ly,3,'.','') ?>"><?= $value ?></text>
+                            <line class="<?= $value % 10 === 0 ? 'major' : '' ?>" x1="<?= number_format($outer[0],3,'.','') ?>" y1="<?= number_format($outer[1],3,'.','') ?>" x2="<?= number_format($inner[0],3,'.','') ?>" y2="<?= number_format($inner[1],3,'.','') ?>"></line>
+                            <?php if ($value % 10 === 0): ?><text x="<?= number_format($lx,3,'.','') ?>" y="<?= number_format($ly,3,'.','') ?>"><?= $value ?></text><?php endif; ?>
                         <?php endfor; ?>
                     </g>
 
-                    <line class="aircraft-needle dew-needle" x1="<?= number_format($dewCx,3,'.','') ?>" y1="<?= number_format($dewCy,3,'.','') ?>" x2="<?= number_format($dewTipX,3,'.','') ?>" y2="<?= number_format($dewTipY,3,'.','') ?>"></line>
-                    <line class="aircraft-needle humidity-needle" x1="<?= number_format($humidityCx,3,'.','') ?>" y1="<?= number_format($humidityCy,3,'.','') ?>" x2="<?= number_format($humidityTipX,3,'.','') ?>" y2="<?= number_format($humidityTipY,3,'.','') ?>"></line>
+                    <path class="aircraft-needle dew-needle" d="<?= $dewNeedlePath ?>"></path>
+                    <path class="aircraft-needle humidity-needle" d="<?= $humidityNeedlePath ?>"></path>
 
                     <circle class="aircraft-hub small" cx="31" cy="68" r="2.1"></circle>
                     <circle class="aircraft-hub small" cx="69" cy="68" r="2.1"></circle>
 
-                    <text class="aircraft-dial-title small" x="31" y="65">DEW</text>
-                    <text class="aircraft-dial-value small" x="31" y="72"><?= $current ? number_format($dewPointC,1) . '°C' : '—' ?></text>
 
-                    <text class="aircraft-dial-title small" x="69" y="65">HUM</text>
-                    <text class="aircraft-dial-value small" x="69" y="72"><?= $current ? number_format($humidityPercent,0) . '%' : '—' ?></text>
                 </svg>
+            </div>
+            <div class="climate-readings" aria-label="Current climate readings">
+                <div class="climate-reading">
+                    <span>Dew Point</span>
+                    <strong><?= $current ? number_format($dewPointC, 1) . '°C' : '—' ?></strong>
+                </div>
+                <div class="climate-reading">
+                    <span>Humidity</span>
+                    <strong><?= $current ? number_format($humidityPercent, 0) . '%' : '—' ?></strong>
+                </div>
             </div>
         </div>
     </section>
