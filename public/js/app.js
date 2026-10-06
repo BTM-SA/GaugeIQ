@@ -117,8 +117,7 @@ function applyWindCompassHeading(heading) {
             // physical compass indicator. The green arrow is drawn 180° from
             // the red arrow, so both always rotate together as a single unit.
             const windArrows = windGauge.querySelector('.wind-direction-arrows');
-            const windMarker = windGauge.querySelector('.wind-direction-marker');
-            const windDegrees = Number(windMarker?.dataset.windDegrees);
+            const windDegrees = Number(windArrows?.dataset.windDegrees);
             if (windArrows && Number.isFinite(windDegrees)) {
                 const markerDelta = shortestCompassDelta(windCompassHeading, windDegrees);
                 windArrows.style.transform = 'rotate(' + markerDelta.toFixed(2) + 'deg)';
