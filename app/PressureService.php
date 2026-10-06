@@ -13,7 +13,7 @@ final class PressureService
         $lon = rawurlencode((string)$this->config['pressure']['longitude']);
 
         $url = "https://api.open-meteo.com/v1/forecast?latitude={$lat}&longitude={$lon}"
-            . "&current=temperature_2m,dew_point_2m,surface_pressure,relative_humidity_2m,wind_speed_10m,wind_direction_10m"
+            . "&current=temperature_2m,apparent_temperature,dew_point_2m,surface_pressure,relative_humidity_2m,wind_speed_10m,wind_direction_10m&daily=temperature_2m_max,temperature_2m_min&forecast_days=1"
             . "&wind_speed_unit=kmh&timezone=auto";
 
         if (!function_exists('curl_init')) {
@@ -56,6 +56,7 @@ final class PressureService
 
         foreach ([
             'temperature_2m' => 'Temperature',
+            'apparent_temperature' => 'Feels like',
             'dew_point_2m' => 'Dew point',
             'surface_pressure' => 'Pressure',
             'relative_humidity_2m' => 'Humidity',
@@ -69,6 +70,9 @@ final class PressureService
 
         return [
             'temperature_c' => (float)$current['temperature_2m'],
+            'feels_like_c' => (float)$current['apparent_temperature'],
+            'forecast_high_c' => isset($data['daily']['temperature_2m_max'][0]) ? (float)$data['daily']['temperature_2m_max'][0] : null,
+            'forecast_low_c' => isset($data['daily']['temperature_2m_min'][0]) ? (float)$data['daily']['temperature_2m_min'][0] : null,
             'dew_point_c' => (float)$current['dew_point_2m'],
             'pressure_hpa' => (float)$current['surface_pressure'],
             'humidity_percent' => (float)$current['relative_humidity_2m'],
