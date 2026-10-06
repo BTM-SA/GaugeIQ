@@ -89,6 +89,13 @@ printf(
 
 $ruleService = new AlertRuleService($pdo);
 $ruleMatches = $baseline === null ? [] : $ruleService->evaluate($baseline, $current);
+$weatherChangeMatches = $ruleService->evaluateWeatherChange();
+$existingRuleIds = array_map(static fn(array $match): int => (int)$match['id'], $ruleMatches);
+foreach ($weatherChangeMatches as $match) {
+    if (!in_array((int)$match['id'], $existingRuleIds, true)) {
+        $ruleMatches[] = $match;
+    }
+}
 $alerts = array_map(
     static fn(array $match): string => $match['message'],
     $ruleMatches
