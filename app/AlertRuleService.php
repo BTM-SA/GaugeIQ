@@ -120,6 +120,35 @@ final class AlertRuleService
         return $matches;
     }
 
+    public function evaluateWeatherChange(): array
+    {
+        $matches = [];
+
+        foreach ($this->all(true) as $rule) {
+            if ((string)$rule['metric'] !== 'weather_change' || !$this->cooldownExpired($rule)) {
+                continue;
+            }
+
+            $config = json_decode((string)$rule['configuration_json'], true);
+            if (!is_array($config)) {
+                continue;
+            }
+
+            $result = $this->weatherChange((string)$rule['condition_type'], $config);
+            if ($result === null) {
+                continue;
+            }
+
+            $matches[] = [
+                'id' => (int)$rule['id'],
+                'name' => (string)$rule['name'],
+                'message' => $result,
+            ];
+        }
+
+        return $matches;
+    }
+
     public function markTriggered(int $ruleId, string $message, string $observedAt): void
     {
         $now = gmdate('c');
