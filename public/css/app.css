@@ -207,7 +207,7 @@ button:disabled { opacity: .55; cursor: default; }
 .aircraft-needle.humidity-needle{color:var(--climate-warm)}
 .aircraft-hub{fill:var(--text);stroke:var(--card);stroke-width:.8}
 .aircraft-hub.small{stroke-width:.65}
-.climate-readings{display:grid;grid-template-columns:1fr 1fr;gap:28px;width:100%;margin-top:10px;text-align:center}
+.climate-readings{display:grid;grid-template-columns:62% 62%;justify-content:center;gap:0;width:100%;margin-top:10px;text-align:center}
 .climate-reading{display:flex;flex-direction:column;gap:3px}
 .climate-reading span{font-size:11px;font-weight:800;color:var(--muted)}
 .climate-reading strong{font-size:20px;line-height:1;font-weight:900;color:var(--text)}
