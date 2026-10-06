@@ -20,9 +20,13 @@ function refreshFields() {
     if (weatherChange) {
         condition.value = 'above';
         valueField.hidden = false;
+        const aboveOption = [...condition.options].find(option => option.value === 'above');
+        if (aboveOption) aboveOption.textContent = 'Reaches score of';
         const help = document.getElementById('weatherChangeHelp');
         if (help) help.hidden = false;
     } else {
+        const aboveOption = [...condition.options].find(option => option.value === 'above');
+        if (aboveOption) aboveOption.textContent = 'Rises above';
         const help = document.getElementById('weatherChangeHelp');
         if (help) help.hidden = true;
     }
@@ -123,6 +127,11 @@ function setupAlertEditing() {
             if (isWeatherChange) {
                 condition.value = 'above';
                 valueField.hidden = false;
+                const aboveOption = [...condition.options].find(option => option.value === 'above');
+                if (aboveOption) aboveOption.textContent = 'Reaches score of';
+            } else {
+                const aboveOption = [...condition.options].find(option => option.value === 'above');
+                if (aboveOption) aboveOption.textContent = 'Rises above';
             }
             toField.hidden = !combined;
 
