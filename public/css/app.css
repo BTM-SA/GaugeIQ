@@ -286,3 +286,7 @@ button:disabled { opacity: .55; cursor: default; }
 .weather-change-reason::before{content:'•';color:#2563eb;font-size:18px;line-height:12px;font-weight:900}
 .weather-change-note{margin:12px 0 0;font-size:11px;color:var(--muted)}
 @media(max-width:560px){.weather-change-card .section-heading{align-items:flex-start}.weather-change-score{min-width:62px;width:62px;height:62px;font-size:26px}}
+
+.weather-change-score[data-level="low"]{border-color:#22c55e;color:#15803d}
+.weather-change-score[data-level="moderate"]{border-color:#f59e0b;color:#b45309}
+.weather-change-score[data-level="high"]{border-color:#ef4444;color:#dc2626}
