@@ -149,7 +149,6 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
             <div class="section-heading">
                 <div>
                     <p class="label">Temperature</p>
-                    <p class="metric-caption">Today's outlook</p>
                 </div>
             </div>
             <?php if ($current): ?>
