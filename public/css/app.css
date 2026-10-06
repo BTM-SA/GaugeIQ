@@ -240,3 +240,21 @@ button:disabled { opacity: .55; cursor: default; }
 
 /* Temperature dial refinements: larger upper arc, 5-degree majors with intermediate markers, longer red needle. */
 .aircraft-needle.temp-needle{stroke:var(--climate-warm);stroke-width:1.15}
+
+
+.temperature-summary-card{margin-top:16px}
+.temperature-summary-main{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-top:8px}
+.temperature-summary-current{display:flex;flex-direction:column;gap:5px}
+.temperature-summary-current strong{font-size:42px;line-height:1;font-weight:900;letter-spacing:-.045em;color:var(--text)}
+.temperature-summary-current span{font-size:12px;font-weight:700;color:var(--muted)}
+.temperature-summary-range{display:flex;gap:18px}
+.temperature-summary-range div{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:46px}
+.temperature-summary-range span{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.temperature-summary-range strong{font-size:22px;line-height:1;font-weight:900;color:var(--text)}
+.temperature-comfort-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;font-weight:800;color:var(--muted)}
+.temperature-comfort-row .humidity-zone{font-size:10px}
+@media(max-width:560px){
+  .temperature-summary-main{align-items:flex-start}
+  .temperature-summary-current strong{font-size:36px}
+  .temperature-summary-range{gap:10px}
+}
