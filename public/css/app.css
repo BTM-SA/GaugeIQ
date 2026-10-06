@@ -208,8 +208,8 @@ button:disabled { opacity: .55; cursor: default; }
 .aircraft-needle.humidity-needle{color:#ef4444}
 .aircraft-hub{fill:var(--text);stroke:var(--card);stroke-width:.8}
 .aircraft-hub.small{stroke-width:.65}
-.climate-readings{display:grid;grid-template-columns:25% 50% 25%;width:100%;margin-top:10px;text-align:center}
-.climate-reading:first-child{grid-column:1}.climate-reading:last-child{grid-column:3}
+.climate-readings{display:grid;grid-template-columns:1fr 1fr;width:100%;margin-top:10px;text-align:center}
+.climate-reading:first-child,.climate-reading:last-child{grid-column:auto}
 .climate-reading{display:flex;flex-direction:column;gap:3px}
 .climate-reading span{font-size:11px;font-weight:800;color:var(--muted)}
 .climate-reading strong{font-size:20px;line-height:1;font-weight:900;color:var(--text)}
