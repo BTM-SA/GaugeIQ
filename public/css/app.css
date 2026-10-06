@@ -201,15 +201,15 @@ button:disabled { opacity: .55; cursor: default; }
 .aircraft-ticks text{font-size:3.7px}
 .aircraft-ticks.small text{font-size:3px}
 .aircraft-ticks.small line{stroke-width:.3}
-.aircraft-needle{stroke:var(--text);stroke-width:1.05;stroke-linecap:round;filter:drop-shadow(0 1px 1px rgba(0,0,0,.18))}
-.aircraft-needle.dew-needle{stroke:var(--climate-dew);stroke-width:.85}
-.aircraft-needle.humidity-needle{stroke:var(--climate-warm);stroke-width:.85}
+.aircraft-needle{fill:currentColor;stroke:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.18))}
+.aircraft-needle.dew-needle{color:var(--climate-dew)}
+.aircraft-needle.humidity-needle{color:var(--climate-warm)}
 .aircraft-hub{fill:var(--text);stroke:var(--card);stroke-width:.8}
 .aircraft-hub.small{stroke-width:.65}
-.aircraft-dial-title{fill:var(--muted);font-size:3px;font-weight:900;letter-spacing:.28px;text-anchor:middle}
-.aircraft-dial-title.small{font-size:2.55px;letter-spacing:.16px}
-.aircraft-dial-value{fill:var(--text);font-size:4.5px;font-weight:900;text-anchor:middle;letter-spacing:-.08px}
-.aircraft-dial-value.small{font-size:3.6px}
+.climate-readings{display:grid;grid-template-columns:1fr 1fr;gap:28px;width:min(100%,320px);margin-top:10px;text-align:center}
+.climate-reading{display:flex;flex-direction:column;gap:3px}
+.climate-reading span{font-size:11px;font-weight:800;color:var(--muted)}
+.climate-reading strong{font-size:20px;line-height:1;font-weight:900;color:var(--text)}
 .humidity-zone-row{display:flex;justify-content:center;min-height:20px;margin-top:4px;margin-bottom:4px}
 .humidity-zone{display:inline-flex;align-items:center;justify-content:center;padding:5px 10px;border-radius:999px;font-size:10px;line-height:1;font-weight:800;border:1px solid var(--border);background:var(--surface);color:var(--text)}
 .humidity-zone.dry{border-color:#f59e0b;color:#b45309}
