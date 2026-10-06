@@ -487,6 +487,132 @@ function drawChart(canvas, values, unit, decimals = 1, hours = 24) {
     ctx.fillText(lastLabel, width - pad.right - lastWidth, height - 17);
 }
 
+function weatherChangeDirectionLabel(delta, unit, positive = 'increased', negative = 'decreased') {
+    if (Math.abs(delta) < 0.05) return 'held steady';
+    return delta > 0
+        ? positive + ' by ' + Math.abs(delta).toFixed(unit === '°C' ? 1 : 1) + unit
+        : negative + ' by ' + Math.abs(delta).toFixed(unit === '°C' ? 1 : 1) + unit;
+}
+
+function weatherChangeScore(readings) {
+    const valid = readings
+        .map(item => ({
+            temperature: Number(item.temperature_c),
+            dewPoint: Number(item.dew_point_c),
+            pressure: Number(item.pressure_hpa),
+            humidity: Number(item.humidity_percent),
+            wind: Number(item.wind_speed_kmh),
+            direction: Number(item.wind_direction_degrees),
+            time: new Date(item.created_at || item.observed_at).getTime()
+        }))
+        .filter(item => Number.isFinite(item.time))
+        .sort((a, b) => a.time - b.time);
+
+    if (valid.length < 3) {
+        return { score: null, summary: 'Gathering more readings…', reasons: [] };
+    }
+
+    const first = valid[0];
+    const last = valid[valid.length - 1];
+    const hours = Math.max(0.5, (last.time - first.time) / 3600000);
+    const reasons = [];
+    let score = 0;
+
+    const pressureDelta = last.pressure - first.pressure;
+    const pressureRate = Math.abs(pressureDelta) / hours;
+    if (pressureRate >= 0.5) score += pressureRate >= 1.0 ? 2 : 1;
+    if (pressureRate >= 1.5) score += 1;
+    if (pressureRate >= 0.75) {
+        reasons.push('Air pressure ' + (pressureDelta < 0 ? 'has fallen' : 'has risen') + ' by ' + Math.abs(pressureDelta).toFixed(1) + ' hPa over the last ' + hours.toFixed(1) + ' hours.');
+    }
+
+    const humidityDelta = last.humidity - first.humidity;
+    const humidityChange = Math.abs(humidityDelta);
+    if (humidityChange >= 4) score += humidityChange >= 8 ? 2 : 1;
+    if (humidityChange >= 4) {
+        reasons.push('Humidity ' + (humidityDelta < 0 ? 'has dropped' : 'has increased') + ' by ' + humidityChange.toFixed(0) + ' percentage points.');
+    }
+
+    const temperatureDelta = last.temperature - first.temperature;
+    const temperatureChange = Math.abs(temperatureDelta);
+    if (temperatureChange >= 1) score += temperatureChange >= 2 ? 2 : 1;
+    if (temperatureChange >= 1) {
+        reasons.push('Temperature ' + (temperatureDelta < 0 ? 'has cooled' : 'has warmed') + ' by ' + temperatureChange.toFixed(1) + '°C.');
+    }
+
+    const windDelta = last.wind - first.wind;
+    const windChange = Math.abs(windDelta);
+    if (windChange >= 8) score += windChange >= 15 ? 2 : 1;
+    if (windChange >= 8) {
+        reasons.push('Wind speed ' + (windDelta < 0 ? 'has eased' : 'has increased') + ' by ' + windChange.toFixed(1) + ' km/h.');
+    }
+
+    const circularDifference = (a, b) => {
+        const diff = Math.abs(((a - b) % 360 + 360) % 360);
+        return Math.min(diff, 360 - diff);
+    };
+    const directionChange = circularDifference(first.direction, last.direction);
+    if (directionChange >= 30) score += directionChange >= 60 ? 2 : 1;
+    if (directionChange >= 30) {
+        reasons.push('Wind direction has shifted by about ' + Math.round(directionChange) + '°.');
+    }
+
+    // A rapidly closing temperature/dew-point spread can indicate a more
+    // unsettled, moisture-rich pattern even when individual changes are small.
+    const firstSpread = first.temperature - first.dewPoint;
+    const lastSpread = last.temperature - last.dewPoint;
+    const spreadDelta = lastSpread - firstSpread;
+    if (Number.isFinite(firstSpread) && Number.isFinite(lastSpread) && spreadDelta <= -1.5) {
+        score += 1;
+        reasons.push('The temperature/dew-point gap is narrowing, indicating rising near-surface moisture.');
+    }
+
+    score = Math.min(10, score);
+
+    let summary;
+    if (score >= 9) summary = 'Very high chance of a noticeable weather change.';
+    else if (score >= 7) summary = 'High chance of a noticeable weather change.';
+    else if (score >= 5) summary = 'Moderate chance of a noticeable weather change.';
+    else if (score >= 3) summary = 'Some signs of a weather change developing.';
+    else summary = 'Conditions look relatively stable right now.';
+
+    return { score, summary, reasons: reasons.slice(0, 4) };
+}
+
+async function loadWeatherChange() {
+    const scoreElement = document.getElementById('weatherChangeScore');
+    const summaryElement = document.getElementById('weatherChangeSummary');
+    const reasonsElement = document.getElementById('weatherChangeReasons');
+    if (!scoreElement || !summaryElement || !reasonsElement) return;
+
+    try {
+        const response = await fetch('../api/history.php?hours=6', { cache: 'no-store' });
+        if (!response.ok) throw new Error('Unable to load recent readings.');
+        const data = await response.json();
+        const result = weatherChangeScore(Array.isArray(data.readings) ? data.readings : []);
+
+        if (result.score === null) {
+            scoreElement.innerHTML = '—<span>/10</span>';
+            summaryElement.textContent = result.summary;
+            reasonsElement.innerHTML = '<div class="weather-change-reason">GaugeIQ needs a few more readings before it can estimate how quickly conditions are changing.</div>';
+            return;
+        }
+
+        scoreElement.innerHTML = result.score + '<span>/10</span>';
+        summaryElement.textContent = result.summary;
+        reasonsElement.innerHTML = result.reasons.length
+            ? result.reasons.map(reason => '<div class="weather-change-reason">' + reason + '</div>').join('')
+            : '<div class="weather-change-reason">Pressure, temperature, humidity and wind have not changed significantly in the recent readings.</div>';
+
+        const scoreClass = result.score >= 7 ? 'high' : result.score >= 5 ? 'moderate' : 'low';
+        scoreElement.dataset.level = scoreClass;
+    } catch {
+        scoreElement.innerHTML = '—<span>/10</span>';
+        summaryElement.textContent = 'Weather change indicator unavailable.';
+        reasonsElement.innerHTML = '';
+    }
+}
+
 async function loadHistory(hours = 24) {
     if (!historyStatus) return;
 
