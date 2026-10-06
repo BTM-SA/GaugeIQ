@@ -7,10 +7,30 @@ final class PressureService
     {
     }
 
+    private function locationCoordinates(): array
+    {
+        $latitude = (string)$this->config['pressure']['latitude'];
+        $longitude = (string)$this->config['pressure']['longitude'];
+
+        $stmt = $this->db->prepare("SELECT `key`, `value` FROM gaugeiq_settings WHERE `key` IN ('location_latitude', 'location_longitude')");
+        $stmt->execute();
+
+        foreach ($stmt->fetchAll() as $setting) {
+            if ((string)$setting['key'] === 'location_latitude') {
+                $latitude = (string)$setting['value'];
+            } elseif ((string)$setting['key'] === 'location_longitude') {
+                $longitude = (string)$setting['value'];
+            }
+        }
+
+        return [$latitude, $longitude];
+    }
+
     public function fetchCurrent(): array
     {
-        $lat = rawurlencode((string)$this->config['pressure']['latitude']);
-        $lon = rawurlencode((string)$this->config['pressure']['longitude']);
+        [$latitude, $longitude] = $this->locationCoordinates();
+        $lat = rawurlencode($latitude);
+        $lon = rawurlencode($longitude);
 
         $url = "https://api.open-meteo.com/v1/forecast?latitude={$lat}&longitude={$lon}"
             . "&current=temperature_2m,apparent_temperature,dew_point_2m,surface_pressure,relative_humidity_2m,wind_speed_10m,wind_direction_10m&daily=temperature_2m_max,temperature_2m_min&forecast_days=1"
