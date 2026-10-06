@@ -109,6 +109,24 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     $humidityPercent = $current ? max(0.0, min(100.0, (float)$current['humidity_percent'])) : 0.0;
     $humidityZone = !$current ? 'Unavailable' : ($humidityPercent < 40 ? 'Dry' : ($humidityPercent < 60 ? 'Comfortable' : ($humidityPercent < 75 ? 'Humid' : 'Condensation risk')));
     $humidityZoneClass = strtolower(str_replace(' ', '-', $humidityZone));
+    $forecast = $current && is_array($current['forecast'] ?? null) ? $current['forecast'] : [];
+
+    $forecastCondition = static function (?int $code): array {
+        return match (true) {
+            $code === null => ['icon' => '—', 'label' => 'Unavailable'],
+            $code === 0 => ['icon' => '☀️', 'label' => 'Clear sky'],
+            $code === 1 => ['icon' => '🌤️', 'label' => 'Mainly clear'],
+            $code === 2 => ['icon' => '⛅', 'label' => 'Partly cloudy'],
+            $code === 3 => ['icon' => '☁️', 'label' => 'Overcast'],
+            in_array($code, [45, 48], true) => ['icon' => '🌫️', 'label' => 'Fog'],
+            in_array($code, [51, 53, 55, 56, 57], true) => ['icon' => '🌦️', 'label' => 'Drizzle'],
+            in_array($code, [61, 63, 65, 66, 67], true) => ['icon' => '🌧️', 'label' => 'Rain'],
+            in_array($code, [71, 73, 75, 77, 85, 86], true) => ['icon' => '🌨️', 'label' => 'Snow'],
+            in_array($code, [80, 81, 82], true) => ['icon' => '🌦️', 'label' => 'Rain showers'],
+            in_array($code, [95, 96, 99], true) => ['icon' => '⛈️', 'label' => 'Thunderstorm'],
+            default => ['icon' => '🌤️', 'label' => 'Mixed conditions'],
+        };
+    };
 
     // Two separate circular environmental instruments. Keep their centres
     // deliberately apart so the dials and their labels share the same axis.
@@ -352,6 +370,36 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 
 
 
+
+    <section class="card forecast-card" aria-labelledby="forecastTitle">
+        <div class="section-heading">
+            <div>
+                <h2 id="forecastTitle">4 day forecast</h2>
+                <p class="muted">Open-Meteo forecast for <?= htmlspecialchars($locationName, ENT_QUOTES) ?></p>
+            </div>
+        </div>
+        <div class="forecast-days">
+            <?php foreach ($forecast as $day):
+                $condition = $forecastCondition($day['weather_code'] ?? null);
+                $rainProbability = max(0, min(100, (int)($day['rain_probability_percent'] ?? 0)));
+                $rainExpected = $rainProbability > 0;
+                $dayLabel = date('D', strtotime((string)$day['date']));
+                $temperature = $day['temperature_max_c'] ?? null;
+            ?>
+                <div class="forecast-day">
+                    <strong class="forecast-day-name"><?= htmlspecialchars($dayLabel, ENT_QUOTES) ?></strong>
+                    <span class="forecast-icon" role="img" aria-label="<?= htmlspecialchars($condition['label'], ENT_QUOTES) ?>"><?= $condition['icon'] ?></span>
+                    <?php if ($rainExpected): ?>
+                        <strong class="forecast-rain"><?= $rainProbability ?>%</strong>
+                    <?php elseif ($temperature !== null): ?>
+                        <strong class="forecast-temperature"><?= number_format((float)$temperature, 0) ?>°</strong>
+                    <?php else: ?>
+                        <strong class="forecast-temperature">—</strong>
+                    <?php endif; ?>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </section>
 
     <section class="card weather-change-card" aria-labelledby="weatherChangeTitle">
         <div class="section-heading">
