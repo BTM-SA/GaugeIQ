@@ -95,6 +95,9 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     <?php
     $temperatureC = $current ? (float)($current['temperature_c'] ?? 0.0) : 0.0;
     $dewPointC = $current ? (float)($current['dew_point_c'] ?? 0.0) : 0.0;
+    $feelsLikeC = $current ? (float)($current['feels_like_c'] ?? $temperatureC) : 0.0;
+    $forecastHighC = $current ? ($current['forecast_high_c'] ?? null) : null;
+    $forecastLowC = $current ? ($current['forecast_low_c'] ?? null) : null;
     $humidityPercent = $current ? max(0.0, min(100.0, (float)$current['humidity_percent'])) : 0.0;
     $humidityZone = !$current ? 'Unavailable' : ($humidityPercent < 40 ? 'Dry' : ($humidityPercent < 60 ? 'Comfortable' : ($humidityPercent < 75 ? 'Humid' : 'Condensation risk')));
     $humidityZoneClass = strtolower(str_replace(' ', '-', $humidityZone));
@@ -135,6 +138,33 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                 <div class="metric-trend <?= $change > 0 ? 'rise' : ($change < 0 ? 'fall' : 'steady') ?>">
                     <?= $change > 0 ? '↑ Rising' : ($change < 0 ? '↓ Falling' : '→ Stable') ?>
                     <?php if ($latest): ?><strong><?= $change >= 0 ? '+' : '' ?><?= number_format($change, 1) ?> hPa</strong><?php endif; ?>
+                </div>
+            <?php else: ?>
+                <div class="metric-unavailable">Unavailable</div>
+            <?php endif; ?>
+        </article>
+
+        <article class="card metric-card temperature-summary-card">
+            <div class="section-heading">
+                <div>
+                    <p class="label">Temperature</p>
+                    <p class="metric-caption">Today's outlook</p>
+                </div>
+            </div>
+            <?php if ($current): ?>
+                <div class="temperature-summary-main">
+                    <div class="temperature-summary-current">
+                        <strong><?= number_format($temperatureC, 1) ?>°C</strong>
+                        <span>Feels like <?= number_format($feelsLikeC, 1) ?>°C</span>
+                    </div>
+                    <div class="temperature-summary-range">
+                        <div><span>Low</span><strong><?= $forecastLowC !== null ? number_format((float)$forecastLowC, 1) . '°' : '—' ?></strong></div>
+                        <div><span>High</span><strong><?= $forecastHighC !== null ? number_format((float)$forecastHighC, 1) . '°' : '—' ?></strong></div>
+                    </div>
+                </div>
+                <div class="temperature-comfort-row">
+                    <span>Comfort</span>
+                    <b class="humidity-zone <?= htmlspecialchars($humidityZoneClass, ENT_QUOTES) ?>"><?= htmlspecialchars($humidityZone, ENT_QUOTES) ?></b>
                 </div>
             <?php else: ?>
                 <div class="metric-unavailable">Unavailable</div>
@@ -225,9 +255,6 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                 </svg>
             </div>
 
-            <div class="humidity-zone-row">
-                <b class="humidity-zone <?= htmlspecialchars($humidityZoneClass, ENT_QUOTES) ?>"><?= htmlspecialchars($humidityZone, ENT_QUOTES) ?></b>
-            </div>
         </div>
     </section>
 
