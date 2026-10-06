@@ -657,6 +657,7 @@ document.querySelectorAll('.history-range-button').forEach(button => {
 });
 
 loadHistory();
+loadWeatherChange();
 
 async function checkForGaugeIQUpdate() {
     const notice = document.getElementById('updateNotice');
