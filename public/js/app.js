@@ -54,6 +54,7 @@ let windCompassEnabled = storedWindCompassState !== null
 let windCompassListening = false;
 let windCompassHeading = null;
 let windCompassTargetHeading = null;
+let windCompassRotation = null;
 let windCompassAnimationFrame = null;
 
 function normalizeCompassHeading(value) {
@@ -92,33 +93,35 @@ function applyWindCompassHeading(heading) {
 
             const delta = shortestCompassDelta(windCompassHeading, windCompassTargetHeading);
 
-            // North is a circular boundary. When both readings are close to
-            // 0/360, deliberately settle through north instead of allowing
-            // sensor noise to make the compass choose opposite directions.
+            // Keep the displayed heading normalized, but keep the actual
+            // compass rotation unwrapped. This prevents a transition such as
+            // 5° -> 340° from taking the long way around the circle.
             const nearNorth =
                 (windCompassHeading <= WIND_COMPASS_NORTH_BUFFER || windCompassHeading >= 360 - WIND_COMPASS_NORTH_BUFFER) &&
                 (windCompassTargetHeading <= WIND_COMPASS_NORTH_BUFFER || windCompassTargetHeading >= 360 - WIND_COMPASS_NORTH_BUFFER);
 
             const smoothing = nearNorth ? 0.10 : WIND_COMPASS_SMOOTHING;
-            windCompassHeading = normalizeCompassHeading(windCompassHeading + (delta * smoothing));
+            const step = delta * smoothing;
+            windCompassHeading = normalizeCompassHeading(windCompassHeading + step);
+            windCompassRotation += step;
 
             if (Math.abs(delta) < 0.08) {
+                const correction = shortestCompassDelta(windCompassHeading, windCompassTargetHeading);
                 windCompassHeading = windCompassTargetHeading;
+                windCompassRotation += correction;
             }
 
-            windGauge.style.setProperty('--wind-compass-heading', windCompassHeading.toFixed(2) + 'deg');
+            windGauge.style.setProperty('--wind-compass-heading', windCompassRotation.toFixed(2) + 'deg');
 
+            // The red wind-from arrow and green wind-towards arrow are one
+            // physical compass indicator. The green arrow is drawn 180° from
+            // the red arrow, so both always rotate together as a single unit.
+            const windArrows = windGauge.querySelector('.wind-direction-arrows');
             const windMarker = windGauge.querySelector('.wind-direction-marker');
-            const windToMarker = windGauge.querySelector('.wind-direction-to-marker');
             const windDegrees = Number(windMarker?.dataset.windDegrees);
-            const windToDegrees = Number(windToMarker?.dataset.windToDegrees);
-            if (windMarker && Number.isFinite(windDegrees)) {
+            if (windArrows && Number.isFinite(windDegrees)) {
                 const markerDelta = shortestCompassDelta(windCompassHeading, windDegrees);
-                windMarker.style.transform = 'rotate(' + markerDelta.toFixed(2) + 'deg)';
-            }
-            if (windToMarker && Number.isFinite(windToDegrees)) {
-                const markerToDelta = shortestCompassDelta(windCompassHeading, windToDegrees);
-                windToMarker.style.transform = 'rotate(' + markerToDelta.toFixed(2) + 'deg)';
+                windArrows.style.transform = 'rotate(' + markerDelta.toFixed(2) + 'deg)';
             }
 
             if (windCompassStatus) {
@@ -175,6 +178,7 @@ function disableWindCompass() {
 
     windCompassTargetHeading = null;
     windCompassHeading = null;
+    windCompassRotation = null;
 
     if (windCompassStatus) windCompassStatus.textContent = 'Compass off';
     updateWindCompassButton();
@@ -215,12 +219,9 @@ async function enableWindCompass() {
 
 if (windGauge) {
     const initialMarker = windGauge.querySelector('.wind-direction-marker');
-    const initialToMarker = windGauge.querySelector('.wind-direction-to-marker');
-    if (initialMarker) {
-        initialMarker.style.transform = 'rotate(' + (Number(initialMarker.dataset.windDegrees) || 0) + 'deg)';
-    }
-    if (initialToMarker) {
-        initialToMarker.style.transform = 'rotate(' + (Number(initialToMarker.dataset.windToDegrees) || 0) + 'deg)';
+    const initialArrows = windGauge.querySelector('.wind-direction-arrows');
+    if (initialArrows && initialMarker) {
+        initialArrows.style.transform = 'rotate(' + (Number(initialMarker.dataset.windDegrees) || 0) + 'deg)';
     }
 
     if (windCompassButton) {
