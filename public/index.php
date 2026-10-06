@@ -185,32 +185,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
             <?php endif; ?>
         </article>
 
-        <article class="card metric-card temperature-summary-card">
-            <div class="section-heading">
-                <div>
-                    <p class="label">Temperature</p>
-                    <p class="metric-caption">Today's outlook</p>
-                </div>
-            </div>
-            <?php if ($current): ?>
-                <div class="temperature-summary-main">
-                    <div class="temperature-summary-current">
-                        <strong><?= number_format($temperatureC, 1) ?>°C</strong>
-                        <span>Feels like <?= number_format($feelsLikeC, 1) ?>°C</span>
-                    </div>
-                    <div class="temperature-summary-range">
-                        <div><span>Low</span><strong><?= $forecastLowC !== null ? number_format((float)$forecastLowC, 1) . '°' : '—' ?></strong></div>
-                        <div><span>High</span><strong><?= $forecastHighC !== null ? number_format((float)$forecastHighC, 1) . '°' : '—' ?></strong></div>
-                    </div>
-                </div>
-                <div class="temperature-comfort-row">
-                    <span>Comfort</span>
-                    <b class="humidity-zone <?= htmlspecialchars($humidityZoneClass, ENT_QUOTES) ?>"><?= htmlspecialchars($humidityZone, ENT_QUOTES) ?></b>
-                </div>
-            <?php else: ?>
-                <div class="metric-unavailable">Unavailable</div>
-            <?php endif; ?>
-        </article>
+
 
     <section class="card climate-gauge-card" aria-labelledby="climateGaugeTitle">
         <div class="section-heading">
