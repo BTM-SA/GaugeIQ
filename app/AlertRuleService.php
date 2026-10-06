@@ -163,6 +163,7 @@ final class AlertRuleService
             'wind_speed' => $this->windSpeed($type, $config, $previous, $current),
             'wind_direction' => $this->windDirection($type, $config, $previous, $current),
             'wind' => $this->combinedWind($type, $config, $previous, $current),
+            'weather_change' => $this->weatherChange($type, $config),
             default => null,
         };
     }
@@ -245,6 +246,89 @@ final class AlertRuleService
         return null;
     }
 
+    private function weatherChange(string $type, array $c): ?string
+    {
+        if ($type !== 'above') {
+            return null;
+        }
+
+        $threshold = max(1.0, min(10.0, (float)($c['value'] ?? 0)));
+        $since = gmdate('c', time() - (6 * 3600));
+        $stmt = $this->db->prepare(
+            'SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, observed_at, created_at
+             FROM gaugeiq_pressure_readings
+             WHERE created_at >= ?
+             ORDER BY created_at ASC, id ASC'
+        );
+        $stmt->execute([$since]);
+        $readings = $stmt->fetchAll();
+
+        $score = $this->weatherChangeScore($readings);
+        if ($score === null || $score < $threshold) {
+            return null;
+        }
+
+        return sprintf('Weather change score reached %d/10.', $score);
+    }
+
+    private function weatherChangeScore(array $readings): ?int
+    {
+        $valid = [];
+        foreach ($readings as $item) {
+            $time = strtotime((string)($item['created_at'] ?? $item['observed_at'] ?? ''));
+            if ($time === false) {
+                continue;
+            }
+            $valid[] = [
+                'temperature' => (float)$item['temperature_c'],
+                'dewPoint' => (float)$item['dew_point_c'],
+                'pressure' => (float)$item['pressure_hpa'],
+                'humidity' => (float)$item['humidity_percent'],
+                'wind' => (float)$item['wind_speed_kmh'],
+                'direction' => (float)$item['wind_direction_degrees'],
+                'time' => $time,
+            ];
+        }
+
+        if (count($valid) < 3) {
+            return null;
+        }
+
+        $first = $valid[0];
+        $last = $valid[count($valid) - 1];
+        $hours = max(0.5, ($last['time'] - $first['time']) / 3600);
+        $score = 0;
+
+        $pressureDelta = $last['pressure'] - $first['pressure'];
+        $pressureRate = abs($pressureDelta) / $hours;
+        if ($pressureRate >= 0.5) $score += $pressureRate >= 1.0 ? 2 : 1;
+        if ($pressureRate >= 1.5) $score += 1;
+
+        $humidityDelta = $last['humidity'] - $first['humidity'];
+        $humidityChange = abs($humidityDelta);
+        if ($humidityChange >= 4) $score += $humidityChange >= 8 ? 2 : 1;
+
+        $temperatureDelta = $last['temperature'] - $first['temperature'];
+        $temperatureChange = abs($temperatureDelta);
+        if ($temperatureChange >= 1) $score += $temperatureChange >= 2 ? 2 : 1;
+
+        $windDelta = $last['wind'] - $first['wind'];
+        $windChange = abs($windDelta);
+        if ($windChange >= 8) $score += $windChange >= 15 ? 2 : 1;
+
+        $directionDifference = abs(fmod($first['direction'] - $last['direction'], 360.0));
+        $directionDifference = min($directionDifference, 360.0 - $directionDifference);
+        if ($directionDifference >= 30) $score += $directionDifference >= 60 ? 2 : 1;
+
+        $firstSpread = $first['temperature'] - $first['dewPoint'];
+        $lastSpread = $last['temperature'] - $last['dewPoint'];
+        if (($lastSpread - $firstSpread) <= -1.5) {
+            $score += 1;
+        }
+
+        return min(10, $score);
+    }
+
     private function combinedWind(string $type, array $c, array $p, array $n): ?string
     {
         if ($type !== 'speed_and_direction') {
@@ -292,7 +376,7 @@ final class AlertRuleService
 
     private function validate(string $metric, string $type, array $configuration): void
     {
-        $allowedMetrics = ['pressure', 'humidity', 'wind_speed', 'wind_direction', 'wind'];
+        $allowedMetrics = ['pressure', 'humidity', 'wind_speed', 'wind_direction', 'wind', 'weather_change'];
         $allowedTypes = ['change', 'above', 'below', 'specific', 'speed_and_direction'];
 
         if (!in_array($metric, $allowedMetrics, true) || !in_array($type, $allowedTypes, true)) {
@@ -301,6 +385,10 @@ final class AlertRuleService
 
         if ($configuration === []) {
             throw new InvalidArgumentException('Alert rule configuration cannot be empty.');
+        }
+
+        if ($metric === 'weather_change' && ($type !== 'above' || !isset($configuration['value']))) {
+            throw new InvalidArgumentException('Weather change alerts require a score threshold.');
         }
     }
 }
