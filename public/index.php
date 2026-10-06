@@ -120,8 +120,8 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     $humidityAngle = $humidityStart + $humidityRatio * $humiditySweep;
 
     $tempCx = 50.0; $tempCy = 32.0; $tempR = 34.8;
-    $dewCx = 31.0; $dewCy = 68.0; $smallR = 15.5;
-    $humidityCx = 69.0; $humidityCy = 68.0;
+    $dewCx = 31.0; $dewCy = 50.0; $smallR = 20.0;
+    $humidityCx = 69.0; $humidityCy = 50.0;
 
     $climateNeedlePath = static function (float $cx, float $cy, float $angle, float $length): string {
         $radians = deg2rad($angle);
