@@ -96,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $metric = (string)$_POST['metric'];
                 $type = (string)$_POST['condition_type'];
                 $configuration = [];
-                if (in_array($metric, ['pressure', 'humidity', 'wind_speed'], true)) {
+                if (in_array($metric, ['pressure', 'humidity', 'wind_speed', 'weather_change'], true)) {
                     $configuration['value'] = (float)$_POST['value'];
                 } elseif ($metric === 'wind_direction') {
                     $configuration['degrees'] = (float)$_POST['degrees'];
@@ -283,6 +283,7 @@ $enabledRuleCount = count(array_filter($allRules, static fn(array $rule): bool =
                     <option value="pressure">Air pressure</option>
                     <option value="humidity">Humidity</option>
                     <option value="wind_speed">Wind speed</option>
+                    <option value="weather_change">Weather change score</option>
                     <option value="wind_direction">Wind direction</option>
                     <option value="wind">Wind speed + direction</option>
                 </select>
@@ -300,6 +301,7 @@ $enabledRuleCount = count(array_filter($allRules, static fn(array $rule): bool =
             <div id="valueField">
                 <label for="value">Value</label>
                 <input id="value" name="value" type="number" step="0.1" value="3">
+                <p id="weatherChangeHelp" class="alert-help muted" hidden>Alert when the weather change detection score reaches this level (1–10).</p>
             </div>
             <div id="degreesField" class="full" hidden>
                 <label>Specific wind direction</label>
@@ -367,6 +369,7 @@ $enabledRuleCount = count(array_filter($allRules, static fn(array $rule): bool =
                 <div class="alert-config readable">
                     <?php if ($rule['metric'] === 'pressure'): ?>Air pressure <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 1)) ?> hPa
                     <?php elseif ($rule['metric'] === 'humidity'): ?>Humidity <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 0)) ?>%
+                    <?php elseif ($rule['metric'] === 'weather_change'): ?>Weather change score reaches <?= h(number_format((float)($ruleConfig['value'] ?? 0), 0)) ?>/10
                     <?php elseif ($rule['metric'] === 'wind_speed'): ?>Wind speed <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 1)) ?> km/h
                     <?php elseif ($rule['metric'] === 'wind_direction'): ?>Wind direction <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['degrees'] ?? 0), 0)) ?>°
                     <?php else: ?>Wind <?= h(number_format((float)($ruleConfig['speed_min'] ?? 0), 1)) ?> km/h or faster, from <?= h(PressureService::directionLabel((float)($ruleConfig['direction_from'] ?? 0))) ?> to <?= h(PressureService::directionLabel((float)($ruleConfig['direction_to'] ?? 0))) ?>
@@ -384,7 +387,7 @@ $enabledRuleCount = count(array_filter($allRules, static fn(array $rule): bool =
                 <div class="alert-grid">
                     <div class="full"><label>Alert name</label><input name="name" value="<?= h((string)$rule['name']) ?>" required></div>
                     <div><label>Monitor</label><select name="metric" data-edit-metric>
-                        <?php foreach (['pressure'=>'Air pressure','humidity'=>'Humidity','wind_speed'=>'Wind speed','wind_direction'=>'Wind direction','wind'=>'Wind speed + direction'] as $v=>$label): ?><option value="<?= $v ?>" <?= $rule['metric']===$v?'selected':'' ?>><?= $label ?></option><?php endforeach; ?>
+                        <?php foreach (['pressure'=>'Air pressure','humidity'=>'Humidity','wind_speed'=>'Wind speed','weather_change'=>'Weather change score','wind_direction'=>'Wind direction','wind'=>'Wind speed + direction'] as $v=>$label): ?><option value="<?= $v ?>" <?= $rule['metric']===$v?'selected':'' ?>><?= $label ?></option><?php endforeach; ?>
                     </select></div>
                     <div><label>Condition</label><select name="condition_type" data-edit-condition>
                         <?php foreach (['change'=>'Changes by','above'=>'Rises above','below'=>'Falls below','specific'=>'Specific direction','speed_and_direction'=>'Speed AND direction'] as $v=>$label): ?><option value="<?= $v ?>" <?= $rule['condition_type']===$v?'selected':'' ?>><?= $label ?></option><?php endforeach; ?>
