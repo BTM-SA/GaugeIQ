@@ -197,7 +197,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 
         <div class="climate-gauge-wrap">
             <div class="climate-triple-gauge" role="img" aria-label="<?= $current ? htmlspecialchars('Dew point ' . number_format($dewPointC, 1) . ' degrees Celsius. Relative humidity ' . number_format($humidityPercent, 0) . ' percent.', ENT_QUOTES) : 'Dew point and humidity unavailable' ?>">
-                <svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+                <svg viewBox="0 30 100 40" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
                     <!-- Two near-complete circular instruments with a small opening at the bottom. -->
                     <path class="aircraft-unified-track dew" d="M <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart, $smallR)[1],3,'.','') ?> A <?= $smallR ?> <?= $smallR ?> 0 1 1 <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart + $dewSweep, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart + $dewSweep, $smallR)[1],3,'.','') ?>"></path>
                     <path class="aircraft-unified-dew" pathLength="100" stroke-dasharray="<?= number_format($dewRatio * 100, 2, '.', '') ?> 100" d="M <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart, $smallR)[1],3,'.','') ?> A <?= $smallR ?> <?= $smallR ?> 0 1 1 <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart + $dewSweep, $smallR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($dewCx,$dewCy,$dewStart + $dewSweep, $smallR)[1],3,'.','') ?>"></path>
