@@ -113,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'longitude' => (float)$defaults['longitude'],
                     'location_name' => $defaults['location_name'] ?: 'My location',
                     'threshold_hpa' => (float)$threshold,
-                    'check_interval_minutes' => 15,
+                    'check_interval_minutes' => 30,
                 ],
                 'humidity' => [
                     'enabled' => $defaults['humidity_enabled'] === '1',
@@ -237,7 +237,7 @@ return " . var_export($config, true) . ";
             <p class="step" style="margin-top:28px">2 · PRESSURE</p>
             <label for="threshold_hpa">Alert when pressure changes by</label>
             <input id="threshold_hpa" name="threshold_hpa" value="<?= htmlspecialchars($defaults['threshold_hpa'], ENT_QUOTES) ?>" type="number" step="0.1" min="0.1" required>
-            <p class="muted">GaugeIQ will check pressure every 15 minutes.</p>
+            <p class="muted">GaugeIQ will check pressure every 30 minutes.</p>
 
             <p class="step" style="margin-top:28px">3 · WEATHER MONITORING</p>
             <label class="choice"><input type="checkbox" name="humidity_enabled" value="1" <?= $defaults['humidity_enabled'] === '1' ? 'checked' : '' ?>> Monitor humidity</label>
