@@ -353,6 +353,19 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 
 
 
+    <section class="card weather-change-card" aria-labelledby="weatherChangeTitle">
+        <div class="section-heading">
+            <div>
+                <h2 id="weatherChangeTitle">Weather change</h2>
+                <p class="muted">Based on GaugeIQ's recent pressure, temperature, humidity and wind readings.</p>
+            </div>
+            <div class="weather-change-score" id="weatherChangeScore" aria-label="Weather change score">—<span>/10</span></div>
+        </div>
+        <div class="weather-change-summary" id="weatherChangeSummary">Analysing recent conditions…</div>
+        <div class="weather-change-reasons" id="weatherChangeReasons" aria-live="polite"></div>
+        <p class="weather-change-note">This is a change indicator, not a precipitation forecast. More readings make the indicator more reliable.</p>
+    </section>
+
     <section class="card history-card">
         <div class="section-heading">
             <div>
