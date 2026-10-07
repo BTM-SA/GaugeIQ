@@ -275,9 +275,9 @@ button:disabled { opacity: .55; cursor: default; }
 .temperature-summary-range div{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:40px}
 .temperature-summary-range span{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .temperature-summary-range strong{font-size:20px;line-height:1;font-weight:900;color:var(--text)}
-.temperature-stability-row{display:grid;grid-template-columns:auto minmax(90px,1fr) auto;align-items:center;gap:10px;margin-top:15px;padding-top:12px;border-top:1px solid var(--border)}
-.temperature-stability-label{font-size:11px;font-weight:900;color:var(--text)}
-.temperature-stability-track{height:9px;border-radius:999px;background:var(--surface);border:1px solid var(--border);overflow:hidden}
+.temperature-stability-row{display:grid;grid-template-columns:auto minmax(40px,1fr) auto;align-items:center;gap:10px;margin-top:15px;padding-top:12px;border-top:1px solid var(--border);min-width:0}
+.temperature-stability-label{font-size:11px;font-weight:900;color:var(--text);white-space:nowrap}
+.temperature-stability-track{height:9px;min-width:0;border-radius:999px;background:var(--surface);border:1px solid var(--border);overflow:hidden}
 .temperature-stability-fill{height:100%;border-radius:999px;background:#22c55e;transition:width .6s ease}
 .temperature-comfort-inline{font-size:10px;font-weight:800;color:var(--muted);white-space:nowrap}
 .temperature-comfort-inline .humidity-zone{font-size:10px}
@@ -287,7 +287,9 @@ button:disabled { opacity: .55; cursor: default; }
   .temperature-summary-forecast{gap:8px}
   .temperature-forecast-icon{width:40px;height:40px;font-size:30px}
   .temperature-summary-range{gap:8px}
-  .temperature-stability-row{grid-template-columns:auto 1fr;}.temperature-comfort-inline{grid-column:1 / -1}
+  .temperature-stability-row{grid-template-columns:auto minmax(40px,1fr) auto;gap:6px}
+  .temperature-stability-label,.temperature-comfort-inline{font-size:9px}
+  .temperature-comfort-inline .humidity-zone{font-size:9px;padding:4px 7px}
 }
 
 .location-form{display:flex;flex-direction:column;gap:14px}
