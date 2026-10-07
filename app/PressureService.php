@@ -33,7 +33,7 @@ final class PressureService
         $lon = rawurlencode($longitude);
 
         $url = "https://api.open-meteo.com/v1/forecast?latitude={$lat}&longitude={$lon}"
-            . "&current=temperature_2m,apparent_temperature,dew_point_2m,surface_pressure,relative_humidity_2m,rain,cloud_cover,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=4"
+            . "&current=temperature_2m,apparent_temperature,dew_point_2m,surface_pressure,relative_humidity_2m,rain,cloud_cover,weather_code,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=4"
             . "&wind_speed_unit=kmh&timezone=auto";
 
         if (!function_exists('curl_init')) {
@@ -82,6 +82,7 @@ final class PressureService
             'relative_humidity_2m' => 'Humidity',
             'rain' => 'Rainfall',
             'cloud_cover' => 'Cloud cover',
+            'weather_code' => 'Weather condition',
             'wind_speed_10m' => 'Wind speed',
             'wind_direction_10m' => 'Wind direction',
         ] as $field => $label) {
@@ -100,6 +101,7 @@ final class PressureService
             'humidity_percent' => (float)$current['relative_humidity_2m'],
             'rainfall_mm' => (float)$current['rain'],
             'cloud_cover_percent' => (float)$current['cloud_cover'],
+            'weather_code' => (int)$current['weather_code'],
             'wind_speed_kmh' => (float)$current['wind_speed_10m'],
             'wind_direction_degrees' => (float)$current['wind_direction_10m'],
             'observed_at' => (string)($current['time'] ?? gmdate('c')),
@@ -142,8 +144,8 @@ final class PressureService
 
         $stmt = $this->db->prepare(
             'INSERT INTO gaugeiq_pressure_readings
-             (temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, observed_at, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+             (temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, rainfall_mm, cloud_cover_percent, weather_code, observed_at, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             $current['temperature_c'],
@@ -152,6 +154,9 @@ final class PressureService
             $current['humidity_percent'],
             $current['wind_speed_kmh'],
             $current['wind_direction_degrees'],
+            $current['rainfall_mm'],
+            $current['cloud_cover_percent'],
+            $current['weather_code'],
             $current['observed_at'],
             gmdate('c'),
         ]);
