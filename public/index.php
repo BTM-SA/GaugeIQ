@@ -46,6 +46,17 @@ try {
     $monitorError = $settings['monitor_last_error'] ?? '';
     $subscriptionCount = (int)$pdo->query('SELECT COUNT(*) FROM gaugeiq_push_subscriptions')->fetchColumn();
     $enabledRuleCount = (int)$pdo->query('SELECT COUNT(*) FROM gaugeiq_alert_rules WHERE enabled = 1')->fetchColumn();
+    $weatherChangeAlertThreshold = null;
+    $weatherChangeAlertRules = $pdo->query("SELECT configuration_json FROM gaugeiq_alert_rules WHERE metric = 'weather_change' AND enabled = 1 AND condition_type = 'above'")->fetchAll();
+    foreach ($weatherChangeAlertRules as $weatherChangeAlertRule) {
+        $weatherChangeConfig = json_decode((string)$weatherChangeAlertRule['configuration_json'], true);
+        $weatherChangeThreshold = isset($weatherChangeConfig['value']) ? (float)$weatherChangeConfig['value'] : null;
+        if ($weatherChangeThreshold !== null && $weatherChangeThreshold >= 1 && $weatherChangeThreshold <= 10) {
+            $weatherChangeAlertThreshold = $weatherChangeAlertThreshold === null
+                ? $weatherChangeThreshold
+                : min($weatherChangeAlertThreshold, $weatherChangeThreshold);
+        }
+    }
     $recentAlerts = $pdo->query(
         'SELECT e.id, e.message, e.observed_at, r.name FROM gaugeiq_alert_events e LEFT JOIN gaugeiq_alert_rules r ON r.id = e.rule_id ORDER BY e.id DESC LIMIT 8'
     )->fetchAll();
@@ -203,7 +214,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                 </div>
                 <div class="temperature-stability-row">
                     <div class="temperature-stability-label">Stability</div>
-                    <div class="temperature-stability-track" aria-label="Weather stability"><div class="temperature-stability-fill" id="weatherStabilityFill" style="width:100%"></div></div>
+                    <div class="temperature-stability-track" aria-label="Weather stability" data-weather-change-alert-threshold="<?= $weatherChangeAlertThreshold !== null ? htmlspecialchars((string)$weatherChangeAlertThreshold, ENT_QUOTES) : '' ?>"><div class="temperature-stability-fill" id="weatherStabilityFill" style="width:100%"></div></div>
                     <div class="temperature-comfort-inline">Comfort zone: <b class="humidity-zone <?= htmlspecialchars($humidityZoneClass, ENT_QUOTES) ?>"><?= htmlspecialchars($humidityZone, ENT_QUOTES) ?></b></div>
                 </div>
             <?php else: ?><div class="metric-unavailable">Unavailable</div><?php endif; ?>
