@@ -592,13 +592,13 @@ async function loadWeatherChange() {
         const result = weatherChangeScore(Array.isArray(data.readings) ? data.readings : []);
 
         if (result.score === null) {
-            scoreElement.innerHTML = '—<span>/10</span>';
+            scoreElement.textContent = '—';
             summaryElement.textContent = result.summary;
             reasonsElement.innerHTML = '<div class="weather-change-reason">GaugeIQ needs a few more readings before it can estimate how quickly conditions are changing.</div>';
             return;
         }
 
-        scoreElement.innerHTML = result.score + '<span>/10</span>';
+        scoreElement.textContent = String(result.score);
         summaryElement.textContent = result.summary;
         reasonsElement.innerHTML = result.reasons.length
             ? result.reasons.map(reason => '<div class="weather-change-reason">' + reason + '</div>').join('')
@@ -606,8 +606,10 @@ async function loadWeatherChange() {
 
         const scoreClass = result.score >= 7 ? 'high' : result.score >= 5 ? 'moderate' : 'low';
         scoreElement.dataset.level = scoreClass;
+        const stabilityFill = document.getElementById('weatherStabilityFill');
+        if (stabilityFill) stabilityFill.style.width = ((10 - result.score) * 10) + '%';
     } catch {
-        scoreElement.innerHTML = '—<span>/10</span>';
+        scoreElement.textContent = '—';
         summaryElement.textContent = 'Weather change indicator unavailable.';
         reasonsElement.innerHTML = '';
     }
