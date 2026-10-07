@@ -285,12 +285,15 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
             <div class="wind-gauge-heading">
                 <div>
                     <p class="label">Wind</p>
-                    <p class="metric-caption">Speed &amp; direction</p>
                 </div>
                 <div class="wind-compass-controls">
                     <span class="wind-compass-status" id="windCompassStatus">Compass off</span>
                     <button type="button" class="secondary wind-compass-button" id="windCompassButton">Enable compass</button>
                 </div>
+            </div>
+            <div class="wind-summary-line">
+                <span>Direction <strong><?= $current ? htmlspecialchars($windDirection, ENT_QUOTES) : '—' ?></strong></span>
+                <span>Speed <strong><?= $current ? number_format($windSpeed, 1) . ' km/h' : '—' ?></strong></span>
             </div>
             <div class="wind-gauge" role="img" aria-label="<?= $current ? htmlspecialchars(number_format($windSpeed, 1) . ' kilometers per hour, ' . $windDirection . ', ' . number_format($windDegrees, 0) . ' degrees', ENT_QUOTES) : 'Wind data unavailable' ?>">
                 <svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
