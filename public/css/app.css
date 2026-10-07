@@ -182,8 +182,8 @@ button:disabled { opacity: .55; cursor: default; }
 .wind-speed-ticks line.major{stroke:var(--text);stroke-width:1.45}
 .wind-speed-ticks text{fill:#111827;font-size:4.1px;font-weight:450;text-anchor:middle;dominant-baseline:middle;paint-order:stroke fill;stroke:var(--card);stroke-width:.55px}
 .wind-speed-ticks line.major+text{fill:#111827;font-weight:500}
-:root[data-theme="dark"] .wind-speed-ticks text{fill:#111827}
-:root[data-theme="dark"] .wind-speed-ticks line.major+text{fill:#111827}
+:root[data-theme="dark"] .wind-speed-ticks text{fill:#e5e7eb;stroke:#111827;stroke-width:.55px}
+:root[data-theme="dark"] .wind-speed-ticks line.major+text{fill:#f3f4f6;stroke:#111827;stroke-width:.55px}
 .wind-compass-ring{fill:var(--card);stroke:var(--border);stroke-width:1.1}
 .wind-compass-ticks{stroke:var(--muted);stroke-width:.45}
 .wind-compass-ticks line.major{stroke:var(--text);stroke-width:.8}
@@ -224,13 +224,17 @@ button:disabled { opacity: .55; cursor: default; }
 .aircraft-hub{fill:var(--text);stroke:var(--card);stroke-width:.8}
 .aircraft-hub.small{stroke-width:.65}
 .climate-four-gauges{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 4px;width:100%;margin-top:8px}
-.climate-instrument{display:flex;flex-direction:column;align-items:center;min-width:0}
-.climate-instrument svg{display:block;width:min(100%,215px);height:auto;border-radius:50%;background:radial-gradient(circle at 50% 34%,color-mix(in srgb,var(--card) 88%,white 12%),color-mix(in srgb,var(--surface) 88%,black 12%));box-shadow:inset 0 1px 3px rgba(255,255,255,.22),inset 0 -3px 7px rgba(0,0,0,.18),0 1px 3px rgba(0,0,0,.12)}
+.climate-instrument{position:relative;display:flex;flex-direction:column;align-items:center;min-width:0}
+.climate-instrument svg{display:block;width:min(100%,215px);height:auto;border:1px solid color-mix(in srgb,var(--text) 14%,transparent);border-radius:50%;background:radial-gradient(circle at 38% 24%,color-mix(in srgb,white 24%,transparent),transparent 30%),radial-gradient(circle at 50% 42%,color-mix(in srgb,var(--card) 82%,white 18%),color-mix(in srgb,var(--surface) 82%,black 18%));box-shadow:inset 0 1px 2px rgba(255,255,255,.42),inset 0 -7px 12px rgba(0,0,0,.2),0 3px 8px rgba(0,0,0,.14);position:relative}
+.climate-instrument::after{content:"";position:absolute;top:0;left:50%;width:min(100%,215px);aspect-ratio:1;transform:translateX(-50%);border-radius:50%;pointer-events:none;background:linear-gradient(135deg,rgba(255,255,255,.24) 0%,rgba(255,255,255,.08) 18%,transparent 38%,transparent 72%,rgba(255,255,255,.06) 100%);box-shadow:inset 0 1px 1px rgba(255,255,255,.35);mix-blend-mode:screen}
 .climate-instrument>span{margin-top:1px;font-size:11px;font-weight:800;color:var(--muted);text-align:center}
 .climate-instrument>strong{margin-top:2px;font-size:20px;line-height:1;font-weight:900;color:var(--text);text-align:center}
-.aircraft-unified-track{stroke:color-mix(in srgb,var(--muted) 58%,black 42%)}
-.aircraft-unified-rain{stroke:#2563eb;stroke-width:1.1;fill:none;stroke-linecap:round}
-.aircraft-unified-cloud{stroke:#6b7280;stroke-width:1.1;fill:none;stroke-linecap:round}
+.aircraft-unified-track{stroke:color-mix(in srgb,var(--muted) 50%,black 50%);stroke-width:2.1}
+.aircraft-unified-dew,.aircraft-unified-humidity,.aircraft-unified-rain,.aircraft-unified-cloud{stroke:#aeb7c2;stroke-width:1.1;fill:none;stroke-linecap:round}
+.aircraft-unified-dew,.aircraft-unified-humidity{filter:drop-shadow(0 0 1px rgba(255,255,255,.35))}
+:root[data-theme="dark"] .climate-instrument svg{background:radial-gradient(circle at 38% 24%,rgba(255,255,255,.14),transparent 30%),radial-gradient(circle at 50% 42%,#263242,#111827);border-color:rgba(255,255,255,.16);box-shadow:inset 0 1px 2px rgba(255,255,255,.18),inset 0 -7px 12px rgba(0,0,0,.42),0 3px 10px rgba(0,0,0,.35)}
+:root[data-theme="dark"] .climate-instrument::after{background:linear-gradient(135deg,rgba(255,255,255,.16),rgba(255,255,255,.04) 20%,transparent 40%,transparent 72%,rgba(255,255,255,.04));box-shadow:inset 0 1px 1px rgba(255,255,255,.18)}
+:root[data-theme="dark"] .aircraft-unified-dew,:root[data-theme="dark"] .aircraft-unified-humidity,:root[data-theme="dark"] .aircraft-unified-rain,:root[data-theme="dark"] .aircraft-unified-cloud{stroke:#c4cbd3}
 @media(max-width:560px){.climate-four-gauges{gap:6px 2px}.climate-instrument>span{font-size:10px}.climate-instrument>strong{font-size:18px}}
 .humidity-zone-row{display:flex;justify-content:center;min-height:20px;margin-top:4px;margin-bottom:4px}
 .humidity-zone{display:inline-flex;align-items:center;justify-content:center;padding:5px 10px;border-radius:999px;font-size:10px;line-height:1;font-weight:800;border:1px solid var(--border);background:var(--surface);color:var(--text)}
