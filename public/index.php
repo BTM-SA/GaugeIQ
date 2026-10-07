@@ -185,45 +185,54 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 
 
         <article class="card metric-card temperature-summary-card">
-            <div class="section-heading">
-                <div>
-                    <p class="label">Temperature</p>
-                </div>
-            </div>
+            <div class="temperature-card-heading"><p class="label">Temperature</p></div>
             <?php if ($current): ?>
                 <div class="temperature-summary-main">
                     <div class="temperature-summary-current">
                         <strong><?= number_format($temperatureC, 1) ?>°C</strong>
                         <span>Feels like <?= number_format($feelsLikeC, 1) ?>°C</span>
                     </div>
-                    <div class="temperature-summary-range">
-                        <div><span>Low</span><strong><?= $forecastLowC !== null ? number_format((float)$forecastLowC, 1) . '°' : '—' ?></strong></div>
-                        <div><span>High</span><strong><?= $forecastHighC !== null ? number_format((float)$forecastHighC, 1) . '°' : '—' ?></strong></div>
+                    <div class="temperature-summary-forecast">
+                        <?php $todayCondition = $forecast ? $forecastCondition($forecast[0]['weather_code'] ?? null) : ['icon' => '—', 'label' => 'Unavailable']; ?>
+                        <span class="temperature-forecast-icon" role="img" aria-label="<?= htmlspecialchars($todayCondition['label'], ENT_QUOTES) ?>"><?= $todayCondition['icon'] ?></span>
+                        <div class="temperature-summary-range">
+                            <div><span>High</span><strong><?= $forecastHighC !== null ? number_format((float)$forecastHighC, 1) . '°' : '—' ?></strong></div>
+                            <div><span>Low</span><strong><?= $forecastLowC !== null ? number_format((float)$forecastLowC, 1) . '°' : '—' ?></strong></div>
+                        </div>
                     </div>
                 </div>
-                <div class="temperature-comfort-row">
-                    <span>Comfort</span>
-                    <b class="humidity-zone <?= htmlspecialchars($humidityZoneClass, ENT_QUOTES) ?>"><?= htmlspecialchars($humidityZone, ENT_QUOTES) ?></b>
+                <div class="temperature-stability-row">
+                    <div class="temperature-stability-label">Stability</div>
+                    <div class="temperature-stability-track" aria-label="Weather stability"><div class="temperature-stability-fill" id="weatherStabilityFill" style="width:100%"></div></div>
+                    <div class="temperature-comfort-inline">Comfort zone: <b class="humidity-zone <?= htmlspecialchars($humidityZoneClass, ENT_QUOTES) ?>"><?= htmlspecialchars($humidityZone, ENT_QUOTES) ?></b></div>
                 </div>
-            <?php else: ?>
-                <div class="metric-unavailable">Unavailable</div>
-            <?php endif; ?>
+            <?php else: ?><div class="metric-unavailable">Unavailable</div><?php endif; ?>
         </article>
 
         <article class="card metric-card pressure-card">
-            <p class="label">Air pressure</p>
-            <?php if ($current): ?>
-                <div class="metric-value"><?= number_format($current['pressure_hpa'], 1) ?><span> hPa</span></div>
-                <div class="metric-trend <?= $change > 0 ? 'rise' : ($change < 0 ? 'fall' : 'steady') ?>">
-                    <?= $change > 0 ? '↑ Rising' : ($change < 0 ? '↓ Falling' : '→ Stable') ?>
-                    <?php if ($latest): ?><strong><?= $change >= 0 ? '+' : '' ?><?= number_format($change, 1) ?> hPa</strong><?php endif; ?>
+            <div class="pressure-card-heading">
+                <div>
+                    <p class="label">Air pressure</p>
+                    <?php if ($current): ?>
+                        <div class="metric-value"><?= number_format($current['pressure_hpa'], 1) ?><span> hPa</span></div>
+                        <div class="metric-trend <?= $change > 0 ? 'rise' : ($change < 0 ? 'fall' : 'steady') ?>">
+                            <?= $change > 0 ? '↑ Rising' : ($change < 0 ? '↓ Falling' : '→ Stable') ?>
+                            <?php if ($latest): ?><strong><?= $change >= 0 ? '+' : '' ?><?= number_format($change, 1) ?> hPa</strong><?php endif; ?>
+                        </div>
+                    <?php else: ?><div class="metric-unavailable">Unavailable</div><?php endif; ?>
                 </div>
-            <?php else: ?>
-                <div class="metric-unavailable">Unavailable</div>
-            <?php endif; ?>
+                <div class="pressure-range-gauge" aria-label="<?= $current ? htmlspecialchars('Current pressure ' . number_format((float)$current['pressure_hpa'], 1) . ' hPa, historical low ' . number_format($pressureLow, 1) . ', high ' . number_format($pressureHigh, 1), ENT_QUOTES) : 'Pressure range unavailable' ?>">
+                    <svg viewBox="0 0 100 70" aria-hidden="true" focusable="false">
+                        <path class="pressure-range-track" d="M 18 55 A 32 32 0 0 1 82 55"></path>
+                        <path class="pressure-range-fill" pathLength="100" stroke-dasharray="<?= number_format($pressureRatio * 100, 2, '.', '') ?> 100" d="M 18 55 A 32 32 0 0 1 82 55"></path>
+                        <line class="pressure-range-needle" x1="50" y1="55" x2="<?= number_format(50 - cos(deg2rad(180 + $pressureRatio * 180)) * 28, 3, '.', '') ?>" y2="<?= number_format(55 + sin(deg2rad(180 + $pressureRatio * 180)) * 28, 3, '.', '') ?>"></line>
+                        <circle class="pressure-range-hub" cx="50" cy="55" r="2.8"></circle>
+                        <text x="13" y="66">L</text><text x="87" y="66">H</text>
+                    </svg>
+                    <strong><?= $current ? number_format((float)$current['pressure_hpa'], 1) : '—' ?></strong>
+                </div>
+            </div>
         </article>
-
-
 
     <section class="measurement-grid">
 
@@ -365,6 +374,22 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 
                 </svg>
             </div>
+            <div class="climate-lower-gauges">
+                <div class="climate-lower-gauge">
+                    <svg viewBox="0 28 100 44" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+                        <path class="aircraft-unified-track" d="M <?= number_format($climateGaugePoint($rainCx,$rainCy,$rainStart,$rainR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($rainCx,$rainCy,$rainStart,$rainR)[1],3,'.','') ?> A <?= $rainR ?> <?= $rainR ?> 0 1 1 <?= number_format($climateGaugePoint($rainCx,$rainCy,$rainStart+$rainSweep,$rainR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($rainCx,$rainCy,$rainStart+$rainSweep,$rainR)[1],3,'.','') ?>"></path>
+                        <path class="aircraft-unified-rain" pathLength="100" stroke-dasharray="<?= number_format($rainRatio*100,2,'.','') ?> 100" d="M <?= number_format($climateGaugePoint($rainCx,$rainCy,$rainStart,$rainR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($rainCx,$rainCy,$rainStart,$rainR)[1],3,'.','') ?> A <?= $rainR ?> <?= $rainR ?> 0 1 1 <?= number_format($climateGaugePoint($rainCx,$rainCy,$rainStart+$rainSweep,$rainR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($rainCx,$rainCy,$rainStart+$rainSweep,$rainR)[1],3,'.','') ?>"></path>
+                        <path class="aircraft-needle" d="<?= $rainNeedlePath ?>"></path><circle class="aircraft-hub small" cx="25" cy="50" r="2.1"></circle>
+                    </svg><span>Rainfall</span><strong><?= number_format($rainfallMm,1) ?> mm</strong>
+                </div>
+                <div class="climate-lower-gauge">
+                    <svg viewBox="0 28 100 44" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+                        <path class="aircraft-unified-track" d="M <?= number_format($climateGaugePoint($cloudCx,$cloudCy,$cloudStart,$cloudR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($cloudCx,$cloudCy,$cloudStart,$cloudR)[1],3,'.','') ?> A <?= $cloudR ?> <?= $cloudR ?> 0 1 1 <?= number_format($climateGaugePoint($cloudCx,$cloudCy,$cloudStart+$cloudSweep,$cloudR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($cloudCx,$cloudCy,$cloudStart+$cloudSweep,$cloudR)[1],3,'.','') ?>"></path>
+                        <path class="aircraft-unified-cloud" pathLength="100" stroke-dasharray="<?= number_format($cloudRatio*100,2,'.','') ?> 100" d="M <?= number_format($climateGaugePoint($cloudCx,$cloudCy,$cloudStart,$cloudR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($cloudCx,$cloudCy,$cloudStart,$cloudR)[1],3,'.','') ?> A <?= $cloudR ?> <?= $cloudR ?> 0 1 1 <?= number_format($climateGaugePoint($cloudCx,$cloudCy,$cloudStart+$cloudSweep,$cloudR)[0],3,'.','') ?> <?= number_format($climateGaugePoint($cloudCx,$cloudCy,$cloudStart+$cloudSweep,$cloudR)[1],3,'.','') ?>"></path>
+                        <path class="aircraft-needle" d="<?= $cloudNeedlePath ?>"></path><circle class="aircraft-hub small" cx="75" cy="50" r="2.1"></circle>
+                    </svg><span>Cloud cover</span><strong><?= number_format($cloudCoverPercent,0) ?>%</strong>
+                </div>
+            </div>
             <div class="climate-readings" aria-label="Current climate readings">
                 <div class="climate-reading">
                     <span>Dew Point</span>
@@ -422,7 +447,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                 <h2 id="weatherChangeTitle">Weather change</h2>
                 <p class="muted">Based on GaugeIQ's recent pressure, temperature, humidity and wind readings.</p>
             </div>
-            <div class="weather-change-score" id="weatherChangeScore" aria-label="Weather change score">—<span>/10</span></div>
+            <div class="weather-change-score" id="weatherChangeScore" aria-label="Weather change score">—</div></div>
         </div>
         <div class="weather-change-summary" id="weatherChangeSummary">Analysing recent conditions…</div>
         <div class="weather-change-reasons" id="weatherChangeReasons" aria-live="polite"></div>
