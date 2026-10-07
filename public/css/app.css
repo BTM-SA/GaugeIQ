@@ -176,9 +176,9 @@ button:disabled { opacity: .55; cursor: default; }
 :root[data-theme="dark"] .wind-speed-track{stroke:#747f8f;opacity:.72}
 .wind-speed-fill{fill:none;stroke:#2563eb;stroke-width:3.2;stroke-linecap:round;transition:d .7s ease,stroke-dasharray .7s ease}
 .wind-speed-fill[data-active="true"]{filter:drop-shadow(0 0 3px rgba(37,99,235,.22))}
-.wind-speed-ticks{stroke:var(--muted);stroke-width:.55}
-.wind-speed-ticks line.major{stroke:var(--text);stroke-width:1}
-.wind-speed-ticks text{fill:var(--muted);font-size:3.4px;font-weight:600;text-anchor:middle;dominant-baseline:middle}
+.wind-speed-ticks{stroke:var(--muted);stroke-width:.9}
+.wind-speed-ticks line.major{stroke:var(--text);stroke-width:1.45}
+.wind-speed-ticks text{fill:var(--muted);font-size:4.2px;font-weight:800;text-anchor:middle;dominant-baseline:middle}
 .wind-speed-ticks line.major+text{fill:var(--text)}
 .wind-compass-ring{fill:var(--card);stroke:var(--border);stroke-width:1.1}
 .wind-compass-ticks{stroke:var(--muted);stroke-width:.45}
@@ -187,7 +187,7 @@ button:disabled { opacity: .55; cursor: default; }
 .wind-compass-labels .minor{font-size:3.35px}
 .wind-center{fill:var(--card);stroke:var(--border);stroke-width:1}
 .wind-direction-arrows{transition:transform .7s cubic-bezier(.22,1,.36,1);transform-box:view-box;transform-origin:50px 50px}
-.wind-direction-marker{fill:#ef4444}
+ .wind-direction-marker{fill:#ef4444;stroke:var(--card);stroke-width:.7px}
 .wind-direction-to-marker{fill:#22c55e}
 .wind-gauge-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;padding-top:3px}
 .wind-gauge-center strong{font-size:clamp(28px,7.2vw,38px);line-height:.9;letter-spacing:-.045em;color:var(--text)}
