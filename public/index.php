@@ -36,6 +36,7 @@ try {
     )->fetch();
 
     $change = $latest ? $current['pressure_hpa'] - (float)$latest['pressure_hpa'] : 0.0;
+    $pressureHistory = $pdo->query('SELECT MIN(pressure_hpa) AS pressure_low, MAX(pressure_hpa) AS pressure_high FROM gaugeiq_pressure_readings')->fetch() ?: [];
 
     $settings = [];
     foreach ($pdo->query("SELECT `key`, `value` FROM gaugeiq_settings WHERE `key` IN ('monitor_last_success_at', 'monitor_last_error')") as $setting) {
@@ -109,6 +110,12 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     $humidityPercent = $current ? max(0.0, min(100.0, (float)$current['humidity_percent'])) : 0.0;
     $humidityZone = !$current ? 'Unavailable' : ($humidityPercent < 40 ? 'Dry' : ($humidityPercent < 60 ? 'Comfortable' : ($humidityPercent < 75 ? 'Humid' : 'Condensation risk')));
     $humidityZoneClass = strtolower(str_replace(' ', '-', $humidityZone));
+    $rainfallMm = $current ? max(0.0, (float)($current['rainfall_mm'] ?? 0.0)) : 0.0;
+    $cloudCoverPercent = $current ? max(0.0, min(100.0, (float)($current['cloud_cover_percent'] ?? 0.0))) : 0.0;
+    $pressureLow = isset($pressureHistory['pressure_low']) ? (float)$pressureHistory['pressure_low'] : ($current ? (float)$current['pressure_hpa'] : 0.0);
+    $pressureHigh = isset($pressureHistory['pressure_high']) ? (float)$pressureHistory['pressure_high'] : ($current ? (float)$current['pressure_hpa'] : 0.0);
+    $pressureRange = max(0.1, $pressureHigh - $pressureLow);
+    $pressureRatio = $current ? max(0.0, min(1.0, ((float)$current['pressure_hpa'] - $pressureLow) / $pressureRange)) : 0.0;
     $forecast = $current && is_array($current['forecast'] ?? null) ? $current['forecast'] : [];
 
     $forecastCondition = static function (?int $code): array {
@@ -143,6 +150,10 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     $humidityStart = 115.0; $humiditySweep = 310.0;
     $dewAngle = $dewStart + $dewRatio * $dewSweep;
     $humidityAngle = $humidityStart + $humidityRatio * $humiditySweep;
+    $rainCx = 25.0; $rainCy = 50.0; $rainStart = 115.0; $rainSweep = 310.0; $rainR = 20.0;
+    $cloudCx = 75.0; $cloudCy = 50.0; $cloudStart = 115.0; $cloudSweep = 310.0; $cloudR = 20.0;
+    $rainRatio = max(0.0, min(1.0, $rainfallMm / 10.0));
+    $cloudRatio = $cloudCoverPercent / 100.0;
 
     $dewCx = 25.0; $dewCy = 50.0; $smallR = 20.0;
     $humidityCx = 75.0; $humidityCy = 50.0;
@@ -168,6 +179,8 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 
     $dewNeedlePath = $climateNeedlePath($dewCx, $dewCy, $dewAngle, $smallR - 2.5);
     $humidityNeedlePath = $climateNeedlePath($humidityCx, $humidityCy, $humidityAngle, $smallR - 2.5);
+    $rainNeedlePath = $climateNeedlePath($rainCx, $rainCy, $rainStart + $rainRatio * $rainSweep, $rainR - 2.5);
+    $cloudNeedlePath = $climateNeedlePath($cloudCx, $cloudCy, $cloudStart + $cloudRatio * $cloudSweep, $cloudR - 2.5);
     ?> 
 
 
