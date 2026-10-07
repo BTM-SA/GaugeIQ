@@ -82,6 +82,8 @@ function applyWindCompassHeading(heading) {
 
     if (windCompassHeading === null) {
         windCompassHeading = normalized;
+        windCompassRotation = normalized;
+        windGauge.style.setProperty('--wind-compass-heading', normalized.toFixed(2) + 'deg');
     }
 
     if (windCompassAnimationFrame === null) {
@@ -217,10 +219,10 @@ async function enableWindCompass() {
 }
 
 if (windGauge) {
-    const initialMarker = windGauge.querySelector('.wind-direction-marker');
     const initialArrows = windGauge.querySelector('.wind-direction-arrows');
-    if (initialArrows && initialMarker) {
-        initialArrows.style.transform = 'rotate(' + (Number(initialMarker.dataset.windDegrees) || 0) + 'deg)';
+    const initialWindDegrees = Number(initialArrows?.dataset.windDegrees);
+    if (initialArrows && Number.isFinite(initialWindDegrees)) {
+        initialArrows.style.transform = 'rotate(' + initialWindDegrees.toFixed(2) + 'deg)';
     }
 
     if (windCompassButton) {
