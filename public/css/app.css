@@ -108,6 +108,16 @@ button:disabled { opacity: .55; cursor: default; }
 .measurement-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px}
 .metric-card{margin-bottom:0;min-width:0}
 .pressure-card{margin-bottom:16px}
+.pressure-card-heading{display:flex;justify-content:space-between;align-items:center;gap:14px}
+.pressure-range-gauge{width:108px;flex:0 0 108px;text-align:center}
+.pressure-range-gauge svg{display:block;width:100%;height:70px}
+.pressure-range-track,.pressure-range-fill{fill:none;stroke-linecap:round;stroke-width:6}
+.pressure-range-track{stroke:var(--surface)}
+.pressure-range-fill{stroke:#2563eb}
+.pressure-range-needle{stroke:#ef4444;stroke-width:2.2;stroke-linecap:round}
+.pressure-range-hub{fill:#ef4444;stroke:var(--card);stroke-width:1}
+.pressure-range-gauge text{font-size:10px;font-weight:900;fill:var(--text)}
+.pressure-range-gauge>strong{display:block;margin-top:-7px;font-size:11px;font-weight:900;color:var(--muted)}
 .metric-value{font-size:clamp(34px,8vw,52px);font-weight:800;letter-spacing:-.04em;line-height:1.05;margin:10px 0}
 .metric-value span{font-size:15px;letter-spacing:normal;font-weight:600}
 .metric-trend{display:flex;justify-content:space-between;gap:8px;font-size:14px}
@@ -209,6 +219,13 @@ button:disabled { opacity: .55; cursor: default; }
 .aircraft-needle.humidity-needle{color:#ef4444}
 .aircraft-hub{fill:var(--text);stroke:var(--card);stroke-width:.8}
 .aircraft-hub.small{stroke-width:.65}
+.climate-lower-gauges{display:grid;grid-template-columns:1fr 1fr;width:100%;margin-top:8px}
+.climate-lower-gauge{display:flex;flex-direction:column;align-items:center;gap:2px}
+.climate-lower-gauge svg{display:block;width:min(100%,215px);height:auto}
+.climate-lower-gauge span{font-size:11px;font-weight:800;color:var(--muted)}
+.climate-lower-gauge strong{font-size:20px;line-height:1;font-weight:900;color:var(--text)}
+.aircraft-unified-rain{stroke:#2563eb;stroke-width:1.1;fill:none;stroke-linecap:round}
+.aircraft-unified-cloud{stroke:#6b7280;stroke-width:1.1;fill:none;stroke-linecap:round}
 .climate-readings{display:grid;grid-template-columns:1fr 1fr;width:100%;margin-top:10px;text-align:center}
 .climate-reading:first-child,.climate-reading:last-child{grid-column:auto}
 .climate-reading{display:flex;flex-direction:column;gap:3px}
@@ -247,20 +264,30 @@ button:disabled { opacity: .55; cursor: default; }
 
 
 .temperature-summary-card{margin-top:16px;margin-bottom:16px}
-.temperature-summary-main{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-top:8px}
+.temperature-card-heading{margin-bottom:8px}
+.temperature-summary-main{display:flex;align-items:center;justify-content:space-between;gap:20px}
 .temperature-summary-current{display:flex;flex-direction:column;gap:5px}
 .temperature-summary-current strong{font-size:42px;line-height:1;font-weight:900;letter-spacing:-.045em;color:var(--text)}
 .temperature-summary-current span{font-size:12px;font-weight:700;color:var(--muted)}
-.temperature-summary-range{display:flex;gap:18px}
-.temperature-summary-range div{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:46px}
+.temperature-summary-forecast{display:flex;align-items:center;gap:14px}
+.temperature-forecast-icon{display:grid;place-items:center;width:48px;height:48px;font-size:36px;line-height:1}
+.temperature-summary-range{display:flex;gap:14px}
+.temperature-summary-range div{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:40px}
 .temperature-summary-range span{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-.temperature-summary-range strong{font-size:22px;line-height:1;font-weight:900;color:var(--text)}
-.temperature-comfort-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;font-weight:800;color:var(--muted)}
-.temperature-comfort-row .humidity-zone{font-size:10px}
+.temperature-summary-range strong{font-size:20px;line-height:1;font-weight:900;color:var(--text)}
+.temperature-stability-row{display:grid;grid-template-columns:auto minmax(90px,1fr) auto;align-items:center;gap:10px;margin-top:15px;padding-top:12px;border-top:1px solid var(--border)}
+.temperature-stability-label{font-size:11px;font-weight:900;color:var(--text)}
+.temperature-stability-track{height:9px;border-radius:999px;background:var(--surface);border:1px solid var(--border);overflow:hidden}
+.temperature-stability-fill{height:100%;border-radius:999px;background:#22c55e;transition:width .6s ease}
+.temperature-comfort-inline{font-size:10px;font-weight:800;color:var(--muted);white-space:nowrap}
+.temperature-comfort-inline .humidity-zone{font-size:10px}
 @media(max-width:560px){
   .temperature-summary-main{align-items:flex-start}
   .temperature-summary-current strong{font-size:36px}
-  .temperature-summary-range{gap:10px}
+  .temperature-summary-forecast{gap:8px}
+  .temperature-forecast-icon{width:40px;height:40px;font-size:30px}
+  .temperature-summary-range{gap:8px}
+  .temperature-stability-row{grid-template-columns:auto 1fr;}.temperature-comfort-inline{grid-column:1 / -1}
 }
 
 .location-form{display:flex;flex-direction:column;gap:14px}
@@ -299,7 +326,6 @@ button:disabled { opacity: .55; cursor: default; }
 .weather-change-card{margin-top:16px}
 .weather-change-card .section-heading{align-items:center}
 .weather-change-score{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:78px;height:78px;box-sizing:border-box;border-radius:50%;background:var(--surface);border:2px solid var(--border);font-size:30px;font-weight:900;line-height:1;color:var(--text);font-variant-numeric:tabular-nums}
-.weather-change-score span{font-size:11px;font-weight:800;color:var(--muted);margin-left:2px;line-height:1;align-self:flex-end;margin-bottom:24px}
 .weather-change-summary{margin-top:14px;font-size:15px;font-weight:800;color:var(--text)}
 .weather-change-reasons{display:grid;gap:8px;margin-top:12px}
 .weather-change-reason{display:flex;gap:9px;align-items:flex-start;padding:10px 12px;border-radius:12px;background:var(--surface);border:1px solid var(--border);font-size:13px;line-height:1.4;color:var(--text)}
