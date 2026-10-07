@@ -351,7 +351,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         <div class="climate-gauge-wrap">
             <div class="climate-four-gauges" aria-label="Current climate gauges">
                 <div class="climate-instrument">
-                    <svg viewBox="0 28 100 44" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
+                    <svg viewBox="25 25 50 50" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
                         <path class="aircraft-unified-track" d="M 41.548 68.126 A 20 20 0 1 1 61.472 66.383"></path>
                         <path class="aircraft-unified-dew" pathLength="100" stroke-dasharray="<?= number_format($dewRatio * 100, 2, '.', '') ?> 100" d="M 41.548 68.126 A 20 20 0 1 1 61.472 66.383"></path>
                         <g class="aircraft-ticks small">
@@ -373,7 +373,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                 </div>
 
                 <div class="climate-instrument">
-                    <svg viewBox="0 28 100 44" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
+                    <svg viewBox="25 25 50 50" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
                         <path class="aircraft-unified-track" d="M 41.548 68.126 A 20 20 0 1 1 61.472 66.383"></path>
                         <path class="aircraft-unified-humidity" pathLength="100" stroke-dasharray="<?= number_format($humidityRatio * 100, 2, '.', '') ?> 100" d="M 41.548 68.126 A 20 20 0 1 1 61.472 66.383"></path>
                         <g class="aircraft-ticks small">
@@ -395,7 +395,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                 </div>
 
                 <div class="climate-instrument">
-                    <svg viewBox="0 28 100 44" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
+                    <svg viewBox="25 25 50 50" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
                         <path class="aircraft-unified-track" d="M 41.548 68.126 A 20 20 0 1 1 61.472 66.383"></path>
                         <path class="aircraft-unified-rain" pathLength="100" stroke-dasharray="<?= number_format($rainRatio * 100, 2, '.', '') ?> 100" d="M 41.548 68.126 A 20 20 0 1 1 61.472 66.383"></path>
                         <g class="aircraft-ticks small">
@@ -417,7 +417,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                 </div>
 
                 <div class="climate-instrument">
-                    <svg viewBox="0 28 100 44" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
+                    <svg viewBox="25 25 50 50" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
                         <path class="aircraft-unified-track" d="M 41.548 68.126 A 20 20 0 1 1 61.472 66.383"></path>
                         <path class="aircraft-unified-cloud" pathLength="100" stroke-dasharray="<?= number_format($cloudRatio * 100, 2, '.', '') ?> 100" d="M 41.548 68.126 A 20 20 0 1 1 61.472 66.383"></path>
                         <g class="aircraft-ticks small">
