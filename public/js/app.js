@@ -505,6 +505,9 @@ function weatherChangeScore(readings) {
             humidity: Number(item.humidity_percent),
             wind: Number(item.wind_speed_kmh),
             direction: Number(item.wind_direction_degrees),
+            rain: Number(item.rainfall_mm),
+            cloud: Number(item.cloud_cover_percent),
+            weatherCode: Number(item.weather_code),
             time: new Date(item.created_at || item.observed_at).getTime()
         }))
         .filter(item => Number.isFinite(item.time))
@@ -559,14 +562,48 @@ function weatherChangeScore(readings) {
         reasons.push('Wind direction has shifted by about ' + Math.round(directionChange) + '°.');
     }
 
-    // A rapidly closing temperature/dew-point spread can indicate a more
-    // unsettled, moisture-rich pattern even when individual changes are small.
     const firstSpread = first.temperature - first.dewPoint;
     const lastSpread = last.temperature - last.dewPoint;
     const spreadDelta = lastSpread - firstSpread;
     if (Number.isFinite(firstSpread) && Number.isFinite(lastSpread) && spreadDelta <= -1.5) {
         score += 1;
         reasons.push('The temperature/dew-point gap is narrowing, indicating rising near-surface moisture.');
+    }
+
+    if (Number.isFinite(first.rain) && Number.isFinite(last.rain)) {
+        const rainDelta = last.rain - first.rain;
+        if ((first.rain < 0.2 && last.rain >= 0.2) || rainDelta >= 1.0) {
+            score += 2;
+            reasons.push('Rainfall has started or increased noticeably.');
+        } else if (rainDelta >= 0.2) {
+            score += 1;
+            reasons.push('Rainfall is increasing.');
+        }
+    }
+
+    if (Number.isFinite(first.cloud) && Number.isFinite(last.cloud)) {
+        const cloudChange = Math.abs(last.cloud - first.cloud);
+        if (cloudChange >= 40) {
+            score += 2;
+            reasons.push('Cloud cover has changed by about ' + Math.round(cloudChange) + ' percentage points.');
+        } else if (cloudChange >= 20) {
+            score += 1;
+            reasons.push('Cloud cover has changed by about ' + Math.round(cloudChange) + ' percentage points.');
+        }
+    }
+
+    if (Number.isFinite(first.weatherCode) && Number.isFinite(last.weatherCode) && first.weatherCode !== last.weatherCode) {
+        const severity = code => {
+            if ([95, 96, 99].includes(code)) return 5;
+            if ([65, 67, 75, 82, 86].includes(code)) return 4;
+            if ([61, 63, 66, 71, 73, 77, 80, 81, 85].includes(code)) return 3;
+            if ([45, 48, 51, 53, 55, 56, 57].includes(code)) return 2;
+            if ([2, 3].includes(code)) return 1;
+            return 0;
+        };
+        const severityChange = Math.abs(severity(last.weatherCode) - severity(first.weatherCode));
+        score += severityChange >= 2 ? 2 : 1;
+        reasons.push('The reported weather condition has changed.');
     }
 
     score = Math.min(10, score);
