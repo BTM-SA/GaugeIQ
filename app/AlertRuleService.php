@@ -284,7 +284,7 @@ final class AlertRuleService
         $threshold = max(1.0, min(10.0, (float)($c['value'] ?? 0)));
         $since = gmdate('c', time() - (6 * 3600));
         $stmt = $this->db->prepare(
-            'SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, observed_at, created_at
+            'SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, rainfall_mm, cloud_cover_percent, weather_code, observed_at, created_at
              FROM gaugeiq_pressure_readings
              WHERE created_at >= ?
              ORDER BY created_at ASC, id ASC'
@@ -308,6 +308,7 @@ final class AlertRuleService
             if ($time === false) {
                 continue;
             }
+
             $valid[] = [
                 'temperature' => (float)$item['temperature_c'],
                 'dewPoint' => (float)$item['dew_point_c'],
@@ -315,6 +316,9 @@ final class AlertRuleService
                 'humidity' => (float)$item['humidity_percent'],
                 'wind' => (float)$item['wind_speed_kmh'],
                 'direction' => (float)$item['wind_direction_degrees'],
+                'rain' => isset($item['rainfall_mm']) && is_numeric($item['rainfall_mm']) ? (float)$item['rainfall_mm'] : null,
+                'cloud' => isset($item['cloud_cover_percent']) && is_numeric($item['cloud_cover_percent']) ? (float)$item['cloud_cover_percent'] : null,
+                'weatherCode' => isset($item['weather_code']) && is_numeric($item['weather_code']) ? (int)$item['weather_code'] : null,
                 'time' => $time,
             ];
         }
@@ -345,14 +349,57 @@ final class AlertRuleService
         $windChange = abs($windDelta);
         if ($windChange >= 8) $score += $windChange >= 15 ? 2 : 1;
 
-        $directionDifference = abs(fmod($first['direction'] - $last['direction'], 360.0));
-        $directionDifference = min($directionDifference, 360.0 - $directionDifference);
+        $directionDifference = $this->directionDifference($first['direction'], $last['direction']);
         if ($directionDifference >= 30) $score += $directionDifference >= 60 ? 2 : 1;
 
         $firstSpread = $first['temperature'] - $first['dewPoint'];
         $lastSpread = $last['temperature'] - $last['dewPoint'];
         if (($lastSpread - $firstSpread) <= -1.5) {
             $score += 1;
+        }
+
+        // New precipitation signal: the start or strengthening of rainfall is
+        // a direct indicator that conditions are changing.
+        if ($first['rain'] !== null && $last['rain'] !== null) {
+            $rainDelta = $last['rain'] - $first['rain'];
+            if (($first['rain'] < 0.2 && $last['rain'] >= 0.2) || $rainDelta >= 1.0) {
+                $score += 2;
+            } elseif ($rainDelta >= 0.2) {
+                $score += 1;
+            }
+        }
+
+        // Cloud-cover movement captures a developing or clearing system even
+        // when rainfall has not started yet.
+        if ($first['cloud'] !== null && $last['cloud'] !== null) {
+            $cloudChange = abs($last['cloud'] - $first['cloud']);
+            if ($cloudChange >= 40) {
+                $score += 2;
+            } elseif ($cloudChange >= 20) {
+                $score += 1;
+            }
+        }
+
+        // Weather code is categorical, so use severity transitions rather
+        // than treating the WMO code as a continuous numeric measurement.
+        if ($first['weatherCode'] !== null && $last['weatherCode'] !== null && $first['weatherCode'] !== $last['weatherCode']) {
+            $severity = static function (int $code): int {
+                return match (true) {
+                    in_array($code, [95, 96, 99], true) => 5,
+                    in_array($code, [65, 67, 75, 82, 86], true) => 4,
+                    in_array($code, [61, 63, 66, 71, 73, 77, 80, 81, 85], true) => 3,
+                    in_array($code, [45, 48, 51, 53, 55, 56, 57], true) => 2,
+                    in_array($code, [2, 3], true) => 1,
+                    default => 0,
+                };
+            };
+
+            $severityChange = abs($severity($last['weatherCode']) - $severity($first['weatherCode']));
+            if ($severityChange >= 2) {
+                $score += 2;
+            } else {
+                $score += 1;
+            }
         }
 
         return min(10, $score);
