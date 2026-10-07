@@ -119,7 +119,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     $forecastHighC = $current ? ($current['forecast_high_c'] ?? null) : null;
     $forecastLowC = $current ? ($current['forecast_low_c'] ?? null) : null;
     $humidityPercent = $current ? max(0.0, min(100.0, (float)$current['humidity_percent'])) : 0.0;
-    $humidityZone = !$current ? 'Unavailable' : ($humidityPercent < 40 ? 'Dry' : ($humidityPercent < 60 ? 'Comfortable' : ($humidityPercent < 75 ? 'Humid' : 'Condensation risk')));
+    $humidityZone = !$current ? 'Unavailable' : ($humidityPercent < 40 ? 'Dry' : ($humidityPercent < 60 ? 'Comfortable' : ($humidityPercent < 75 ? 'Humid' : 'Condensation')));
     $humidityZoneClass = strtolower(str_replace(' ', '-', $humidityZone));
     $rainfallMm = $current ? max(0.0, (float)($current['rainfall_mm'] ?? 0.0)) : 0.0;
     $cloudCoverPercent = $current ? max(0.0, min(100.0, (float)($current['cloud_cover_percent'] ?? 0.0))) : 0.0;
@@ -228,12 +228,12 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                         <div class="pressure-readout-row">
                             <div class="metric-value"><?= number_format($current['pressure_hpa'], 1) ?><span> hPa</span></div>
                             <div class="pressure-range-gauge" aria-label="<?= $current ? htmlspecialchars('Current pressure ' . number_format((float)$current['pressure_hpa'], 1) . ' hPa, historical low ' . number_format($pressureLow, 1) . ', high ' . number_format($pressureHigh, 1), ENT_QUOTES) : 'Pressure range unavailable' ?>">
-                                <svg viewBox="0 0 100 70" aria-hidden="true" focusable="false">
+                                <svg viewBox="0 16 100 50" aria-hidden="true" focusable="false">
                                     <path class="pressure-range-track" d="M 18 55 A 32 32 0 0 1 82 55"></path>
                                     <g class="pressure-range-ticks">
                                         <?php for ($tick = 0; $tick <= 10; $tick++):
                                             $tickRatio = $tick / 10.0;
-                                            $tickAngle = 180.0 - ($tickRatio * 180.0);
+                                            $tickAngle = 180.0 + ($tickRatio * 180.0);
                                             $tickOuterX = 50 + cos(deg2rad($tickAngle)) * 33;
                                             $tickOuterY = 55 + sin(deg2rad($tickAngle)) * 33;
                                             $tickInnerRadius = $tick % 2 === 0 ? 27.5 : 29.5;
@@ -246,10 +246,10 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                                         <?php endfor; ?>
                                     </g>
                                     <line class="pressure-range-needle" x1="50" y1="55"
-                                          x2="<?= number_format(50 + cos(deg2rad(180 - $pressureRatio * 180)) * 28, 3, '.', '') ?>"
-                                          y2="<?= number_format(55 + sin(deg2rad(180 - $pressureRatio * 180)) * 28, 3, '.', '') ?>"></line>
+                                          x2="<?= number_format(50 + cos(deg2rad(180 + $pressureRatio * 180)) * 28, 3, '.', '') ?>"
+                                          y2="<?= number_format(55 + sin(deg2rad(180 + $pressureRatio * 180)) * 28, 3, '.', '') ?>"></line>
                                     <circle class="pressure-range-hub" cx="50" cy="55" r="2.8"></circle>
-                                    <text x="14" y="66">L</text><text x="86" y="66">H</text>
+                                    <text x="14" y="63">L</text><text x="86" y="63">H</text>
                                 </svg>
                             </div>
                         </div>
