@@ -276,6 +276,7 @@ button:disabled { opacity: .55; cursor: default; }
 .temperature-summary-range span{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .temperature-summary-range strong{font-size:20px;line-height:1;font-weight:900;color:var(--text)}
 .temperature-stability-row{display:flex;align-items:center;min-width:0;margin-top:15px;padding-top:12px;border-top:1px solid var(--border);gap:10px}
+.temperature-comfort-inline{margin-left:auto}
 .temperature-stability-label{flex:0 0 auto;font-size:11px;font-weight:900;color:var(--text);white-space:nowrap}
 .temperature-stability-track{flex:0 0 90px;width:90px;height:9px;min-width:90px;border-radius:999px;background:var(--surface);border:1px solid var(--border);overflow:hidden}
 .temperature-stability-fill{height:100%;border-radius:999px;background:#22c55e;transition:width .6s ease}
