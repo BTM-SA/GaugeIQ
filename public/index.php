@@ -214,31 +214,33 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                 <div>
                     <p class="label">Air pressure</p>
                     <?php if ($current): ?>
-                        <div class="metric-value"><?= number_format($current['pressure_hpa'], 1) ?><span> hPa</span></div>
-                        <div class="pressure-range-gauge" aria-label="<?= $current ? htmlspecialchars('Current pressure ' . number_format((float)$current['pressure_hpa'], 1) . ' hPa, historical low ' . number_format($pressureLow, 1) . ', high ' . number_format($pressureHigh, 1), ENT_QUOTES) : 'Pressure range unavailable' ?>">
-                            <svg viewBox="0 0 100 70" aria-hidden="true" focusable="false">
-                                <path class="pressure-range-track" d="M 18 55 A 32 32 0 0 1 82 55"></path>
-                                <g class="pressure-range-ticks">
-                                    <?php for ($tick = 0; $tick <= 10; $tick++):
-                                        $tickRatio = $tick / 10.0;
-                                        $tickAngle = 180.0 - ($tickRatio * 180.0);
-                                        $tickOuterX = 50 + cos(deg2rad($tickAngle)) * 33;
-                                        $tickOuterY = 55 + sin(deg2rad($tickAngle)) * 33;
-                                        $tickInnerRadius = $tick % 2 === 0 ? 27.5 : 29.5;
-                                        $tickInnerX = 50 + cos(deg2rad($tickAngle)) * $tickInnerRadius;
-                                        $tickInnerY = 55 + sin(deg2rad($tickAngle)) * $tickInnerRadius;
-                                    ?>
-                                        <line class="<?= $tick % 2 === 0 ? 'major' : '' ?>"
-                                              x1="<?= number_format($tickOuterX, 3, '.', '') ?>" y1="<?= number_format($tickOuterY, 3, '.', '') ?>"
-                                              x2="<?= number_format($tickInnerX, 3, '.', '') ?>" y2="<?= number_format($tickInnerY, 3, '.', '') ?>"></line>
-                                    <?php endfor; ?>
-                                </g>
-                                <line class="pressure-range-needle" x1="50" y1="55"
-                                      x2="<?= number_format(50 + cos(deg2rad(180 - $pressureRatio * 180)) * 28, 3, '.', '') ?>"
-                                      y2="<?= number_format(55 + sin(deg2rad(180 - $pressureRatio * 180)) * 28, 3, '.', '') ?>"></line>
-                                <circle class="pressure-range-hub" cx="50" cy="55" r="2.8"></circle>
-                                <text x="14" y="66">L</text><text x="86" y="66">H</text>
-                            </svg>
+                        <div class="pressure-readout-row">
+                            <div class="metric-value"><?= number_format($current['pressure_hpa'], 1) ?><span> hPa</span></div>
+                            <div class="pressure-range-gauge" aria-label="<?= $current ? htmlspecialchars('Current pressure ' . number_format((float)$current['pressure_hpa'], 1) . ' hPa, historical low ' . number_format($pressureLow, 1) . ', high ' . number_format($pressureHigh, 1), ENT_QUOTES) : 'Pressure range unavailable' ?>">
+                                <svg viewBox="0 0 100 70" aria-hidden="true" focusable="false">
+                                    <path class="pressure-range-track" d="M 18 55 A 32 32 0 0 1 82 55"></path>
+                                    <g class="pressure-range-ticks">
+                                        <?php for ($tick = 0; $tick <= 10; $tick++):
+                                            $tickRatio = $tick / 10.0;
+                                            $tickAngle = 180.0 - ($tickRatio * 180.0);
+                                            $tickOuterX = 50 + cos(deg2rad($tickAngle)) * 33;
+                                            $tickOuterY = 55 + sin(deg2rad($tickAngle)) * 33;
+                                            $tickInnerRadius = $tick % 2 === 0 ? 27.5 : 29.5;
+                                            $tickInnerX = 50 + cos(deg2rad($tickAngle)) * $tickInnerRadius;
+                                            $tickInnerY = 55 + sin(deg2rad($tickAngle)) * $tickInnerRadius;
+                                        ?>
+                                            <line class="<?= $tick % 2 === 0 ? 'major' : '' ?>"
+                                                  x1="<?= number_format($tickOuterX, 3, '.', '') ?>" y1="<?= number_format($tickOuterY, 3, '.', '') ?>"
+                                                  x2="<?= number_format($tickInnerX, 3, '.', '') ?>" y2="<?= number_format($tickInnerY, 3, '.', '') ?>"></line>
+                                        <?php endfor; ?>
+                                    </g>
+                                    <line class="pressure-range-needle" x1="50" y1="55"
+                                          x2="<?= number_format(50 + cos(deg2rad(180 - $pressureRatio * 180)) * 28, 3, '.', '') ?>"
+                                          y2="<?= number_format(55 + sin(deg2rad(180 - $pressureRatio * 180)) * 28, 3, '.', '') ?>"></line>
+                                    <circle class="pressure-range-hub" cx="50" cy="55" r="2.8"></circle>
+                                    <text x="14" y="66">L</text><text x="86" y="66">H</text>
+                                </svg>
+                            </div>
                         </div>
                         <div class="metric-trend <?= $change > 0 ? 'rise' : ($change < 0 ? 'fall' : 'steady') ?>">
                             <?= $change > 0 ? '↑ Rising' : ($change < 0 ? '↓ Falling' : '→ Stable') ?>
