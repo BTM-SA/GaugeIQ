@@ -294,6 +294,7 @@ button:disabled { opacity: .55; cursor: default; }
   .temperature-comfort-inline{margin-left:12px}
   .temperature-comfort-inline .humidity-zone{font-size:9px;padding:4px 7px}
 }
+.temperature-comfort-inline{margin-left:auto}
 
 .location-form{display:flex;flex-direction:column;gap:14px}
 .location-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
