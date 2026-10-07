@@ -218,18 +218,14 @@ button:disabled { opacity: .55; cursor: default; }
 .aircraft-needle.humidity-needle{color:#ef4444}
 .aircraft-hub{fill:var(--text);stroke:var(--card);stroke-width:.8}
 .aircraft-hub.small{stroke-width:.65}
-.climate-lower-gauges{display:grid;grid-template-columns:1fr 1fr;width:100%;margin-top:8px}
-.climate-lower-gauge{display:flex;flex-direction:column;align-items:center;gap:2px}
-.climate-lower-gauge svg{display:block;width:min(100%,215px);height:auto}
-.climate-lower-gauge span{font-size:11px;font-weight:800;color:var(--muted)}
-.climate-lower-gauge strong{font-size:20px;line-height:1;font-weight:900;color:var(--text)}
+.climate-four-gauges{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 4px;width:100%;margin-top:8px}
+.climate-instrument{display:flex;flex-direction:column;align-items:center;min-width:0}
+.climate-instrument svg{display:block;width:min(100%,215px);height:auto}
+.climate-instrument>span{margin-top:1px;font-size:11px;font-weight:800;color:var(--muted);text-align:center}
+.climate-instrument>strong{margin-top:2px;font-size:20px;line-height:1;font-weight:900;color:var(--text);text-align:center}
 .aircraft-unified-rain{stroke:#2563eb;stroke-width:1.1;fill:none;stroke-linecap:round}
 .aircraft-unified-cloud{stroke:#6b7280;stroke-width:1.1;fill:none;stroke-linecap:round}
-.climate-readings{display:grid;grid-template-columns:1fr 1fr;width:100%;margin-top:10px;text-align:center}
-.climate-reading:first-child,.climate-reading:last-child{grid-column:auto}
-.climate-reading{display:flex;flex-direction:column;gap:3px}
-.climate-reading span{font-size:11px;font-weight:800;color:var(--muted)}
-.climate-reading strong{font-size:20px;line-height:1;font-weight:900;color:var(--text)}
+@media(max-width:560px){.climate-four-gauges{gap:6px 2px}.climate-instrument>span{font-size:10px}.climate-instrument>strong{font-size:18px}}
 .humidity-zone-row{display:flex;justify-content:center;min-height:20px;margin-top:4px;margin-bottom:4px}
 .humidity-zone{display:inline-flex;align-items:center;justify-content:center;padding:5px 10px;border-radius:999px;font-size:10px;line-height:1;font-weight:800;border:1px solid var(--border);background:var(--surface);color:var(--text)}
 .humidity-zone.dry{border-color:#f59e0b;color:#b45309}
