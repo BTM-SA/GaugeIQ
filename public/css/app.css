@@ -111,13 +111,12 @@ button:disabled { opacity: .55; cursor: default; }
 .pressure-card-heading{display:flex;justify-content:space-between;align-items:center;gap:14px}
 .pressure-range-gauge{width:108px;flex:0 0 108px;text-align:center}
 .pressure-range-gauge svg{display:block;width:100%;height:70px}
-.pressure-range-track,.pressure-range-fill{fill:none;stroke-linecap:round;stroke-width:6}
-.pressure-range-track{stroke:var(--surface)}
-.pressure-range-fill{stroke:#2563eb}
+.pressure-range-track{fill:none;stroke:var(--surface);stroke-linecap:round;stroke-width:6}
+.pressure-range-ticks{stroke:var(--muted);stroke-width:.8;stroke-linecap:round}
+.pressure-range-ticks line.major{stroke:var(--text);stroke-width:1.35}
 .pressure-range-needle{stroke:#ef4444;stroke-width:2.2;stroke-linecap:round}
 .pressure-range-hub{fill:#ef4444;stroke:var(--card);stroke-width:1}
 .pressure-range-gauge text{font-size:10px;font-weight:900;fill:var(--text)}
-.pressure-range-gauge>strong{display:block;margin-top:-7px;font-size:11px;font-weight:900;color:var(--muted)}
 .metric-value{font-size:clamp(34px,8vw,52px);font-weight:800;letter-spacing:-.04em;line-height:1.05;margin:10px 0}
 .metric-value span{font-size:15px;letter-spacing:normal;font-weight:600}
 .metric-trend{display:flex;justify-content:space-between;gap:8px;font-size:14px}
