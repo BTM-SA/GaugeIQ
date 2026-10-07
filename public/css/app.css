@@ -108,9 +108,9 @@ button:disabled { opacity: .55; cursor: default; }
 .measurement-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px}
 .metric-card{margin-bottom:0;min-width:0}
 .pressure-card{margin-bottom:16px}
-.pressure-card-heading{display:flex;justify-content:space-between;align-items:center;gap:14px}
-.pressure-range-gauge{width:108px;flex:0 0 108px;text-align:center}
-.pressure-range-gauge svg{display:block;width:100%;height:70px}
+.pressure-card-heading{display:block}
+.pressure-range-gauge{width:100%;text-align:center;margin-top:2px;margin-bottom:2px}
+.pressure-range-gauge svg{display:block;width:108px;height:70px;margin:0 auto}
 .pressure-range-track{fill:none;stroke:var(--surface);stroke-linecap:round;stroke-width:6}
 .pressure-range-ticks{stroke:var(--muted);stroke-width:.8;stroke-linecap:round}
 .pressure-range-ticks line.major{stroke:var(--text);stroke-width:1.35}
