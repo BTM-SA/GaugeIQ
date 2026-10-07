@@ -646,7 +646,18 @@ async function loadWeatherChange() {
         const scoreClass = result.score >= 7 ? 'high' : result.score >= 5 ? 'moderate' : 'low';
         scoreElement.dataset.level = scoreClass;
         const stabilityFill = document.getElementById('weatherStabilityFill');
-        if (stabilityFill) stabilityFill.style.width = ((10 - result.score) * 10) + '%';
+        const stabilityTrack = stabilityFill?.closest('.temperature-stability-track');
+        if (stabilityFill) {
+            const stabilityScore = 10 - result.score;
+            stabilityFill.style.width = (stabilityScore * 10) + '%';
+
+            const alertThreshold = Number(stabilityTrack?.dataset.weatherChangeAlertThreshold);
+            const warningActive = Number.isFinite(alertThreshold)
+                && result.score >= alertThreshold;
+
+            stabilityFill.classList.toggle('warning', warningActive);
+            stabilityTrack?.classList.toggle('warning', warningActive);
+        }
     } catch {
         scoreElement.textContent = '—';
         summaryElement.textContent = 'Weather change indicator unavailable.';
