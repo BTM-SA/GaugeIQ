@@ -33,7 +33,7 @@ final class PressureService
         $lon = rawurlencode($longitude);
 
         $url = "https://api.open-meteo.com/v1/forecast?latitude={$lat}&longitude={$lon}"
-            . "&current=temperature_2m,apparent_temperature,dew_point_2m,surface_pressure,relative_humidity_2m,precipitation,cloud_cover,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=4"
+            . "&current=temperature_2m,apparent_temperature,dew_point_2m,surface_pressure,relative_humidity_2m,rain,cloud_cover,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=4"
             . "&wind_speed_unit=kmh&timezone=auto";
 
         if (!function_exists('curl_init')) {
@@ -80,7 +80,7 @@ final class PressureService
             'dew_point_2m' => 'Dew point',
             'surface_pressure' => 'Pressure',
             'relative_humidity_2m' => 'Humidity',
-            'precipitation' => 'Rainfall',
+            'rain' => 'Rainfall',
             'cloud_cover' => 'Cloud cover',
             'wind_speed_10m' => 'Wind speed',
             'wind_direction_10m' => 'Wind direction',
@@ -98,7 +98,7 @@ final class PressureService
             'dew_point_c' => (float)$current['dew_point_2m'],
             'pressure_hpa' => (float)$current['surface_pressure'],
             'humidity_percent' => (float)$current['relative_humidity_2m'],
-            'rainfall_mm' => (float)$current['precipitation'],
+            'rainfall_mm' => (float)$current['rain'],
             'cloud_cover_percent' => (float)$current['cloud_cover'],
             'wind_speed_kmh' => (float)$current['wind_speed_10m'],
             'wind_direction_degrees' => (float)$current['wind_direction_10m'],
