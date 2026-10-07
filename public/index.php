@@ -225,7 +225,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     <svg viewBox="0 0 100 70" aria-hidden="true" focusable="false">
                         <path class="pressure-range-track" d="M 18 55 A 32 32 0 0 1 82 55"></path>
                         <path class="pressure-range-fill" pathLength="100" stroke-dasharray="<?= number_format($pressureRatio * 100, 2, '.', '') ?> 100" d="M 18 55 A 32 32 0 0 1 82 55"></path>
-                        <line class="pressure-range-needle" x1="50" y1="55" x2="<?= number_format(50 - cos(deg2rad(180 + $pressureRatio * 180)) * 28, 3, '.', '') ?>" y2="<?= number_format(55 + sin(deg2rad(180 + $pressureRatio * 180)) * 28, 3, '.', '') ?>"></line>
+                        <line class="pressure-range-needle" x1="50" y1="55" x2="<?= number_format(50 + cos(deg2rad(180 - $pressureRatio * 180)) * 28, 3, '.', '') ?>" y2="<?= number_format(55 + sin(deg2rad(180 - $pressureRatio * 180)) * 28, 3, '.', '') ?>"></line>
                         <circle class="pressure-range-hub" cx="50" cy="55" r="2.8"></circle>
                         <text x="13" y="66">L</text><text x="87" y="66">H</text>
                     </svg>
