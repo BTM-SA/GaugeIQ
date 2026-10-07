@@ -17,7 +17,7 @@ try {
     // therefore should not be used for the UTC history window.
     $stmt = $db->pdo()->prepare(
         'SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh,
-                wind_direction_degrees, observed_at, created_at
+                wind_direction_degrees, rainfall_mm, cloud_cover_percent, weather_code, observed_at, created_at
          FROM gaugeiq_pressure_readings
          WHERE created_at >= ?
          ORDER BY created_at ASC'
