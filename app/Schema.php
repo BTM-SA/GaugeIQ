@@ -19,6 +19,9 @@ CREATE TABLE IF NOT EXISTS gaugeiq_pressure_readings (
     humidity_percent DOUBLE NULL,
     wind_speed_kmh DOUBLE NULL,
     wind_direction_degrees DOUBLE NULL,
+    rainfall_mm DOUBLE NULL,
+    cloud_cover_percent DOUBLE NULL,
+    weather_code INT NULL,
     observed_at VARCHAR(64) NOT NULL,
     created_at VARCHAR(64) NOT NULL,
     INDEX idx_gaugeiq_pressure_created (created_at)
@@ -52,6 +55,9 @@ CREATE TABLE IF NOT EXISTS gaugeiq_pressure_readings (
     humidity_percent REAL NULL,
     wind_speed_kmh REAL NULL,
     wind_direction_degrees REAL NULL,
+    rainfall_mm REAL NULL,
+    cloud_cover_percent REAL NULL,
+    weather_code INTEGER NULL,
     observed_at TEXT NOT NULL,
     created_at TEXT NOT NULL
 );
@@ -232,3 +238,20 @@ SQL);
     }
 
 }
+
+
+    if ($version === 6) {
+        if ($driver === 'mysql') {
+            $db->exec("ALTER TABLE gaugeiq_pressure_readings
+                ADD COLUMN rainfall_mm DOUBLE NULL,
+                ADD COLUMN cloud_cover_percent DOUBLE NULL,
+                ADD COLUMN weather_code INT NULL");
+        } else {
+            $db->exec("ALTER TABLE gaugeiq_pressure_readings ADD COLUMN rainfall_mm REAL NULL");
+            $db->exec("ALTER TABLE gaugeiq_pressure_readings ADD COLUMN cloud_cover_percent REAL NULL");
+            $db->exec("ALTER TABLE gaugeiq_pressure_readings ADD COLUMN weather_code INTEGER NULL");
+        }
+        $db->exec("UPDATE gaugeiq_schema SET version = 7");
+        $version = 7;
+    }
+
