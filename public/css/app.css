@@ -180,8 +180,8 @@ button:disabled { opacity: .55; cursor: default; }
 .wind-speed-fill[data-active="true"]{filter:drop-shadow(0 0 3px rgba(37,99,235,.22))}
 .wind-speed-ticks{stroke:var(--muted);stroke-width:.9}
 .wind-speed-ticks line.major{stroke:var(--text);stroke-width:1.45}
-.wind-speed-ticks text{fill:#111827;font-size:3.6px;font-weight:300;text-anchor:middle;dominant-baseline:middle}
-.wind-speed-ticks line.major+text{fill:#111827;font-weight:400}
+.wind-speed-ticks text{fill:#111827;font-size:4.1px;font-weight:450;text-anchor:middle;dominant-baseline:middle;paint-order:stroke fill;stroke:var(--card);stroke-width:.55px}
+.wind-speed-ticks line.major+text{fill:#111827;font-weight:500}
 :root[data-theme="dark"] .wind-speed-ticks text{fill:#111827}
 :root[data-theme="dark"] .wind-speed-ticks line.major+text{fill:#111827}
 .wind-compass-ring{fill:var(--card);stroke:var(--border);stroke-width:1.1}
