@@ -111,6 +111,7 @@ button:disabled { opacity: .55; cursor: default; }
 .pressure-card-heading{display:block}
 .pressure-readout-row{display:flex;align-items:center;justify-content:space-between;gap:18px;min-width:0}
 .pressure-range-gauge{flex:0 0 108px;width:108px;text-align:center;margin:0}
+@media(max-width:560px){.pressure-range-gauge{transform:translateY(-15px)}}
 .pressure-range-gauge svg{display:block;width:108px;height:70px;margin:0}
 .pressure-range-track{fill:none;stroke:var(--surface);stroke-linecap:round;stroke-width:6}
 .pressure-range-ticks{stroke:var(--muted);stroke-width:.8;stroke-linecap:round}
