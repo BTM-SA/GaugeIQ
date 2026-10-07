@@ -274,11 +274,11 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                             $ratio = $value / $windSpeedMax;
                             $angle = $windGaugeStart + ($ratio * $windGaugeSweep);
                             $tickOuter = $windGaugePoint($angle, 47.0);
-                            $tickInner = $windGaugePoint($angle, $value % 10 === 0 ? 43.0 : 44.5);
+                            $tickInner = $windGaugePoint($angle, $value % 10 === 0 ? 41.5 : 43.0);
                             [$labelX, $labelY] = $windGaugePoint($angle, 38.5);
                         ?>
                             <line class="<?= $value % 10 === 0 ? 'major' : '' ?>" x1="<?= number_format($tickOuter[0], 3, '.', '') ?>" y1="<?= number_format($tickOuter[1], 3, '.', '') ?>" x2="<?= number_format($tickInner[0], 3, '.', '') ?>" y2="<?= number_format($tickInner[1], 3, '.', '') ?>"></line>
-                            <?php if ($value % 20 === 0): ?>
+                            <?php if ($value % 5 === 0): ?>
                                 <text x="<?= number_format($labelX, 3, '.', '') ?>" y="<?= number_format($labelY, 3, '.', '') ?>"><?= $value ?></text>
                             <?php endif; ?>
                         <?php endfor; ?>
@@ -311,7 +311,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 
                     <circle class="wind-center" cx="50" cy="50" r="18.5"></circle>
                     <g class="wind-direction-arrows" data-wind-degrees="<?= number_format($windDegrees, 2, '.', '') ?>">
-                        <path class="wind-direction-marker" d="M50 20 L54 29 L50 27 L46 29 Z"></path>
+                        <circle class="wind-direction-marker" cx="50" cy="20" r="2.7"></circle>
                         <path class="wind-direction-to-marker" transform="rotate(180 50 50)" d="M50 20 L54 29 L50 27 L46 29 Z"></path>
                     </g>
                 </svg>
