@@ -184,8 +184,10 @@ button:disabled { opacity: .55; cursor: default; }
 .wind-speed-ticks line.major+text{fill:#111827;font-weight:500}
 :root[data-theme="dark"] .wind-speed-ticks text{fill:#e5e7eb;stroke:#111827;stroke-width:.55px}
 :root[data-theme="dark"] .wind-speed-ticks line.major+text{fill:#f3f4f6;stroke:#111827;stroke-width:.55px}
-.wind-compass-ring{fill:var(--card);stroke:var(--border);stroke-width:1.1}
-.wind-compass-glass{fill:url(#windCompassGlass);stroke:rgba(255,255,255,.34);stroke-width:.7;filter:drop-shadow(0 1px 2px rgba(255,255,255,.14))}
+.wind-compass-ring{fill:rgba(255,255,255,.045);stroke:color-mix(in srgb,var(--text) 18%,transparent);stroke-width:1.1}
+.wind-compass-glass{fill:url(#windCompassGlass);stroke:rgba(255,255,255,.42);stroke-width:.75;filter:drop-shadow(0 1px 2px rgba(255,255,255,.18))}
+:root[data-theme="dark"] .wind-compass-ring{fill:rgba(255,255,255,.025);stroke:rgba(255,255,255,.18)}
+:root[data-theme="dark"] .wind-compass-glass{stroke:rgba(255,255,255,.24);filter:drop-shadow(0 1px 2px rgba(255,255,255,.12))}
 .wind-compass-ticks{stroke:var(--muted);stroke-width:.45}
 .wind-compass-ticks line.major{stroke:var(--text);stroke-width:.8}
 .wind-compass-labels{fill:var(--muted);font-size:4px;font-weight:800;text-anchor:middle;dominant-baseline:middle}
