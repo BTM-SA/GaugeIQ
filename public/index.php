@@ -194,7 +194,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                 <div class="temperature-summary-main">
                     <div class="temperature-summary-current">
                         <strong><?= number_format($temperatureC, 1) ?>°C</strong>
-                        <span>Feels like <?= number_format($feelsLikeC, 1) ?>°C</span><div class="temperature-conditions-inline" id="weatherConditions" aria-live="polite">Conditions: <b>→ Steady</b></div>
+                        <div class="temperature-feels-like-row"><span>Feels like <?= number_format($feelsLikeC, 1) ?>°C</span><div class="temperature-conditions-inline" id="weatherConditions" aria-live="polite">Conditions: <b>→ Steady</b></div></div>
                     </div>
                     <div class="temperature-summary-forecast">
                         <?php $todayCondition = $forecast ? $forecastCondition($forecast[0]['weather_code'] ?? null) : ['icon' => '—', 'label' => 'Unavailable']; ?>
