@@ -275,7 +275,7 @@ button:disabled { opacity: .55; cursor: default; }
 .temperature-summary-main{display:flex;align-items:center;justify-content:space-between;gap:20px}
 .temperature-summary-current{display:flex;flex-direction:column;gap:5px}
 .temperature-summary-current strong{font-size:42px;line-height:1;font-weight:900;letter-spacing:-.045em;color:var(--text)}
-.temperature-feels-like-row{display:flex;align-items:center;gap:12px;width:100%;flex-wrap:nowrap}.temperature-summary-current span{font-size:12px;font-weight:700;color:var(--muted)}
+.temperature-feels-like-row{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;flex-wrap:nowrap}.temperature-summary-current span{font-size:12px;font-weight:700;color:var(--muted)}
 .temperature-summary-forecast{display:flex;align-items:center;gap:14px}
 .temperature-forecast-icon{display:grid;place-items:center;width:48px;height:48px;font-size:36px;line-height:1}
 .temperature-summary-range{display:flex;gap:14px}
@@ -291,7 +291,7 @@ button:disabled { opacity: .55; cursor: default; }
 .temperature-stability-track.warning{border-color:#eab308}
 @keyframes temperature-stability-warning{0%,100%{opacity:1}50%{opacity:.35}}
 .temperature-comfort-inline{flex:0 0 auto;font-size:10px;font-weight:800;color:var(--muted);white-space:nowrap;margin-left:28px}
-.temperature-conditions-inline{margin-left:auto;font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap}.temperature-conditions-inline b{color:var(--text);font-weight:900}
+.temperature-conditions-inline{margin-left:0;font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap}.temperature-conditions-inline b{color:var(--text);font-weight:900}
 .temperature-comfort-inline .humidity-zone{font-size:10px}
 @media(max-width:560px){
   .temperature-summary-main{align-items:flex-start}
