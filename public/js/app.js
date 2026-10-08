@@ -83,7 +83,6 @@ function applyWindCompassHeading(heading) {
     if (windCompassHeading === null) {
         windCompassHeading = normalized;
         windCompassRotation = normalized;
-        windGauge.style.setProperty('--wind-compass-heading', normalized.toFixed(2) + 'deg');
     }
 
     if (windCompassAnimationFrame === null) {
