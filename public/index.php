@@ -564,22 +564,6 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     </section>
     <?php endif; ?>
 
-    <section class="card monitoring-card" aria-labelledby="monitoringTitle">
-        <div class="section-heading">
-            <div><h2 id="monitoringTitle">Monitoring status</h2><p class="muted">GaugeIQ's scheduled background monitor.</p></div>
-            <span class="status-pill <?= $monitorHealthy ? 'status-good' : 'status-warn' ?>"><?= $monitorHealthy ? '● Monitoring active' : '● Check required' ?></span>
-        </div>
-        <div class="status-grid">
-            <div><span>Last successful check</span><strong><?= $lastMonitorAt ? htmlspecialchars(date('d M, H:i', (int)strtotime($lastMonitorAt)), ENT_QUOTES) : 'Not yet' ?></strong></div>
-            <div><span>Next expected check</span><strong><?= $nextMonitorAt ? htmlspecialchars(date('d M, H:i', $nextMonitorAt), ENT_QUOTES) : 'Waiting for cron' ?></strong></div>
-
-        <div class="device-view-row"><div><span>Notifications</span><strong><?= $subscriptionCount > 0 ? $subscriptionCount . ' device' . ($subscriptionCount === 1 ? '' : 's') . ' registered' : 'Not enabled' ?></strong></div><button type="button" class="device-view-button secondary" id="deviceViewButton" aria-expanded="false">View</button></div>
-        <div id="deviceList" class="device-list" hidden></div>
-            <div><span>Active alert rules</span><strong><?= $enabledRuleCount ?></strong></div>
-        </div>
-        <?php if ($monitorError): ?><p class="monitor-warning">The last scheduled check reported an error. <?= htmlspecialchars($monitorError, ENT_QUOTES) ?></p><?php endif; ?>
-    </section>
-
     <section class="card alert-history-card" aria-labelledby="alertHistoryTitle">
         <div class="section-heading">
             <div><h2 id="alertHistoryTitle">Alert history</h2><p class="muted">Recent conditions that triggered your saved rules.</p></div>
