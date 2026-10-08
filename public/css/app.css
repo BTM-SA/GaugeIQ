@@ -275,7 +275,7 @@ button:disabled { opacity: .55; cursor: default; }
 .temperature-summary-main{display:flex;align-items:center;justify-content:space-between;gap:20px}
 .temperature-summary-current{display:flex;flex-direction:column;gap:5px}
 .temperature-summary-current strong{font-size:42px;line-height:1;font-weight:900;letter-spacing:-.045em;color:var(--text)}
-.temperature-summary-current span{font-size:12px;font-weight:700;color:var(--muted)}
+.temperature-feels-like-row{display:flex;align-items:center;gap:12px;width:100%}.temperature-summary-current span{font-size:12px;font-weight:700;color:var(--muted)}
 .temperature-summary-forecast{display:flex;align-items:center;gap:14px}
 .temperature-forecast-icon{display:grid;place-items:center;width:48px;height:48px;font-size:36px;line-height:1}
 .temperature-summary-range{display:flex;gap:14px}
