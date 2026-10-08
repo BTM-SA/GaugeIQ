@@ -313,7 +313,16 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     </g>
 
                     <g class="wind-compass-orientation">
-                        <circle class="wind-compass-ring" cx="50" cy="50" r="31"></circle>
+                        <defs>
+                        <radialGradient id="windCompassGlass" cx="38%" cy="28%" r="72%">
+                            <stop offset="0%" stop-color="#ffffff" stop-opacity=".30"></stop>
+                            <stop offset="34%" stop-color="#ffffff" stop-opacity=".10"></stop>
+                            <stop offset="72%" stop-color="#ffffff" stop-opacity=".035"></stop>
+                            <stop offset="100%" stop-color="#ffffff" stop-opacity=".12"></stop>
+                        </radialGradient>
+                    </defs>
+                    <circle class="wind-compass-ring" cx="50" cy="50" r="31"></circle>
+                    <circle class="wind-compass-glass" cx="50" cy="50" r="29.9"></circle>
                         <g class="wind-compass-ticks">
                             <?php
                             $compassLabels = [
@@ -344,8 +353,8 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     </g>
                 </svg>
                 <div class="wind-gauge-center">
-                    <strong><?= $current ? number_format($windSpeed, 1) : '—' ?><span>km/h</span></strong>
                     <small><?= $current ? number_format($windDegrees, 0) . '°' : '—' ?></small>
+                    <strong><?= $current ? number_format($windSpeed, 1) : '—' ?><span>km/h</span></strong>
                 </div>
             </div>
         </article>
