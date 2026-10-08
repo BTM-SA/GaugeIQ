@@ -166,6 +166,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $lookbackHours = alertLookback($pdo);
 $allRules = $rules->all();
 $enabledRuleCount = count(array_filter($allRules, static fn(array $rule): bool => (bool)$rule['enabled']));
+
+$checkMinutes = max(1, (int)$config['pressure']['check_interval_minutes']);
+$monitorCronMinutes = 30;
+$monitorSettings = [];
+foreach ($pdo->query("SELECT `key`, `value` FROM gaugeiq_settings WHERE `key` IN ('monitor_last_success_at', 'monitor_last_error')") as $setting) {
+    $monitorSettings[(string)$setting['key']] = (string)$setting['value'];
+}
+$lastMonitorAt = $monitorSettings['monitor_last_success_at'] ?? null;
+$monitorError = $monitorSettings['monitor_last_error'] ?? '';
+$nextMonitorAt = $lastMonitorAt ? strtotime($lastMonitorAt) + ($monitorCronMinutes * 60) : null;
+$monitorAge = $lastMonitorAt ? time() - (int)strtotime($lastMonitorAt) : null;
+$monitorHealthy = $monitorAge !== null && $monitorAge <= ($monitorCronMinutes * 60 * 1.5);
+$cronScript = realpath(__DIR__ . '/../cron/check-pressure.php') ?: (__DIR__ . '/../cron/check-pressure.php');
+$cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 ?>
 <!doctype html>
 <html lang="en">
@@ -227,6 +241,19 @@ $enabledRuleCount = count(array_filter($allRules, static fn(array $rule): bool =
         </div>
         <p id="locationHelp" class="alert-help muted">Changing the location affects the next weather check. Existing historical readings remain unchanged.</p>
     </form>
+</section>
+
+<section class="card monitoring-card" aria-labelledby="monitoringTitle">
+    <div class="section-heading">
+        <div><h2 id="monitoringTitle">Monitoring status</h2><p class="muted">GaugeIQ's scheduled background monitor.</p></div>
+        <span class="status-pill <?= $monitorHealthy ? 'status-good' : 'status-warn' ?>"><?= $monitorHealthy ? '● Monitoring active' : '● Check required' ?></span>
+    </div>
+    <div class="status-grid">
+        <div><span>Last successful check</span><strong><?= $lastMonitorAt ? htmlspecialchars(date('d M, H:i', (int)strtotime($lastMonitorAt)), ENT_QUOTES) : 'Not yet' ?></strong></div>
+        <div><span>Next expected check</span><strong><?= $nextMonitorAt ? htmlspecialchars(date('d M, H:i', $nextMonitorAt), ENT_QUOTES) : 'Waiting for cron' ?></strong></div>
+        <div><span>Active alert rules</span><strong><?= $enabledRuleCount ?></strong></div>
+    </div>
+    <?php if ($monitorError): ?><p class="monitor-warning">The last scheduled check reported an error. <?= htmlspecialchars($monitorError, ENT_QUOTES) ?></p><?php endif; ?>
 </section>
 
 <section class="admin-hero card">
