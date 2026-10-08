@@ -348,7 +348,7 @@ button:disabled { opacity: .55; cursor: default; }
 .weather-change-reason{display:flex;gap:9px;align-items:flex-start;padding:10px 12px;border-radius:12px;background:var(--surface);border:1px solid var(--border);font-size:13px;line-height:1.4;color:var(--text)}
 .weather-change-reason::before{content:'•';color:#2563eb;font-size:18px;line-height:12px;font-weight:900}
 .weather-change-note{margin:12px 0 0;font-size:11px;color:var(--muted)}
-@media(max-width:560px){.weather-change-card .section-heading{align-items:flex-start}.weather-change-score{width:64px;height:64px;font-size:26px}}
+@media(max-width:560px){.weather-change-card .section-heading{display:grid;grid-template-columns:64px minmax(0,1fr);grid-template-areas:"title title" "score summary";align-items:center;column-gap:12px;row-gap:8px}.weather-change-card .section-heading>div:first-child{grid-area:title}.weather-change-score{grid-area:score;width:64px;height:64px;font-size:26px}.weather-change-summary{grid-area:summary;margin-top:0;align-self:center}}
 
 .weather-change-score[data-level="low"]{border-color:#22c55e;color:#15803d}
 .weather-change-score[data-level="moderate"]{border-color:#f59e0b;color:#b45309}
