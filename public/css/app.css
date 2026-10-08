@@ -237,7 +237,7 @@ button:disabled { opacity: .55; cursor: default; }
 :root[data-theme="dark"] .climate-instrument svg{background:radial-gradient(circle at 38% 24%,rgba(255,255,255,.14),transparent 30%),radial-gradient(circle at 50% 42%,#263242,#111827);border-color:rgba(255,255,255,.16);box-shadow:inset 0 1px 2px rgba(255,255,255,.18),inset 0 -7px 12px rgba(0,0,0,.42),0 3px 10px rgba(0,0,0,.35)}
 :root[data-theme="dark"] .climate-instrument::after{background:linear-gradient(135deg,rgba(255,255,255,.16),rgba(255,255,255,.04) 20%,transparent 40%,transparent 72%,rgba(255,255,255,.04));box-shadow:inset 0 1px 1px rgba(255,255,255,.18)}
 :root[data-theme="dark"] .aircraft-unified-dew,:root[data-theme="dark"] .aircraft-unified-humidity,:root[data-theme="dark"] .aircraft-unified-rain,:root[data-theme="dark"] .aircraft-unified-cloud{stroke:#c4cbd3}
-@media(max-width:560px){.climate-four-gauges{gap:6px 2px}.climate-instrument>span{font-size:10px}.climate-instrument>strong{font-size:18px}}
+@media(max-width:560px){.climate-four-gauges{gap:10px 2px}.climate-instrument svg{width:min(100%,195px)}.climate-instrument::after{width:min(100%,195px)}.climate-instrument>span{font-size:10px}.climate-instrument>strong{font-size:18px}}
 .humidity-zone-row{display:flex;justify-content:center;min-height:20px;margin-top:4px;margin-bottom:4px}
 .humidity-zone{display:inline-flex;align-items:center;justify-content:center;padding:5px 10px;border-radius:999px;font-size:10px;line-height:1;font-weight:800;border:1px solid var(--border);background:var(--surface);color:var(--text)}
 .humidity-zone.dry{border-color:#f59e0b;color:#b45309}
