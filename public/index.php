@@ -321,7 +321,8 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                             <stop offset="100%" stop-color="#ffffff" stop-opacity=".12"></stop>
                         </radialGradient>
                     </defs>
-                    <circle class="wind-compass-ring" cx="50" cy="50" r="31"></circle>
+                                        <circle class="wind-gauge-glass-overlay" cx="50" cy="50" r="47"></circle>
+<circle class="wind-compass-ring" cx="50" cy="50" r="31"></circle>
                     <circle class="wind-compass-glass" cx="50" cy="50" r="29.9"></circle>
                         <g class="wind-compass-ticks">
                             <?php
