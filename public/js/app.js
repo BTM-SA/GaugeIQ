@@ -113,8 +113,6 @@ function applyWindCompassHeading(heading) {
                 windCompassRotation += correction;
             }
 
-            windGauge.style.setProperty('--wind-compass-heading', windCompassRotation.toFixed(2) + 'deg');
-
             // The red wind-from arrow and green wind-towards arrow are one
             // physical compass indicator. The green arrow is drawn 180° from
             // the red arrow, so both always rotate together as a single unit.
@@ -496,6 +494,13 @@ function weatherChangeDirectionLabel(delta, unit, positive = 'increased', negati
         : negative + ' by ' + Math.abs(delta).toFixed(unit === '°C' ? 1 : 1) + unit;
 }
 
+function weatherConditionsStatus(score) {
+    if (!Number.isFinite(score)) return { arrow: '→', label: 'Steady' };
+    if (score >= 7) return { arrow: '↑', label: 'Worsening' };
+    if (score <= 3) return { arrow: '↓', label: 'Improving' };
+    return { arrow: '→', label: 'Steady' };
+}
+
 function weatherChangeScore(readings) {
     const valid = readings
         .map(item => ({
@@ -639,6 +644,11 @@ async function loadWeatherChange() {
 
         scoreElement.textContent = String(result.score);
         summaryElement.textContent = result.summary;
+        const conditionsElement = document.getElementById('weatherConditions');
+        if (conditionsElement) {
+            const conditions = weatherConditionsStatus(result.score);
+            conditionsElement.innerHTML = 'Conditions: <b>' + conditions.arrow + ' ' + conditions.label + '</b>';
+        }
         reasonsElement.innerHTML = result.reasons.length
             ? result.reasons.map(reason => '<div class="weather-change-reason">' + reason + '</div>').join('')
             : '<div class="weather-change-reason">Pressure, temperature, humidity and wind have not changed significantly in the recent readings.</div>';
@@ -662,6 +672,8 @@ async function loadWeatherChange() {
         scoreElement.textContent = '—';
         summaryElement.textContent = 'Weather change indicator unavailable.';
         reasonsElement.innerHTML = '';
+        const conditionsElement = document.getElementById('weatherConditions');
+        if (conditionsElement) conditionsElement.innerHTML = 'Conditions: <b>→ Steady</b>';
     }
 }
 
