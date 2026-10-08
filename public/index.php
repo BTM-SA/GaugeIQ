@@ -161,12 +161,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     $humidityStart = 115.0; $humiditySweep = 310.0;
     $dewAngle = $dewStart + $dewRatio * $dewSweep;
     $humidityAngle = $humidityStart + $humidityRatio * $humiditySweep;
-    $rainCx = 25.0; $rainCy = 50.0; $rainStart = 115.0; $rainSweep = 310.0; $rainR = 20.0;
-    $cloudCx = 75.0; $cloudCy = 50.0; $cloudStart = 115.0; $cloudSweep = 310.0; $cloudR = 20.0;
-    $rainRatio = max(0.0, min(1.0, $rainfallMm / 10.0));
-    $cloudRatio = $cloudCoverPercent / 100.0;
-
-    $dewCx = 25.0; $dewCy = 50.0; $smallR = 20.0;
+        $dewCx = 25.0; $dewCy = 50.0; $smallR = 20.0;
     $humidityCx = 75.0; $humidityCy = 50.0;
 
     $climateNeedlePath = static function (float $cx, float $cy, float $angle, float $length): string {
@@ -190,8 +185,6 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 
     $dewNeedlePath = $climateNeedlePath($dewCx, $dewCy, $dewAngle, $smallR - 2.5);
     $humidityNeedlePath = $climateNeedlePath($humidityCx, $humidityCy, $humidityAngle, $smallR - 2.5);
-    $rainNeedlePath = $climateNeedlePath($rainCx, $rainCy, $rainStart + $rainRatio * $rainSweep, $rainR - 2.5);
-    $cloudNeedlePath = $climateNeedlePath($cloudCx, $cloudCy, $cloudStart + $cloudRatio * $cloudSweep, $cloudR - 2.5);
     ?> 
 
 
@@ -201,7 +194,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                 <div class="temperature-summary-main">
                     <div class="temperature-summary-current">
                         <strong><?= number_format($temperatureC, 1) ?>°C</strong>
-                        <span>Feels like <?= number_format($feelsLikeC, 1) ?>°C</span>
+                        <span>Feels like <?= number_format($feelsLikeC, 1) ?>°C</span><div class="temperature-conditions-inline" id="weatherConditions" aria-live="polite">Conditions: <b>→ Steady</b></div>
                     </div>
                     <div class="temperature-summary-forecast">
                         <?php $todayCondition = $forecast ? $forecastCondition($forecast[0]['weather_code'] ?? null) : ['icon' => '—', 'label' => 'Unavailable']; ?>
@@ -270,16 +263,10 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         $windDegrees = $current ? fmod((float)$current['wind_direction_degrees'] + 360.0, 360.0) : 0.0;
         $windDirection = $current ? PressureService::directionLabel($windDegrees) : '—';
         $windToDegrees = fmod($windDegrees + 180.0, 360.0);
-        $windSpeedMax = 40.0;
-        $windSpeedPercent = min(100.0, ($windSpeed / $windSpeedMax) * 100.0);
-        $windGaugeStart = 135.0;
-        $windGaugeSweep = 270.0;
         $windGaugePoint = static function (float $angle, float $radius): array {
             $radians = deg2rad($angle);
             return [50.0 + cos($radians) * $radius, 50.0 + sin($radians) * $radius];
         };
-        $windGaugeArcPoint = $windGaugePoint($windGaugeStart + (($windSpeedPercent / 100.0) * $windGaugeSweep), 40.0);
-        $windGaugeArcLarge = $windSpeedPercent * $windGaugeSweep > 180.0 ? 1 : 0;
         ?>
         <article class="card metric-card wind-gauge-card">
             <div class="wind-gauge-heading">
@@ -294,24 +281,6 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
             </div>
             <div class="wind-gauge" role="img" aria-label="<?= $current ? htmlspecialchars(number_format($windSpeed, 1) . ' kilometers per hour, ' . $windDirection . ', ' . number_format($windDegrees, 0) . ' degrees', ENT_QUOTES) : 'Wind data unavailable' ?>">
                 <svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
-                    <path class="wind-speed-track" d="M 21.716 78.284 A 40 40 0 1 1 78.284 78.284"></path>
-                    <path class="wind-speed-fill" pathLength="100" stroke-dasharray="<?= number_format($windSpeedPercent, 2, '.', '') ?> 100" d="M 21.716 78.284 A 40 40 0 1 1 78.284 78.284" <?= $current && $windSpeedPercent > 0 ? 'data-active="true"' : '' ?>></path>
-
-                    <g class="wind-speed-ticks">
-                        <?php for ($value = 0; $value <= 40; $value += 5):
-                            $ratio = $value / $windSpeedMax;
-                            $angle = $windGaugeStart + ($ratio * $windGaugeSweep);
-                            $tickOuter = $windGaugePoint($angle, 47.0);
-                            $tickInner = $windGaugePoint($angle, $value % 10 === 0 ? 41.5 : 43.0);
-                            [$labelX, $labelY] = $windGaugePoint($angle, 38.5);
-                        ?>
-                            <line class="<?= $value % 10 === 0 ? 'major' : '' ?>" x1="<?= number_format($tickOuter[0], 3, '.', '') ?>" y1="<?= number_format($tickOuter[1], 3, '.', '') ?>" x2="<?= number_format($tickInner[0], 3, '.', '') ?>" y2="<?= number_format($tickInner[1], 3, '.', '') ?>"></line>
-                            <?php if ($value % 5 === 0): ?>
-                                <text x="<?= number_format($labelX, 3, '.', '') ?>" y="<?= number_format($labelY, 3, '.', '') ?>"><?= $value ?></text>
-                            <?php endif; ?>
-                        <?php endfor; ?>
-                    </g>
-
                     <g class="wind-compass-orientation">
                         <defs>
                         <radialGradient id="windCompassGlass" cx="38%" cy="28%" r="72%">
@@ -322,8 +291,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                         </radialGradient>
                     </defs>
                                         <circle class="wind-gauge-glass-overlay" cx="50" cy="50" r="47"></circle>
-<circle class="wind-compass-ring" cx="50" cy="50" r="31"></circle>
-                    <circle class="wind-compass-glass" cx="50" cy="50" r="29.9"></circle>
+                    <circle class="wind-compass-ring" cx="50" cy="50" r="31"></circle>
                         <g class="wind-compass-ticks">
                             <?php
                             $compassLabels = [
@@ -414,88 +382,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     <span>Humidity</span>
                     <strong><?= $current ? number_format($humidityPercent, 0) . '%' : '—' ?></strong>
                 </div>
-
-                <div class="climate-instrument">
-                    <svg viewBox="25 25 50 50" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
-                        <path class="aircraft-unified-track" d="M 41.548 68.126 A 20 20 0 1 1 61.472 66.383"></path>
-                        <path class="aircraft-unified-rain" pathLength="100" stroke-dasharray="<?= number_format($rainRatio * 100, 2, '.', '') ?> 100" d="M 41.548 68.126 A 20 20 0 1 1 61.472 66.383"></path>
-                        <g class="aircraft-ticks small">
-                            <?php for ($value = 0; $value <= 10; $value += 1):
-                                $angle = $rainStart + ($value / 10.0) * $rainSweep;
-                                $outer = $climateGaugePoint(50,50,$angle,$smallR);
-                                $inner = $climateGaugePoint(50,50,$angle,$smallR - ($value % 2 === 0 ? 3.0 : 2.0));
-                                [$lx,$ly] = $climateGaugePoint(50,50,$angle,$smallR-5.5);
-                            ?>
-                                <line class="<?= $value % 2 === 0 ? 'major' : '' ?>" x1="<?= number_format($outer[0],3,'.','') ?>" y1="<?= number_format($outer[1],3,'.','') ?>" x2="<?= number_format($inner[0],3,'.','') ?>" y2="<?= number_format($inner[1],3,'.','') ?>"></line>
-                                <?php if ($value % 2 === 0): ?><text x="<?= number_format($lx,3,'.','') ?>" y="<?= number_format($ly,3,'.','') ?>"><?= $value ?></text><?php endif; ?>
-                            <?php endfor; ?>
-                        </g>
-                        <path class="aircraft-needle" d="<?= $climateNeedlePath(50,50,$rainStart + $rainRatio * $rainSweep,$smallR-2.5) ?>"></path>
-                        <circle class="aircraft-hub small" cx="50" cy="50" r="2.1"></circle>
-                    </svg>
-                    <span>Rainfall</span>
-                    <strong><?= $current ? number_format($rainfallMm, 1) . ' mm' : '—' ?></strong>
-                </div>
-
-                <div class="climate-instrument">
-                    <svg viewBox="25 25 50 50" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
-                        <path class="aircraft-unified-track" d="M 41.548 68.126 A 20 20 0 1 1 61.472 66.383"></path>
-                        <path class="aircraft-unified-cloud" pathLength="100" stroke-dasharray="<?= number_format($cloudRatio * 100, 2, '.', '') ?> 100" d="M 41.548 68.126 A 20 20 0 1 1 61.472 66.383"></path>
-                        <g class="aircraft-ticks small">
-                            <?php for ($value = 0; $value <= 100; $value += 2):
-                                $angle = $cloudStart + ($value / 100.0) * $cloudSweep;
-                                $outer = $climateGaugePoint(50,50,$angle,$smallR);
-                                $inner = $climateGaugePoint(50,50,$angle,$smallR - ($value % 10 === 0 ? 3.0 : 2.0));
-                                [$lx,$ly] = $climateGaugePoint(50,50,$angle,$smallR-5.5);
-                            ?>
-                                <line class="<?= $value % 10 === 0 ? 'major' : '' ?>" x1="<?= number_format($outer[0],3,'.','') ?>" y1="<?= number_format($outer[1],3,'.','') ?>" x2="<?= number_format($inner[0],3,'.','') ?>" y2="<?= number_format($inner[1],3,'.','') ?>"></line>
-                                <?php if ($value % 10 === 0): ?><text x="<?= number_format($lx,3,'.','') ?>" y="<?= number_format($ly,3,'.','') ?>"><?= $value ?></text><?php endif; ?>
-                            <?php endfor; ?>
-                        </g>
-                        <path class="aircraft-needle" d="<?= $climateNeedlePath(50,50,$cloudStart + $cloudRatio * $cloudSweep,$smallR-2.5) ?>"></path>
-                        <circle class="aircraft-hub small" cx="50" cy="50" r="2.1"></circle>
-                    </svg>
-                    <span>Cloud Cover</span>
-                    <strong><?= $current ? number_format($cloudCoverPercent, 0) . '%' : '—' ?></strong>
-                </div>
             </div>
-        </section>
-
-
-
-
-
-    <section class="card forecast-card" aria-labelledby="forecastTitle">
-        <div class="section-heading">
-            <div>
-                <h2 id="forecastTitle">4 day forecast</h2>
-                <p class="muted">Open-Meteo forecast for <?= htmlspecialchars($locationName, ENT_QUOTES) ?></p>
-            </div>
-        </div>
-        <div class="forecast-days">
-            <?php foreach ($forecast as $day):
-                $condition = $forecastCondition($day['weather_code'] ?? null);
-                $rainProbability = max(0, min(100, (int)($day['rain_probability_percent'] ?? 0)));
-                $dayLabel = date('D', strtotime((string)$day['date']));
-                $high = $day['temperature_max_c'] ?? null;
-                $low = $day['temperature_min_c'] ?? null;
-            ?>
-                <div class="forecast-day">
-                    <strong class="forecast-day-name"><?= htmlspecialchars($dayLabel, ENT_QUOTES) ?></strong>
-                    <span class="forecast-icon" role="img" aria-label="<?= htmlspecialchars($condition['label'], ENT_QUOTES) ?>"><?= $condition['icon'] ?></span>
-                    <strong class="forecast-temperature">
-                        <?= $high !== null ? number_format((float)$high, 0) . '°' : '—' ?>
-                        <?php if ($low !== null): ?>
-                            <span class="forecast-low">/ <?= number_format((float)$low, 0) ?>°</span>
-                        <?php endif; ?>
-                    </strong>
-                    <?php if ($rainProbability > 0): ?>
-                        <span class="forecast-rain">Rain <?= $rainProbability ?>%</span>
-                    <?php else: ?>
-                        <span class="forecast-rain forecast-rain-empty" aria-hidden="true">&nbsp;</span>
-                    <?php endif; ?>
-                </div>
-            <?php endforeach; ?>
         </div>
     </section>
 
