@@ -412,8 +412,8 @@ button:disabled { opacity: .55; cursor: default; }
 .insight-meter-fill{height:100%;width:0;border-radius:999px;transition:width .25s ease}
 .rain-meter-fill{background:#3987d7}
 .change-meter-fill{background:#22a06b}
-.weather-change-score[data-level="moderate"]~.insight-meter-track .change-meter-fill{background:#d49a36}
-.weather-change-score[data-level="high"]~.insight-meter-track .change-meter-fill{background:#d94b4b}
+.change-meter-fill[data-level="moderate"]{background:#d49a36}
+.change-meter-fill[data-level="high"]{background:#d94b4b}
 .rain-probability-meta{display:flex;justify-content:space-between;gap:12px;margin-top:12px;font-size:13px;color:var(--muted)}
 .rain-probability-meta strong{color:var(--text);font-variant-numeric:tabular-nums}
 .conditions-trend-reasons{display:grid;gap:8px;margin-top:12px}
