@@ -8,7 +8,7 @@ require __DIR__ . '/../app/AdminAuth.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 
-function respond(int $status, array $payload): never
+function respond(int $status, array $payload): void
 {
     http_response_code($status);
     echo json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
