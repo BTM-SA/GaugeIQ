@@ -128,9 +128,8 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     $pressureRange = max(0.1, $pressureHigh - $pressureLow);
     $pressureRatio = $current ? max(0.0, min(1.0, ((float)$current['pressure_hpa'] - $pressureLow) / $pressureRange)) : 0.0;
     $forecast = $current && is_array($current['forecast'] ?? null) ? $current['forecast'] : [];
-    $rainForecastMm = $current && isset($forecast[0]['rain_mm']) && is_numeric($forecast[0]['rain_mm'])
-        ? max(0.0, (float)$forecast[0]['rain_mm'])
-        : 0.0;
+    $rainForecastAvailable = $current && isset($forecast[0]['rain_mm']) && is_numeric($forecast[0]['rain_mm']);
+    $rainForecastMm = $rainForecastAvailable ? max(0.0, (float)$forecast[0]['rain_mm']) : 0.0;
     $rainProbabilityPercent = $current && isset($forecast[0]['rain_probability_percent']) && is_numeric($forecast[0]['rain_probability_percent'])
         ? max(0, min(100, (int)$forecast[0]['rain_probability_percent']))
         : null;
@@ -421,12 +420,12 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
             </div>
             <div class="rain-probability-score" id="rainProbabilityScore"><?= $rainProbabilityPercent !== null ? htmlspecialchars((string)$rainProbabilityPercent, ENT_QUOTES) . '%' : '—' ?></div>
         </div>
-        <div class="insight-meter-track" role="progressbar" aria-label="Forecast rain probability" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<?= $rainProbabilityPercent !== null ? $rainProbabilityPercent : 0 ?>" id="rainProbabilityTrack">
+        <div class="insight-meter-track" role="progressbar" aria-label="Forecast rain probability" aria-valuemin="0" aria-valuemax="100" <?= $rainProbabilityPercent !== null ? 'aria-valuenow="' . $rainProbabilityPercent . '"' : 'aria-valuetext="Forecast probability unavailable"' ?> id="rainProbabilityTrack">
             <div class="insight-meter-fill rain-meter-fill" id="rainProbabilityFill" style="width:<?= $rainProbabilityPercent !== null ? $rainProbabilityPercent : 0 ?>%"></div>
         </div>
         <div class="rain-probability-meta">
             <span>Forecast rainfall</span>
-            <strong><?= number_format($rainForecastMm, 1) ?> mm</strong>
+            <strong><?= $rainForecastAvailable ? number_format($rainForecastMm, 1) : '—' ?> mm</strong>
         </div>
         <p class="weather-change-note">Probability comes from the weather provider's daily forecast; rainfall is the predicted daily total. Neither is calculated from humidity alone.</p>
         <details class="algorithm-details">
