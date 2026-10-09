@@ -443,6 +443,8 @@
         });
         select.value = [...select.options].some(option => option.value === selected) ? selected : SERVER_LOCATION_ID;
         updateRangeButtons();
+        const activeLocation = locations.find(location => location.id === select.value);
+        window.GaugeIQSelectDashboardLocation?.(select.value, activeLocation || null);
     }
 
     function downloadJson(filename, data) {
