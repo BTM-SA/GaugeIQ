@@ -446,6 +446,8 @@
 
         select.addEventListener('change', () => {
             updateRangeButtons();
+            document.querySelectorAll('.history-range-button').forEach(button => button.classList.remove('active'));
+            document.querySelector('.history-range-button[data-hours="24"]')?.classList.add('active');
             if (window.GaugeIQLoadHistory) window.GaugeIQLoadHistory(24);
         });
         importButton.addEventListener('click', () => fileInput.click());
