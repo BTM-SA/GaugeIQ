@@ -1,0 +1,415 @@
+(() => {
+    'use strict';
+
+    const DB_NAME = 'gaugeiq-local-weather';
+    const DB_VERSION = 1;
+    const STORE_LOCATIONS = 'locations';
+    const STORE_READINGS = 'readings';
+    const SERVER_LOCATION_ID = 'server-current';
+    const status = () => document.getElementById('localWeatherStatus');
+    const locationSelect = () => document.getElementById('weatherLocationSelect');
+    let databasePromise;
+
+    function openDatabase() {
+        if (!('indexedDB' in window)) {
+            return Promise.reject(new Error('IndexedDB is not available in this browser.'));
+        }
+        if (databasePromise) return databasePromise;
+        databasePromise = new Promise((resolve, reject) => {
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
+            request.onupgradeneeded = () => {
+                const db = request.result;
+                if (!db.objectStoreNames.contains(STORE_LOCATIONS)) {
+                    db.createObjectStore(STORE_LOCATIONS, { keyPath: 'id' });
+                }
+                if (!db.objectStoreNames.contains(STORE_READINGS)) {
+                    const readings = db.createObjectStore(STORE_READINGS, { keyPath: ['locationId', 'timestamp'] });
+                    readings.createIndex('locationId', 'locationId', { unique: false });
+                    readings.createIndex('timestamp', 'timestamp', { unique: false });
+                }
+            };
+            request.onsuccess = () => {
+                const db = request.result;
+                db.onversionchange = () => db.close();
+                resolve(db);
+            };
+            request.onerror = () => reject(request.error || new Error('Unable to open local weather storage.'));
+            request.onblocked = () => reject(new Error('Local weather storage is busy in another GaugeIQ tab. Close the other tab and retry.'));
+        });
+        return databasePromise;
+    }
+
+    function transactionDone(tx) {
+        return new Promise((resolve, reject) => {
+            tx.oncomplete = () => resolve();
+            tx.onabort = tx.onerror = () => reject(tx.error || new Error('Local weather storage operation failed.'));
+        });
+    }
+
+    async function allLocations() {
+        const db = await openDatabase();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_LOCATIONS, 'readonly');
+            const request = tx.objectStore(STORE_LOCATIONS).getAll();
+            request.onsuccess = () => resolve(request.result || []);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async function readingsFor(locationId, hours) {
+        const db = await openDatabase();
+        const rows = await new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_READINGS, 'readonly');
+            const request = tx.objectStore(STORE_READINGS).index('locationId').getAll(IDBKeyRange.only(locationId));
+            request.onsuccess = () => resolve(request.result || []);
+            request.onerror = () => reject(request.error);
+        });
+        if (hours === 'all') return rows.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+        const cutoff = Date.now() - Math.max(1, Number(hours) || 24) * 3600000;
+        return rows.filter(row => {
+            const time = Date.parse(row.timestamp);
+            return Number.isFinite(time) && time >= cutoff;
+        }).sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+    }
+
+    function parseCsv(text) {
+        const rows = [];
+        let row = [];
+        let field = '';
+        let quoted = false;
+        for (let i = 0; i < text.length; i++) {
+            const char = text[i];
+            if (char === '"') {
+                if (quoted && text[i + 1] === '"') {
+                    field += '"';
+                    i++;
+                } else {
+                    quoted = !quoted;
+                }
+            } else if (char === ',' && !quoted) {
+                row.push(field);
+                field = '';
+            } else if ((char === '\n' || char === '\r') && !quoted) {
+                if (char === '\r' && text[i + 1] === '\n') i++;
+                row.push(field);
+                if (row.some(value => value.trim() !== '')) rows.push(row);
+                row = [];
+                field = '';
+            } else {
+                field += char;
+            }
+        }
+        if (field.length || row.length) {
+            row.push(field);
+            if (row.some(value => value.trim() !== '')) rows.push(row);
+        }
+        return rows;
+    }
+
+    function normalizeTimestamp(value) {
+        if (typeof value === 'number') {
+            const date = new Date(value < 100000000000 ? value * 1000 : value);
+            return Number.isNaN(date.getTime()) ? null : date.toISOString();
+        }
+        const raw = String(value || '').trim();
+        if (!raw) return null;
+        const date = new Date(raw);
+        return Number.isNaN(date.getTime()) ? null : date.toISOString();
+    }
+
+    function numberOrNull(value) {
+        if (value === null || value === undefined || value === '') return null;
+        const number = Number(value);
+        return Number.isFinite(number) ? number : null;
+    }
+
+    function fromOpenMeteoJson(data) {
+        if (data && data.format === 'gaugeiq-local-weather-backup' && Array.isArray(data.locations) && Array.isArray(data.readings)) {
+            return { backup: data };
+        }
+        const hourly = data && data.hourly;
+        if (!hourly || !Array.isArray(hourly.time)) {
+            throw new Error('JSON format not recognized. Choose an Open-Meteo hourly JSON response or a GaugeIQ local backup.');
+        }
+        const n = hourly.time.length;
+        const rows = [];
+        for (let i = 0; i < n; i++) {
+            const timestamp = normalizeTimestamp(hourly.time[i]);
+            if (!timestamp) continue;
+            rows.push({
+                timestamp,
+                temperature_c: numberOrNull(hourly.temperature_2m?.[i]),
+                dew_point_c: numberOrNull(hourly.dew_point_2m?.[i]),
+                pressure_hpa: numberOrNull(hourly.pressure_msl?.[i] ?? hourly.surface_pressure?.[i]),
+                humidity_percent: numberOrNull(hourly.relative_humidity_2m?.[i]),
+                wind_speed_kmh: numberOrNull(hourly.wind_speed_10m?.[i]),
+                wind_direction_degrees: numberOrNull(hourly.wind_direction_10m?.[i]),
+                rainfall_mm: numberOrNull(hourly.precipitation?.[i]),
+                cloud_cover_percent: numberOrNull(hourly.cloud_cover?.[i]),
+                weather_code: numberOrNull(hourly.weather_code?.[i]),
+                source: 'open-meteo',
+                observed_at: String(hourly.time[i])
+            });
+        }
+        return {
+            location: {
+                name: data.location_name || data.name || 'Imported Open-Meteo location',
+                latitude: numberOrNull(data.latitude),
+                longitude: numberOrNull(data.longitude),
+                timezone: data.timezone || 'UTC'
+            },
+            readings: rows
+        };
+    }
+
+    function fromCsv(text) {
+        const rows = parseCsv(text);
+        if (rows.length < 2) throw new Error('The CSV file does not contain weather records.');
+        const headers = rows[0].map(value => value.trim().replace(/^\uFEFF/, '').toLowerCase());
+        const findColumn = names => headers.findIndex(header => names.includes(header));
+        const timeIndex = findColumn(['time', 'timestamp', 'date', 'datetime']);
+        if (timeIndex < 0) throw new Error('CSV must include a time column, as in an Open-Meteo hourly CSV.');
+        const indices = {
+            temperature_c: findColumn(['temperature_2m (°c)', 'temperature_2m (°c)', 'temperature_2m', 'temperature_c']),
+            dew_point_c: findColumn(['dew_point_2m (°c)', 'dew_point_2m', 'dew_point_c']),
+            pressure_hpa: findColumn(['pressure_msl (hpa)', 'pressure_msl', 'surface_pressure (hpa)', 'surface_pressure', 'pressure_hpa']),
+            humidity_percent: findColumn(['relative_humidity_2m (%)', 'relative_humidity_2m', 'humidity_percent']),
+            wind_speed_kmh: findColumn(['wind_speed_10m (km/h)', 'wind_speed_10m', 'wind_speed_kmh']),
+            wind_direction_degrees: findColumn(['wind_direction_10m (°)', 'wind_direction_10m', 'wind_direction_degrees']),
+            rainfall_mm: findColumn(['precipitation (mm)', 'precipitation', 'rainfall_mm']),
+            cloud_cover_percent: findColumn(['cloud_cover (%)', 'cloud_cover', 'cloud_cover_percent']),
+            weather_code: findColumn(['weather_code (wmo code)', 'weather_code', 'weathercode'])
+        };
+        const readings = [];
+        for (const row of rows.slice(1)) {
+            const timestamp = normalizeTimestamp(row[timeIndex]);
+            if (!timestamp) continue;
+            const reading = {
+                timestamp,
+                source: 'open-meteo-csv',
+                observed_at: String(row[timeIndex] || '').trim()
+            };
+            Object.entries(indices).forEach(([key, index]) => {
+                reading[key] = index >= 0 ? numberOrNull(row[index]) : null;
+            });
+            if (Object.values(reading).some(value => typeof value === 'number')) readings.push(reading);
+        }
+        if (!readings.length) throw new Error('No usable weather rows were found. Check that this is an Open-Meteo CSV with a time column.');
+        return { location: { name: 'Imported Open-Meteo location', latitude: null, longitude: null, timezone: 'UTC' }, readings };
+    }
+
+    async function saveLocationAndReadings(location, readings, existingId) {
+        if (!readings.length) throw new Error('No weather readings were found to import.');
+        const db = await openDatabase();
+        const id = existingId || ('local-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8));
+        const name = String(location.name || 'Imported location').trim().slice(0, 100) || 'Imported location';
+        const record = {
+            id,
+            name,
+            latitude: numberOrNull(location.latitude),
+            longitude: numberOrNull(location.longitude),
+            timezone: String(location.timezone || 'UTC'),
+            source: String(location.source || 'Open-Meteo import'),
+            updatedAt: new Date().toISOString(),
+            readingCount: readings.length
+        };
+        const tx = db.transaction([STORE_LOCATIONS, STORE_READINGS], 'readwrite');
+        tx.objectStore(STORE_LOCATIONS).put(record);
+        const store = tx.objectStore(STORE_READINGS);
+        for (const item of readings) {
+            if (!item.timestamp) continue;
+            store.put({
+                locationId: id,
+                timestamp: item.timestamp,
+                observed_at: item.observed_at || item.timestamp,
+                temperature_c: numberOrNull(item.temperature_c),
+                dew_point_c: numberOrNull(item.dew_point_c),
+                pressure_hpa: numberOrNull(item.pressure_hpa),
+                humidity_percent: numberOrNull(item.humidity_percent),
+                wind_speed_kmh: numberOrNull(item.wind_speed_kmh),
+                wind_direction_degrees: numberOrNull(item.wind_direction_degrees),
+                rainfall_mm: numberOrNull(item.rainfall_mm),
+                cloud_cover_percent: numberOrNull(item.cloud_cover_percent),
+                weather_code: numberOrNull(item.weather_code),
+                source: item.source || record.source
+            });
+        }
+        await transactionDone(tx);
+        return record;
+    }
+
+    function setStatus(message, isError) {
+        const element = status();
+        if (!element) return;
+        element.textContent = message;
+        element.dataset.state = isError ? 'error' : 'ok';
+    }
+
+    function updateRangeButtons() {
+        const localSelected = locationSelect()?.value && locationSelect().value !== SERVER_LOCATION_ID;
+        document.querySelectorAll('[data-local-range="true"]').forEach(button => {
+            button.hidden = !localSelected;
+        });
+    }
+
+    async function refreshLocations(selectId) {
+        const select = locationSelect();
+        if (!select) return;
+        const locations = await allLocations();
+        const selected = selectId || select.value || SERVER_LOCATION_ID;
+        select.replaceChildren();
+        const serverOption = document.createElement('option');
+        serverOption.value = SERVER_LOCATION_ID;
+        serverOption.textContent = 'Current GaugeIQ location (server)';
+        select.append(serverOption);
+        locations.sort((a, b) => a.name.localeCompare(b.name)).forEach(location => {
+            const option = document.createElement('option');
+            option.value = location.id;
+            const coords = Number.isFinite(location.latitude) && Number.isFinite(location.longitude)
+                ? ' · ' + location.latitude.toFixed(3) + ', ' + location.longitude.toFixed(3)
+                : '';
+            option.textContent = location.name + coords;
+            select.append(option);
+        });
+        select.value = [...select.options].some(option => option.value === selected) ? selected : SERVER_LOCATION_ID;
+        updateRangeButtons();
+    }
+
+    function downloadJson(filename, data) {
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.append(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    async function exportBackup() {
+        setStatus('Preparing local weather backup…', false);
+        const locations = await allLocations();
+        const readings = [];
+        for (const location of locations) {
+            readings.push(...await readingsFor(location.id, 'all'));
+        }
+        downloadJson('gaugeiq-weather-backup-' + new Date().toISOString().slice(0, 10) + '.json', {
+            format: 'gaugeiq-local-weather-backup',
+            version: 1,
+            exportedAt: new Date().toISOString(),
+            locations,
+            readings
+        });
+        setStatus('Backup exported: ' + locations.length + ' location(s), ' + readings.length + ' readings.', false);
+    }
+
+    async function importFile(file) {
+        if (!file) return;
+        if (file.size > 100 * 1024 * 1024) {
+            throw new Error('This file is over 100 MB. Split the dataset into smaller date ranges and import them separately.');
+        }
+        setStatus('Reading ' + file.name + '…', false);
+        const text = await file.text();
+        let parsed;
+        if (/\.csv$/i.test(file.name) || file.type.includes('csv')) {
+            parsed = fromCsv(text);
+        } else {
+            let data;
+            try { data = JSON.parse(text); } catch { throw new Error('This file is not valid JSON.'); }
+            parsed = fromOpenMeteoJson(data);
+        }
+
+        if (parsed.backup) {
+            const backup = parsed.backup;
+            if (backup.version !== 1) throw new Error('This GaugeIQ backup version is not supported.');
+            if (!confirm('Restore ' + backup.locations.length + ' location(s) and ' + backup.readings.length + ' readings? Existing matching timestamps will be updated; other records will be kept.')) return;
+            const idMap = new Map();
+            for (const location of backup.locations) {
+                const restored = await saveLocationAndReadings(location, backup.readings.filter(row => row.locationId === location.id), location.id);
+                idMap.set(location.id, restored.id);
+            }
+            setStatus('Backup restored. ' + backup.locations.length + ' location(s) processed.', false);
+            await refreshLocations();
+            return;
+        }
+
+        const defaultName = parsed.location.name || 'Imported Open-Meteo location';
+        const name = prompt('Name this location (for example, East London):', defaultName);
+        if (name === null) return;
+        parsed.location.name = name.trim() || defaultName;
+        parsed.location.source = 'Open-Meteo';
+        const saved = await saveLocationAndReadings(parsed.location, parsed.readings);
+        await refreshLocations(saved.id);
+        updateRangeButtons();
+        const range = document.querySelector('.history-range-button[data-hours="all"]');
+        if (range) range.click();
+        else if (window.GaugeIQLoadHistory) window.GaugeIQLoadHistory('all');
+        setStatus('Imported ' + parsed.readings.length + ' readings for ' + saved.name + ' into this device only.', false);
+    }
+
+    async function requestPersistentStorage() {
+        if (!navigator.storage || typeof navigator.storage.persist !== 'function') {
+            setStatus('Local storage is available, but this browser cannot confirm persistent-storage protection.', false);
+            return;
+        }
+        const alreadyPersistent = typeof navigator.storage.persisted === 'function' && await navigator.storage.persisted();
+        if (alreadyPersistent) {
+            setStatus('GaugeIQ local weather storage is marked persistent by this browser.', false);
+            return;
+        }
+        const granted = await navigator.storage.persist();
+        setStatus(granted
+            ? 'The browser granted persistent storage for GaugeIQ.'
+            : 'The browser did not grant persistent storage. Export backups regularly to protect your data.', !granted);
+    }
+
+    function setup() {
+        const select = locationSelect();
+        const fileInput = document.getElementById('localWeatherFile');
+        const importButton = document.getElementById('localWeatherImport');
+        const exportButton = document.getElementById('localWeatherExport');
+        const persistButton = document.getElementById('localWeatherPersist');
+        if (!select || !fileInput || !importButton || !exportButton) return;
+
+        select.addEventListener('change', () => {
+            updateRangeButtons();
+            if (window.GaugeIQLoadHistory) window.GaugeIQLoadHistory(24);
+        });
+        importButton.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', async () => {
+            try { await importFile(fileInput.files?.[0]); }
+            catch (error) { setStatus(error instanceof Error ? error.message : 'Unable to import this file.', true); }
+            finally { fileInput.value = ''; }
+        });
+        exportButton.addEventListener('click', async () => {
+            try { await exportBackup(); }
+            catch (error) { setStatus(error instanceof Error ? error.message : 'Unable to export a backup.', true); }
+        });
+        persistButton?.addEventListener('click', async () => {
+            try { await requestPersistentStorage(); }
+            catch { setStatus('Unable to request persistent storage in this browser.', true); }
+        });
+
+        openDatabase()
+            .then(() => refreshLocations())
+            .then(() => setStatus('Local weather database is ready. Imports and backups stay on this device unless you export them.', false))
+            .catch(error => {
+                setStatus(error instanceof Error ? error.message : 'Local weather storage is unavailable.', true);
+                importButton.disabled = true;
+                exportButton.disabled = true;
+                if (persistButton) persistButton.disabled = true;
+            });
+    }
+
+    window.GaugeIQLocalWeather = {
+        serverLocationId: SERVER_LOCATION_ID,
+        readingsFor,
+        allLocations,
+        refreshLocations,
+        setStatus
+    };
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setup);
+    else setup();
+})();
