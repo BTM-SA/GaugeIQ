@@ -217,11 +217,6 @@ async function enableWindCompass() {
 }
 
 if (windGauge) {
-    const initialArrows = windGauge.querySelector('.wind-direction-arrows');
-    const initialWindDegrees = Number(initialArrows?.dataset.windDegrees);
-    if (initialArrows && Number.isFinite(initialWindDegrees)) {
-        initialArrows.style.transform = 'rotate(' + initialWindDegrees.toFixed(2) + 'deg)';
-    }
     const initialCompassDisc = windGauge?.querySelector('.wind-compass-orientation');
     if (initialCompassDisc) initialCompassDisc.style.transform = 'rotate(0deg)';
 
