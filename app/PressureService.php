@@ -33,7 +33,7 @@ final class PressureService
         $lon = rawurlencode($longitude);
 
         $url = "https://api.open-meteo.com/v1/forecast?latitude={$lat}&longitude={$lon}"
-            . "&current=temperature_2m,apparent_temperature,dew_point_2m,surface_pressure,relative_humidity_2m,rain,cloud_cover,weather_code,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=4"
+            . "&current=temperature_2m,apparent_temperature,dew_point_2m,surface_pressure,relative_humidity_2m,rain,cloud_cover,weather_code,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum&forecast_days=4"
             . "&wind_speed_unit=kmh&timezone=auto";
 
         if (!function_exists('curl_init')) {
@@ -117,6 +117,7 @@ final class PressureService
         $highs = $daily['temperature_2m_max'] ?? [];
         $lows = $daily['temperature_2m_min'] ?? [];
         $rainProbabilities = $daily['precipitation_probability_max'] ?? [];
+        $rainTotals = $daily['precipitation_sum'] ?? [];
 
         foreach ($times as $index => $time) {
             if (!is_string($time) || $time === '') {
@@ -129,6 +130,7 @@ final class PressureService
                 'temperature_max_c' => isset($highs[$index]) && is_numeric($highs[$index]) ? (float)$highs[$index] : null,
                 'temperature_min_c' => isset($lows[$index]) && is_numeric($lows[$index]) ? (float)$lows[$index] : null,
                 'rain_probability_percent' => isset($rainProbabilities[$index]) && is_numeric($rainProbabilities[$index]) ? (int)round((float)$rainProbabilities[$index]) : 0,
+                'rain_mm' => isset($rainTotals[$index]) && is_numeric($rainTotals[$index]) ? max(0.0, (float)$rainTotals[$index]) : 0.0,
             ];
         }
 
