@@ -1,4 +1,4 @@
-const CACHE = 'gaugeiq-v4';
+const CACHE = 'gaugeiq-v5';
 
 self.addEventListener('install', event => {
     event.waitUntil(
@@ -6,6 +6,7 @@ self.addEventListener('install', event => {
             './',
             './manifest.json',
             './css/app.css',
+            './js/local-weather.js',
             './js/app.js'
         ]))
     );
@@ -13,7 +14,11 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('activate', event => {
-    event.waitUntil(self.clients.claim());
+    event.waitUntil(
+        caches.keys().then(keys => Promise.all(
+            keys.filter(key => key.startsWith('gaugeiq-') && key !== CACHE).map(key => caches.delete(key))
+        )).then(() => self.clients.claim())
+    );
 });
 
 self.addEventListener('push', event => {
@@ -66,6 +71,6 @@ self.addEventListener('fetch', event => {
     }
 
     event.respondWith(
-        fetch(event.request).catch(() => caches.match(event.request))
+        fetch(event.request).catch(() => caches.match(event.request, { ignoreSearch: true }))
     );
 });

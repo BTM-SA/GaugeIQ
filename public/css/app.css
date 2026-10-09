@@ -431,3 +431,15 @@ button:disabled { opacity: .55; cursor: default; }
 }
 
 .weather-baseline-status{margin-top:9px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--muted);font-size:12px;line-height:1.45}
+
+
+.local-weather-tools{display:grid;gap:9px;padding:14px 0 8px;border-top:1px solid var(--border);margin-top:12px}
+.local-weather-tools>label{font-size:14px;font-weight:800}
+.local-weather-tools .theme-select{width:100%;min-width:0}
+.local-weather-actions{display:flex;flex-wrap:wrap;gap:8px}
+.local-weather-actions button{font-size:13px;padding:10px 12px}
+#localWeatherStatus{margin:0;font-size:13px;overflow-wrap:anywhere}
+#localWeatherStatus[data-state="error"]{color:#b91c1c}
+.local-weather-help{font-size:12px;line-height:1.5;margin:0}
+.history-range-button[hidden]{display:none!important}
+@media(max-width:560px){.local-weather-actions{display:grid;grid-template-columns:1fr}.local-weather-actions button{width:100%}}
