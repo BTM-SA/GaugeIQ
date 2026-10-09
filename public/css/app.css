@@ -373,3 +373,23 @@ button:disabled { opacity: .55; cursor: default; }
 .wind-summary-line{display:flex;align-items:center;justify-content:center;gap:28px;margin-top:2px;font-size:12px;font-weight:700;color:var(--muted)}
 .wind-summary-line strong{color:var(--text);font-weight:900}
 @media(max-width:560px){.wind-summary-line{gap:20px;font-size:11px}}
+
+
+/* Horizontal segmented environmental readings */
+.climate-gauge-card{overflow:hidden}
+.climate-bars{display:flex;flex-direction:column;gap:16px;margin-top:18px}
+.climate-bar-row{display:grid;grid-template-columns:112px minmax(0,1fr) 54px;align-items:center;gap:12px;min-width:0}
+.climate-bar-label{font-size:13px;font-weight:750;color:var(--text);line-height:1.2}
+.climate-segment-track{display:grid;grid-template-columns:repeat(40,minmax(0,1fr));gap:3px;min-width:0;align-items:center}
+.climate-segment{display:block;height:13px;min-width:0;border-radius:2px;background:color-mix(in srgb,var(--muted) 20%,transparent);transition:background-color .2s ease}
+.climate-segment.active{background:#22c55e}
+.climate-segment.danger.active{background:#ef4444}
+.climate-bar-value{font-size:14px;font-weight:850;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--text)}
+@media(max-width:560px){
+  .climate-bars{gap:15px;margin-top:14px}
+  .climate-bar-row{grid-template-columns:94px minmax(0,1fr) 45px;gap:7px}
+  .climate-bar-label{font-size:11px}
+  .climate-segment-track{gap:2px}
+  .climate-segment{height:11px}
+  .climate-bar-value{font-size:12px}
+}
