@@ -24,24 +24,21 @@ migrateDatabase($pdo);
 $locationName = (string)$config['pressure']['location_name'];
 $dashboardLatitude = (string)($config['pressure']['latitude'] ?? '');
 $dashboardLongitude = (string)($config['pressure']['longitude'] ?? '');
-$coordinateSettings = $pdo->prepare("SELECT `key`, `value` FROM gaugeiq_settings WHERE `key` IN ('active_location_latitude', 'active_location_longitude', 'location_latitude', 'location_longitude')");
+$coordinateSettings = $pdo->prepare("SELECT `key`, `value` FROM gaugeiq_settings WHERE `key` IN ('active_location_latitude', 'active_location_longitude', 'active_location_name', 'location_latitude', 'location_longitude', 'location_name')");
 $coordinateSettings->execute();
-$coordinateRows = $coordinateSettings->fetchAll();
-foreach (['location_latitude', 'location_longitude', 'active_location_latitude', 'active_location_longitude'] as $coordinateKey) {
-    foreach ($coordinateRows as $coordinateSetting) {
-        if ((string)$coordinateSetting['key'] !== $coordinateKey) continue;
-    if (in_array((string)$coordinateSetting['key'], ['active_location_latitude', 'location_latitude'], true)) {
-        $dashboardLatitude = (string)$coordinateSetting['value'];
-    } elseif (in_array((string)$coordinateSetting['key'], ['active_location_longitude', 'location_longitude'], true)) {
-        $dashboardLongitude = (string)$coordinateSetting['value'];
-    }
+$storedCoordinates = [];
+foreach ($coordinateSettings->fetchAll() as $coordinateSetting) {
+    $storedCoordinates[(string)$coordinateSetting['key']] = (string)$coordinateSetting['value'];
 }
-$locationSetting = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` IN ('active_location_name', 'location_name') ORDER BY CASE `key` WHEN 'active_location_name' THEN 0 ELSE 1 END LIMIT 1");
-$locationSetting->execute();
-$storedLocationName = $locationSetting->fetchColumn();
-if ($storedLocationName !== false && trim((string)$storedLocationName) !== '') {
-    $locationName = (string)$storedLocationName;
-}
+$dashboardLatitude = $storedCoordinates['active_location_latitude']
+    ?? $storedCoordinates['location_latitude']
+    ?? $dashboardLatitude;
+$dashboardLongitude = $storedCoordinates['active_location_longitude']
+    ?? $storedCoordinates['location_longitude']
+    ?? $dashboardLongitude;
+$locationName = $storedCoordinates['active_location_name']
+    ?? $storedCoordinates['location_name']
+    ?? $locationName;
 
 try {
     $current = $service->fetchCurrent();
