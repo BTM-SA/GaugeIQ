@@ -117,6 +117,42 @@
         return Number.isNaN(date.getTime()) ? null : date.toISOString();
     }
 
+    function openMeteoTimestamp(value, offsetSeconds) {
+        const raw = String(value || '').trim();
+        if (!raw) return null;
+        if (/[zZ]|[+-]\\d{2}:?\\d{2}$/.test(raw)) return normalizeTimestamp(raw);
+        const match = raw.match(/^(\\d{4})-(\\d{2})-(\\d{2})[T ](\\d{2}):(\\d{2})(?::(\\d{2}))?$/);
+        if (!match) return normalizeTimestamp(raw);
+        const wallClockAsUtc = Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]), Number(match[4]), Number(match[5]), Number(match[6] || 0));
+        const offset = Number(offsetSeconds);
+        return new Date(wallClockAsUtc - (Number.isFinite(offset) ? offset : 0) * 1000).toISOString();
+    }
+
+    function localTimeInZoneToUtc(value, timeZone) {
+        const raw = String(value || '').trim();
+        const match = raw.match(/^(\\d{4})-(\\d{2})-(\\d{2})[T ](\\d{2}):(\\d{2})(?::(\\d{2}))?$/);
+        if (!match) return normalizeTimestamp(raw);
+        const desired = Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]), Number(match[4]), Number(match[5]), Number(match[6] || 0));
+        try {
+            const formatter = new Intl.DateTimeFormat('en-GB', {
+                timeZone: timeZone || 'UTC', year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23'
+            });
+            let guess = desired;
+            for (let attempt = 0; attempt < 3; attempt++) {
+                const parts = Object.fromEntries(formatter.formatToParts(new Date(guess))
+                    .filter(part => part.type !== 'literal').map(part => [part.type, Number(part.value)]));
+                const represented = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second);
+                const delta = desired - represented;
+                guess += delta;
+                if (delta === 0) break;
+            }
+            return new Date(guess).toISOString();
+        } catch {
+            return normalizeTimestamp(raw);
+        }
+    }
+
     function numberOrNull(value) {
         if (value === null || value === undefined || value === '') return null;
         const number = Number(value);
@@ -134,7 +170,7 @@
         const n = hourly.time.length;
         const rows = [];
         for (let i = 0; i < n; i++) {
-            const timestamp = normalizeTimestamp(hourly.time[i]);
+            const timestamp = openMeteoTimestamp(hourly.time[i], data.utc_offset_seconds);
             if (!timestamp) continue;
             rows.push({
                 timestamp,
@@ -162,7 +198,7 @@
         };
     }
 
-    function fromCsv(text) {
+    function fromCsv(text, timezone) {
         const rows = parseCsv(text);
         if (rows.length < 2) throw new Error('The CSV file does not contain weather records.');
         const headers = rows[0].map(value => value.trim().replace(/^\uFEFF/, '').toLowerCase());
@@ -182,7 +218,7 @@
         };
         const readings = [];
         for (const row of rows.slice(1)) {
-            const timestamp = normalizeTimestamp(row[timeIndex]);
+            const timestamp = localTimeInZoneToUtc(row[timeIndex], timezone);
             if (!timestamp) continue;
             const reading = {
                 timestamp,
@@ -213,28 +249,33 @@
             updatedAt: new Date().toISOString(),
             readingCount: readings.length
         };
-        const tx = db.transaction([STORE_LOCATIONS, STORE_READINGS], 'readwrite');
+        let tx = db.transaction(STORE_LOCATIONS, 'readwrite');
         tx.objectStore(STORE_LOCATIONS).put(record);
-        const store = tx.objectStore(STORE_READINGS);
-        for (const item of readings) {
-            if (!item.timestamp) continue;
-            store.put({
-                locationId: id,
-                timestamp: item.timestamp,
-                observed_at: item.observed_at || item.timestamp,
-                temperature_c: numberOrNull(item.temperature_c),
-                dew_point_c: numberOrNull(item.dew_point_c),
-                pressure_hpa: numberOrNull(item.pressure_hpa),
-                humidity_percent: numberOrNull(item.humidity_percent),
-                wind_speed_kmh: numberOrNull(item.wind_speed_kmh),
-                wind_direction_degrees: numberOrNull(item.wind_direction_degrees),
-                rainfall_mm: numberOrNull(item.rainfall_mm),
-                cloud_cover_percent: numberOrNull(item.cloud_cover_percent),
-                weather_code: numberOrNull(item.weather_code),
-                source: item.source || record.source
-            });
-        }
         await transactionDone(tx);
+
+        const validReadings = readings.filter(item => item.timestamp);
+        for (let start = 0; start < validReadings.length; start += 500) {
+            tx = db.transaction(STORE_READINGS, 'readwrite');
+            const store = tx.objectStore(STORE_READINGS);
+            for (const item of validReadings.slice(start, start + 500)) {
+                store.put({
+                    locationId: id,
+                    timestamp: item.timestamp,
+                    observed_at: item.observed_at || item.timestamp,
+                    temperature_c: numberOrNull(item.temperature_c),
+                    dew_point_c: numberOrNull(item.dew_point_c),
+                    pressure_hpa: numberOrNull(item.pressure_hpa),
+                    humidity_percent: numberOrNull(item.humidity_percent),
+                    wind_speed_kmh: numberOrNull(item.wind_speed_kmh),
+                    wind_direction_degrees: numberOrNull(item.wind_direction_degrees),
+                    rainfall_mm: numberOrNull(item.rainfall_mm),
+                    cloud_cover_percent: numberOrNull(item.cloud_cover_percent),
+                    weather_code: numberOrNull(item.weather_code),
+                    source: item.source || record.source
+                });
+            }
+            await transactionDone(tx);
+        }
         return record;
     }
 
@@ -313,7 +354,10 @@
         const text = await file.text();
         let parsed;
         if (/\.csv$/i.test(file.name) || file.type.includes('csv')) {
-            parsed = fromCsv(text);
+            const timezone = prompt('Timezone used by this CSV (for example, Africa/Johannesburg):', Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
+            if (timezone === null) return;
+            parsed = fromCsv(text, timezone.trim() || 'UTC');
+            parsed.location.timezone = timezone.trim() || 'UTC';
         } else {
             let data;
             try { data = JSON.parse(text); } catch { throw new Error('This file is not valid JSON.'); }
