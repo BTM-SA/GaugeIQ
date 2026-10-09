@@ -612,9 +612,9 @@
             updateRangeButtons();
             const selectedId = select.value;
             if (selectedId === SERVER_LOCATION_ID) {
-                window.GaugeIQSelectDashboardLocation?.(selectedId, null);
+                window.GaugeIQSelectDashboardLocation?.(selectedId, null, true);
             } else {
-                allLocations().then(items => window.GaugeIQSelectDashboardLocation?.(selectedId, items.find(item => item.id === selectedId))).catch(() => {});
+                allLocations().then(items => window.GaugeIQSelectDashboardLocation?.(selectedId, items.find(item => item.id === selectedId), true)).catch(() => {});
             }
             document.querySelectorAll('.history-range-button').forEach(button => button.classList.remove('active'));
             document.querySelector('.history-range-button[data-hours="24"]')?.classList.add('active');
