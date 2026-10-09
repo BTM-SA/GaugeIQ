@@ -392,3 +392,6 @@ button:disabled { opacity: .55; cursor: default; }
   .climate-segment{height:11px}
   .climate-bar-value{font-size:12px}
 }
+
+.climate-bar-predicted-rain .climate-segment.active{background:#2698f3}
+.climate-bar-predicted-rain .climate-segment.danger.active{background:#1674c5}
