@@ -176,7 +176,7 @@
                 timestamp,
                 temperature_c: numberOrNull(hourly.temperature_2m?.[i]),
                 dew_point_c: numberOrNull(hourly.dew_point_2m?.[i]),
-                pressure_hpa: numberOrNull(hourly.pressure_msl?.[i] ?? hourly.surface_pressure?.[i]),
+                pressure_hpa: numberOrNull(hourly.surface_pressure?.[i] ?? hourly.pressure_msl?.[i]),
                 humidity_percent: numberOrNull(hourly.relative_humidity_2m?.[i]),
                 wind_speed_kmh: numberOrNull(hourly.wind_speed_10m?.[i]),
                 wind_direction_degrees: numberOrNull(hourly.wind_direction_10m?.[i]),
