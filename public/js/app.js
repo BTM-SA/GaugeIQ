@@ -916,6 +916,31 @@ async function selectDashboardLocation(locationId, location) {
     }
     if (name) name.textContent = 'Loading ' + location.name + '…';
     try {
+        if (locationId !== 'server-current') {
+            const syncEndpoint = selector?.dataset.locationSyncEndpoint;
+            const csrf = selector?.dataset.locationCsrf;
+            if (!syncEndpoint || !csrf) throw new Error('Location sync is not configured. Reload GaugeIQ and try again.');
+            const syncResponse = await fetch(syncEndpoint, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
+                body: JSON.stringify({
+                    csrf,
+                    name: String(location.name || 'Saved location').slice(0, 120),
+                    latitude: Number(location.latitude),
+                    longitude: Number(location.longitude),
+                    timezone: String(location.timezone || 'auto').slice(0, 80)
+                })
+            });
+            const syncResult = await syncResponse.json();
+            if (!syncResponse.ok || !syncResult.success) throw new Error(syncResult.error || 'Unable to sync this location to the server; cron will keep using the previous location.');
+            if (selector) {
+                selector.dataset.serverLatitude = String(location.latitude);
+                selector.dataset.serverLongitude = String(location.longitude);
+                selector.dataset.serverLocationName = String(location.name || 'Saved location');
+                selector.dataset.serverTimezone = String(location.timezone || 'auto');
+            }
+        }
         const p = new URLSearchParams({
             latitude: String(location.latitude), longitude: String(location.longitude),
             current: 'temperature_2m,apparent_temperature,dew_point_2m,surface_pressure,relative_humidity_2m,rain,cloud_cover,weather_code,wind_speed_10m,wind_direction_10m',
