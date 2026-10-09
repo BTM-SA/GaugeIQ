@@ -701,16 +701,16 @@ function weatherConditionsTrend(readings) {
     const pressure = weatherFieldPair(valid, 'pressure');
     if (pressure) {
         const rate = pressure.delta / pressure.hours;
-        if (rate <= -0.3) addSignal(2, 'Pressure is falling, which can precede unsettled weather.', 'Pressure is rising, which can support more settled weather.', 2, 'Pressure');
-        else if (rate >= 0.3) addSignal(-2, 'Pressure is falling, which can precede unsettled weather.', 'Pressure is rising, which can support more settled weather.', 2, 'Pressure');
+        if (rate <= -0.3) addSignal(1, 'Pressure is falling, which can precede unsettled weather.', 'Pressure is rising, which can support more settled weather.', 2, 'Pressure');
+        else if (rate >= 0.3) addSignal(-1, 'Pressure is falling, which can precede unsettled weather.', 'Pressure is rising, which can support more settled weather.', 2, 'Pressure');
     }
 
     const rain = weatherFieldPair(valid, 'rain');
     if (rain) {
         const scaled = rain.delta * 6 / rain.hours;
-        if (rain.first < 0.2 && rain.last >= 0.2) addSignal(2, 'Rain has appeared in the latest reading.', 'Rainfall has eased or stopped.', 2, 'Rainfall');
-        else if (scaled >= 0.2) addSignal(1, 'The recent rainfall reading has increased.', 'The recent rainfall reading has decreased.', 2, 'Rainfall');
-        else if (scaled <= -0.2) addSignal(-1, 'The recent rainfall reading has increased.', 'The recent rainfall reading has decreased.', 2, 'Rainfall');
+        if (rain.first < 0.2 && rain.last >= 0.2) addSignal(1, 'Rain has appeared in the latest reading.', 'Rainfall has eased or stopped.', 2, 'Rainfall');
+        else if (scaled >= 0.2) addSignal(0.5, 'The recent rainfall reading has increased.', 'The recent rainfall reading has decreased.', 2, 'Rainfall');
+        else if (scaled <= -0.2) addSignal(-0.5, 'The recent rainfall reading has increased.', 'The recent rainfall reading has decreased.', 2, 'Rainfall');
     }
 
     const wind = weatherFieldPair(valid, 'wind');
@@ -730,8 +730,8 @@ function weatherConditionsTrend(readings) {
     const codes = weatherFieldPair(valid, 'weatherCode');
     if (codes) {
         const delta = weatherCodeSeverity(codes.last) - weatherCodeSeverity(codes.first);
-        if (delta >= 1) addSignal(2, 'The reported weather category has become more severe.', 'The reported weather category has become less severe.', 2, 'Weather code');
-        else if (delta <= -1) addSignal(-2, 'The reported weather category has become more severe.', 'The reported weather category has become less severe.', 2, 'Weather code');
+        if (delta >= 1) addSignal(1, 'The reported weather category has become more severe.', 'The reported weather category has become less severe.', 2, 'Weather code');
+        else if (delta <= -1) addSignal(-1, 'The reported weather category has become more severe.', 'The reported weather category has become less severe.', 2, 'Weather code');
     }
 
     const mixed = reasons.some(reason => reason.points > 0) && reasons.some(reason => reason.points < 0);
@@ -814,7 +814,7 @@ async function loadWeatherChange() {
             if (trendSummary) trendSummary.textContent = trend.label + ' · ' + trend.explanation;
             if (trendReasons) {
                 trendReasons.innerHTML = trend.reasons.length
-                    ? trend.reasons.map(reason => '<div class="weather-change-reason"><span><strong>' + reason.label + '</strong> (' + (reason.points > 0 ? '+' : '') + reason.points + ' trend points; weight ' + reason.weight + '): ' + reason.explanation + '</span></div>').join('')
+                    ? trend.reasons.map(reason => '<div class="weather-change-reason"><span><strong>' + reason.label + '</strong> (' + (reason.points > 0 ? '+' : '') + reason.points + ' weighted trend points (weight ' + reason.weight + '): ' + reason.explanation + '</span></div>').join('')
                     : '<div class="weather-change-reason">No pressure, rain, wind, cloud or weather-code signal crossed the current trend thresholds.</div>';
             }
             if (conditionsElement) conditionsElement.innerHTML = 'Conditions: <b>' + trend.arrow + ' ' + trend.label + '</b>';
