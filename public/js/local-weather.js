@@ -170,7 +170,7 @@
         const n = hourly.time.length;
         const rows = [];
         for (let i = 0; i < n; i++) {
-            const timestamp = openMeteoTimestamp(hourly.time[i], data.utc_offset_seconds);
+            const timestamp = localTimeInZoneToUtc(hourly.time[i], data.timezone || 'UTC');
             if (!timestamp) continue;
             rows.push({
                 timestamp,
@@ -377,6 +377,8 @@
         if (/\.csv$/i.test(file.name) || file.type.includes('csv')) {
             const timezone = prompt('Timezone used by this CSV (for example, Africa/Johannesburg):', Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
             if (timezone === null) return;
+            try { new Intl.DateTimeFormat('en-US', { timeZone: timezone.trim() || 'UTC' }); }
+            catch { throw new Error('That timezone is not recognized. Use an IANA timezone such as Africa/Johannesburg.'); }
             parsed = fromCsv(text, timezone.trim() || 'UTC');
             parsed.location.timezone = timezone.trim() || 'UTC';
         } else {
