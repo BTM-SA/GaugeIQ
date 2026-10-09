@@ -276,6 +276,19 @@
             }
             await transactionDone(tx);
         }
+
+        // Keep the displayed location count cumulative when data is imported in
+        // several batches (for example, the year-by-year "all history" import).
+        const totalCount = await new Promise((resolve, reject) => {
+            const countTx = db.transaction(STORE_READINGS, 'readonly');
+            const request = countTx.objectStore(STORE_READINGS).index('locationId').count(IDBKeyRange.only(id));
+            request.onsuccess = () => resolve(request.result || 0);
+            request.onerror = () => reject(request.error || new Error('Unable to count saved weather readings.'));
+        });
+        record.readingCount = totalCount;
+        tx = db.transaction(STORE_LOCATIONS, 'readwrite');
+        tx.objectStore(STORE_LOCATIONS).put(record);
+        await transactionDone(tx);
         return record;
     }
 
