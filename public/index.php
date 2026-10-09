@@ -361,9 +361,21 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     $climateBars = [
         ['label' => 'Dew point °C', 'value' => $dewPointC, 'display' => $current ? number_format($dewPointC, 1) : '—', 'ratio' => $dewBarRatio, 'decimals' => 1],
         ['label' => 'Humidity %', 'value' => $humidityPercent, 'display' => $current ? number_format($humidityPercent, 1) : '—', 'ratio' => $humidityBarRatio, 'decimals' => 1],
-        ['label' => 'Rain mm', 'value' => $rainfallMm, 'display' => $current ? number_format($rainfallMm, 2) : '—', 'ratio' => $rainBarRatio, 'decimals' => 2],
         ['label' => 'Cloud cover %', 'value' => $cloudCoverPercent, 'display' => $current ? number_format($cloudCoverPercent, 0) : '—', 'ratio' => $cloudBarRatio, 'decimals' => 0],
     ];
+    if ($current && $rainfallMm > 0.0) {
+        $climateBars[] = ['label' => 'Rain mm', 'value' => $rainfallMm, 'display' => number_format($rainfallMm, 2), 'ratio' => $rainBarRatio, 'decimals' => 2, 'kind' => 'current-rain'];
+    }
+    if ($current && $rainForecastMm > 0.0) {
+        $climateBars[] = [
+            'label' => 'Rain Predicted in mm',
+            'value' => $rainForecastMm,
+            'display' => number_format($rainForecastMm, 2),
+            'ratio' => max(0.0, min(1.0, $rainForecastMm / 10.0)),
+            'decimals' => 2,
+            'kind' => 'predicted-rain',
+        ];
+    }
     ?>
     <section class="card climate-gauge-card" aria-labelledby="climateGaugeTitle">
         <div class="section-heading">
@@ -374,7 +386,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         </div>
         <div class="climate-bars" aria-label="Current environmental conditions">
             <?php foreach ($climateBars as $bar): ?>
-                <div class="climate-bar-row">
+                <div class="climate-bar-row<?= isset($bar['kind']) ? ' climate-bar-' . htmlspecialchars($bar['kind'], ENT_QUOTES) : '' ?>">
                     <div class="climate-bar-label"><?= htmlspecialchars($bar['label'], ENT_QUOTES) ?></div>
                     <div class="climate-segment-track" role="img" aria-label="<?= htmlspecialchars($bar['label'] . ': ' . $bar['display'], ENT_QUOTES) ?>">
                         <?php for ($segment = 0; $segment < 40; $segment++):
