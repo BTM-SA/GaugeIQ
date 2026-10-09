@@ -446,6 +446,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
             <div class="weather-change-score" id="weatherChangeScore" aria-label="Weather change score">—</div>
         </div>
         <div class="weather-change-summary" id="weatherChangeSummary">Analysing recent conditions…</div>
+        <div class="weather-baseline-status" id="weatherBaselineStatus" aria-live="polite">Building a recent local baseline…</div>
         <div class="insight-meter-track" role="progressbar" aria-label="Weather change intensity" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0" id="weatherChangeTrack">
             <div class="insight-meter-fill change-meter-fill" id="weatherChangeFill" style="width:0%"></div>
         </div>
