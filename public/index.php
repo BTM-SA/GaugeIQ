@@ -494,11 +494,29 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                 <p id="historyStatus" class="muted">Loading history…</p>
             </div>
         </div>
+        <div class="local-weather-tools" aria-label="Local weather history tools">
+            <label for="weatherLocationSelect">History location</label>
+            <select id="weatherLocationSelect" class="theme-select" aria-label="History location">
+                <option value="server-current">Current GaugeIQ location (server)</option>
+            </select>
+            <div class="local-weather-actions">
+                <button type="button" class="secondary" id="localWeatherImport">Import Open-Meteo data</button>
+                <button type="button" class="secondary" id="localWeatherExport">Export / restore backup</button>
+                <button type="button" class="secondary" id="localWeatherPersist">Protect local storage</button>
+                <input type="file" id="localWeatherFile" accept=".csv,.json,application/json,text/csv" hidden>
+            </div>
+            <p id="localWeatherStatus" class="muted" role="status" aria-live="polite">Preparing local weather database…</p>
+            <p class="muted local-weather-help">Imports are stored in this browser on this device. Open-Meteo hourly JSON and CSV files are supported. Export a backup before clearing browser data or changing devices.</p>
+        </div>
         <div class="history-range" role="group" aria-label="History range">
             <button type="button" class="history-range-button" data-hours="6">6h</button>
             <button type="button" class="history-range-button active" data-hours="24">24h</button>
             <button type="button" class="history-range-button" data-hours="48">48h</button>
             <button type="button" class="history-range-button" data-hours="168">7d</button>
+            <button type="button" class="history-range-button" data-hours="720" data-local-range="true" hidden>30d</button>
+            <button type="button" class="history-range-button" data-hours="2160" data-local-range="true" hidden>90d</button>
+            <button type="button" class="history-range-button" data-hours="8760" data-local-range="true" hidden>1y</button>
+            <button type="button" class="history-range-button" data-hours="all" data-local-range="true" hidden>All</button>
         </div>
         <div class="chart-block"><h3>Pressure</h3><canvas id="pressureChart" height="220"></canvas></div>
         <div class="chart-block"><h3>Humidity</h3><canvas id="humidityChart" height="220"></canvas></div>
@@ -571,6 +589,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 
     <p id="status" class="status"></p>
 </main>
-<script src="js/app.js?v=20261006-compass"></script>
+<script src="js/local-weather.js?v=20261009-indexeddb"></script>
+<script src="js/app.js?v=20261009-local-history"></script>
 </body>
 </html>
