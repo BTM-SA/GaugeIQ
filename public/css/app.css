@@ -186,29 +186,28 @@ button:disabled { opacity: .55; cursor: default; }
 .wind-speed-ticks line.major+text{fill:#111827;font-weight:500}
 :root[data-theme="dark"] .wind-speed-ticks text{fill:#e5e7eb;stroke:#111827;stroke-width:.55px}
 :root[data-theme="dark"] .wind-speed-ticks line.major+text{fill:#f3f4f6;stroke:#111827;stroke-width:.55px}
-.wind-compass-ring{fill:rgba(255,255,255,.045);stroke:color-mix(in srgb,var(--text) 18%,transparent);stroke-width:1.1}
+.wind-compass-ring{fill:rgba(255,255,255,.025);stroke:color-mix(in srgb,var(--text) 15%,transparent);stroke-width:.7}
 .wind-gauge-glass-overlay{fill:url(#windCompassGlass);stroke:rgba(255,255,255,.18);stroke-width:.7;opacity:.72;pointer-events:none}
-:root[data-theme="dark"] .wind-compass-ring{fill:rgba(255,255,255,.025);stroke:rgba(255,255,255,.18)}
-.wind-compass-ticks{stroke:var(--muted);stroke-width:.45}
-.wind-compass-ticks line.major{stroke:var(--text);stroke-width:.8}
-.wind-compass-labels{fill:var(--muted);font-size:4px;font-weight:800;text-anchor:middle;dominant-baseline:middle}
-.wind-compass-labels .north-label{fill:#ef4444;font-size:4.5px;font-weight:900}
-.wind-compass-ticks line.north-marker{stroke:#ef4444;stroke-width:1.35}
+:root[data-theme="dark"] .wind-compass-ring{fill:rgba(255,255,255,.018);stroke:rgba(255,255,255,.15)}
+.wind-compass-ticks{stroke:color-mix(in srgb,var(--text) 66%,transparent);stroke-width:.22}
+.wind-compass-ticks line.medium{stroke-width:.3}
+.wind-compass-ticks line.major{stroke:var(--text);stroke-width:.48}
+.wind-compass-labels{fill:var(--text);font-size:4.2px;font-weight:850;text-anchor:middle;dominant-baseline:middle}
+.wind-compass-labels .north-label{fill:#ef4444;font-size:5px;font-weight:950}
+.wind-compass-ticks line.north-marker{stroke:#ef4444;stroke-width:.8}
+.wind-degree-labels{fill:var(--text);font-size:2.8px;font-weight:650;text-anchor:middle;dominant-baseline:middle}
+.wind-degree-labels .north-degree{fill:#ef4444;font-weight:900}
 .wind-direction-line{fill:none;stroke-width:1.15;stroke-linecap:round}
-.wind-direction-line-from{stroke:#ef4444}
+.wind-direction-line-from{stroke:#facc15}
 .wind-direction-line-to{stroke:#facc15}
-.wind-direction-marker{fill:#ef4444;stroke:var(--card);stroke-width:.7px}
+.wind-direction-marker{fill:#facc15;stroke:var(--card);stroke-width:.7px}
 .wind-direction-to-marker{fill:#facc15;stroke:#facc15;stroke-width:.4px}
-.wind-compass-labels .minor{font-size:3.35px}
+.wind-compass-labels .minor{font-size:3.2px}
 .wind-center{fill:var(--card);stroke:var(--border);stroke-width:1}
 .wind-direction-arrows{transition:transform .7s cubic-bezier(.22,1,.36,1);transform-box:view-box;transform-origin:50px 50px}
- .wind-direction-marker{fill:#ef4444;stroke:var(--card);stroke-width:.7px}
-.wind-direction-to-marker{fill:#facc15;stroke:#facc15}
-.wind-gauge-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;padding-top:1px}
-.wind-gauge-center small{font-size:15px;line-height:1;font-weight:800;color:var(--text);margin:0 0 7px;letter-spacing:.01em}
-.wind-gauge-center strong{font-size:clamp(28px,7.2vw,38px);line-height:.9;letter-spacing:-.045em;color:var(--text);font-variant-numeric:tabular-nums}
-.wind-gauge-center strong span{display:block;font-size:10px;letter-spacing:.02em;margin-top:5px;color:var(--muted);font-weight:700;text-align:center}
-.wind-gauge-center b{font-size:14px;line-height:1;margin-top:8px;color:var(--text)}
+.wind-gauge-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;padding:1px 0 0}
+.wind-gauge-center .wind-heading-readout{font-size:clamp(17px,4.6vw,25px);line-height:1;letter-spacing:-.045em;color:var(--text);font-weight:850;white-space:nowrap;font-variant-numeric:tabular-nums}
+.wind-gauge-center .wind-speed-readout{font-size:9px;line-height:1.2;font-weight:750;color:var(--muted);margin-top:7px;letter-spacing:.01em;white-space:nowrap}
 @media(max-width:700px){.wind-gauge-card{padding:18px}.wind-gauge{width:min(100%,350px)}}
 
 
