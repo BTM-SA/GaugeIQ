@@ -851,7 +851,7 @@ async function loadWeatherChange() {
             reasonsElement.innerHTML = result.components.map(component =>
                 '<div class="weather-change-reason"><span><strong>' + component.label + '</strong>: ' + component.evidence +
                 '. Severity ' + component.severity.toFixed(2) + '/1 × weight ' + component.weight +
-                ' = ' + component.contribution.toFixed(2) + ' points of ' + result.score.toFixed(1) + '/10.</span></div>'
+                '; normalized contribution ' + component.contribution.toFixed(2) + ' points of ' + result.score.toFixed(1) + '/10.</span></div>'
             ).join('');
             const stabilityFill = document.getElementById('weatherStabilityFill');
             const stabilityTrack = stabilityFill?.closest('.temperature-stability-track');
