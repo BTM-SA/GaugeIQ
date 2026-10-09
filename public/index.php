@@ -44,12 +44,30 @@ $dashboardTimezone = $storedCoordinates['active_location_timezone'] ?? $dashboar
 
 try {
     $current = $service->fetchCurrent();
-    $latest = $db->pdo()->query(
-        'SELECT pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, observed_at FROM gaugeiq_pressure_readings ORDER BY id DESC LIMIT 1'
-    )->fetch();
+    $changedAtStmt = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = 'active_location_changed_at' LIMIT 1");
+    $changedAtStmt->execute();
+    $activeLocationChangedAt = $changedAtStmt->fetchColumn();
+    if (is_string($activeLocationChangedAt) && $activeLocationChangedAt !== '') {
+        $latestStmt = $pdo->prepare(
+            'SELECT pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, observed_at
+             FROM gaugeiq_pressure_readings WHERE created_at >= ? ORDER BY id DESC LIMIT 1'
+        );
+        $latestStmt->execute([$activeLocationChangedAt]);
+        $latest = $latestStmt->fetch() ?: null;
+        $rangeStmt = $pdo->prepare(
+            'SELECT MIN(pressure_hpa) AS pressure_low, MAX(pressure_hpa) AS pressure_high
+             FROM gaugeiq_pressure_readings WHERE created_at >= ?'
+        );
+        $rangeStmt->execute([$activeLocationChangedAt]);
+        $pressureHistory = $rangeStmt->fetch() ?: [];
+    } else {
+        $latest = $pdo->query(
+            'SELECT pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, observed_at FROM gaugeiq_pressure_readings ORDER BY id DESC LIMIT 1'
+        )->fetch() ?: null;
+        $pressureHistory = $pdo->query('SELECT MIN(pressure_hpa) AS pressure_low, MAX(pressure_hpa) AS pressure_high FROM gaugeiq_pressure_readings')->fetch() ?: [];
+    }
 
     $change = $latest ? $current['pressure_hpa'] - (float)$latest['pressure_hpa'] : 0.0;
-    $pressureHistory = $pdo->query('SELECT MIN(pressure_hpa) AS pressure_low, MAX(pressure_hpa) AS pressure_high FROM gaugeiq_pressure_readings')->fetch() ?: [];
 
     $settings = [];
     foreach ($pdo->query("SELECT `key`, `value` FROM gaugeiq_settings WHERE `key` IN ('monitor_last_success_at', 'monitor_last_error')") as $setting) {
