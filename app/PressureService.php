@@ -129,7 +129,7 @@ final class PressureService
                 'weather_code' => isset($codes[$index]) && is_numeric($codes[$index]) ? (int)$codes[$index] : null,
                 'temperature_max_c' => isset($highs[$index]) && is_numeric($highs[$index]) ? (float)$highs[$index] : null,
                 'temperature_min_c' => isset($lows[$index]) && is_numeric($lows[$index]) ? (float)$lows[$index] : null,
-                'rain_probability_percent' => isset($rainProbabilities[$index]) && is_numeric($rainProbabilities[$index]) ? (int)round((float)$rainProbabilities[$index]) : 0,
+                'rain_probability_percent' => isset($rainProbabilities[$index]) && is_numeric($rainProbabilities[$index]) ? max(0, min(100, (int)round((float)$rainProbabilities[$index]))) : null,
                 'rain_mm' => isset($rainTotals[$index]) && is_numeric($rainTotals[$index]) ? max(0.0, (float)$rainTotals[$index]) : 0.0,
             ];
         }
