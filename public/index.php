@@ -131,6 +131,9 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     $rainForecastMm = $current && isset($forecast[0]['rain_mm']) && is_numeric($forecast[0]['rain_mm'])
         ? max(0.0, (float)$forecast[0]['rain_mm'])
         : 0.0;
+    $rainProbabilityPercent = $current && isset($forecast[0]['rain_probability_percent']) && is_numeric($forecast[0]['rain_probability_percent'])
+        ? max(0, min(100, (int)$forecast[0]['rain_probability_percent']))
+        : null;
 
     $forecastCondition = static function (?int $code): array {
         return match (true) {
@@ -410,17 +413,78 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         </div>
     </section>
 
+    <section class="card rain-probability-card" aria-labelledby="rainProbabilityTitle">
+        <div class="section-heading">
+            <div>
+                <h2 id="rainProbabilityTitle">Rain probability</h2>
+                <p class="muted">Today's forecast maximum precipitation probability.</p>
+            </div>
+            <div class="rain-probability-score" id="rainProbabilityScore"><?= $rainProbabilityPercent !== null ? htmlspecialchars((string)$rainProbabilityPercent, ENT_QUOTES) . '%' : '—' ?></div>
+        </div>
+        <div class="insight-meter-track" role="progressbar" aria-label="Forecast rain probability" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<?= $rainProbabilityPercent !== null ? $rainProbabilityPercent : 0 ?>" id="rainProbabilityTrack">
+            <div class="insight-meter-fill rain-meter-fill" id="rainProbabilityFill" style="width:<?= $rainProbabilityPercent !== null ? $rainProbabilityPercent : 0 ?>%"></div>
+        </div>
+        <div class="rain-probability-meta">
+            <span>Forecast rainfall</span>
+            <strong><?= number_format($rainForecastMm, 1) ?> mm</strong>
+        </div>
+        <p class="weather-change-note">Probability comes from the weather provider's daily forecast; rainfall is the predicted daily total. Neither is calculated from humidity alone.</p>
+        <details class="algorithm-details">
+            <summary>How this meter is calculated</summary>
+            <p><strong>Current method:</strong> use the provider's daily maximum precipitation probability directly (0–100%). Display the predicted daily rainfall amount separately in millimetres.</p>
+            <p><strong>Weights:</strong> forecast probability 100% of the displayed probability. Recent rain, humidity, dew point, pressure and cloud cover are not yet used to adjust the percentage; they will be supporting signals only after calibration against observed outcomes.</p>
+            <p><strong>Limitation:</strong> this is the forecast's daily maximum probability, not a calibrated GaugeIQ prediction for a particular hour. Forecast calibration needs saved forecast snapshots and later observations.</p>
+        </details>
+    </section>
+
     <section class="card weather-change-card" aria-labelledby="weatherChangeTitle">
         <div class="section-heading">
             <div>
                 <h2 id="weatherChangeTitle">Weather change</h2>
-                <p class="muted">Based on GaugeIQ's recent pressure, temperature, humidity and wind readings.</p>
+                <p class="muted">A weighted measure of how much recent conditions have changed — not a rain probability.</p>
             </div>
-            <div class="weather-change-score" id="weatherChangeScore" aria-label="Weather change score">—</div></div>
+            <div class="weather-change-score" id="weatherChangeScore" aria-label="Weather change score">—</div>
         </div>
         <div class="weather-change-summary" id="weatherChangeSummary">Analysing recent conditions…</div>
+        <div class="insight-meter-track" role="progressbar" aria-label="Weather change intensity" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0" id="weatherChangeTrack">
+            <div class="insight-meter-fill change-meter-fill" id="weatherChangeFill" style="width:0%"></div>
+        </div>
         <div class="weather-change-reasons" id="weatherChangeReasons" aria-live="polite"></div>
-        <p class="weather-change-note">This is a change indicator, not a precipitation forecast. More readings make the indicator more reliable.</p>
+        <details class="algorithm-details">
+            <summary>Show calculation and weights</summary>
+            <p><strong>Formula:</strong> score = 10 × (sum of each signal's weight × its severity) ÷ (sum of weights for signals with valid readings). Each severity is between 0 and 1. The result is capped at 10 and rounded to one decimal place.</p>
+            <ul>
+                <li>Pressure change: weight 2; meaningful from about 0.3 hPa/hour, maximum severity at 1.5 hPa/hour.</li>
+                <li>Temperature change: weight 1; meaningful from 1°C over a six-hour equivalent, maximum severity at 3°C.</li>
+                <li>Humidity change: weight 1; meaningful from 4 percentage points, maximum severity at 12 points.</li>
+                <li>Wind speed change: weight 2; meaningful from 8 km/h over a six-hour equivalent, maximum severity at 20 km/h.</li>
+                <li>Wind direction shift: weight 1; meaningful from 20°, maximum severity at 90°; angular wrap across north is handled.</li>
+                <li>Temperature/dew-point gap narrowing: weight 1; meaningful from 1°C, maximum severity at 3°C.</li>
+                <li>Rainfall change: weight 2; meaningful from 0.2 mm, maximum severity at 2 mm.</li>
+                <li>Cloud-cover change: weight 1; meaningful from 15 percentage points, maximum severity at 50 points.</li>
+                <li>Weather-code severity change: weight 1; larger changes between clear, cloudy, rain and storm categories count more.</li>
+            </ul>
+            <p><strong>Interpretation:</strong> 0–1.9 stable, 2–3.9 minor, 4–5.9 moderate, 6–7.9 significant, 8–10 very significant change. These initial weights and thresholds are provisional engineering rules, not yet statistically calibrated to local history.</p>
+        </details>
+        <p class="weather-change-note">Missing values are excluded rather than treated as zero. GaugeIQ currently uses a six-hour history window; local-normal and seasonal comparisons are not yet enabled.</p>
+    </section>
+
+    <section class="card conditions-trend-card" aria-labelledby="conditionsTrendTitle">
+        <div class="section-heading">
+            <div>
+                <h2 id="conditionsTrendTitle">Conditions trend</h2>
+                <p class="muted">Interprets whether the recent pattern points towards more settled or more unsettled conditions.</p>
+            </div>
+            <div class="conditions-trend-score" id="conditionsTrendIcon" aria-hidden="true">→</div>
+        </div>
+        <div class="conditions-trend-summary" id="conditionsTrendSummary">Analysing recent conditions…</div>
+        <div class="conditions-trend-reasons" id="conditionsTrendReasons" aria-live="polite"></div>
+        <details class="algorithm-details">
+            <summary>Show trend rules and weights</summary>
+            <p>This is a separate directional assessment, not the Weather Change score. Pressure trend has weight 2; rainfall trend weight 2; wind-speed trend weight 1; cloud-cover trend weight 1; and change in reported weather severity weight 2.</p>
+            <p>Falling pressure, developing rain, strengthening wind, increasing cloud cover and more severe weather codes support a Worsening classification. The opposite signals can support Improving. The combined directional score must reach ±2 to classify a trend; otherwise the result is Steady/no clear trend.</p>
+            <p>These are provisional rules. Rising pressure or a change in wind/clouds is not universally better or worse, so the explanation shows the evidence and the classification should not be treated as a formal safety warning.</p>
+        </details>
     </section>
 
     <section class="card history-card">
