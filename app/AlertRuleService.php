@@ -282,7 +282,17 @@ final class AlertRuleService
         }
 
         $threshold = max(1.0, min(10.0, (float)($c['value'] ?? 0)));
-        $since = gmdate('c', time() - (6 * 3600));
+        $sinceTimestamp = time() - (6 * 3600);
+        $changedAtQuery = $this->db->prepare(
+            "SELECT value FROM gaugeiq_settings WHERE `key` = 'active_location_changed_at' LIMIT 1"
+        );
+        $changedAtQuery->execute();
+        $changedAt = $changedAtQuery->fetchColumn();
+        $changedTimestamp = is_string($changedAt) ? strtotime($changedAt) : false;
+        if ($changedTimestamp !== false) {
+            $sinceTimestamp = max($sinceTimestamp, $changedTimestamp);
+        }
+        $since = gmdate('c', $sinceTimestamp);
         $stmt = $this->db->prepare(
             'SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, rainfall_mm, cloud_cover_percent, weather_code, observed_at, created_at
              FROM gaugeiq_pressure_readings

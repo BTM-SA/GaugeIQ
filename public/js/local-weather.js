@@ -279,6 +279,114 @@
         return record;
     }
 
+
+    function dateOnly(date) {
+        return date.toISOString().slice(0, 10);
+    }
+
+    async function installHistoricalData() {
+        const select = locationSelect();
+        const rangeSelect = document.getElementById('localWeatherRange');
+        const sourceSelect = document.getElementById('localWeatherSource');
+        const fetchButton = document.getElementById('localWeatherFetch');
+        if (!select || !rangeSelect || !sourceSelect) throw new Error('Historical-data controls are unavailable.');
+
+        const selectedId = select.value;
+        let locations = await allLocations();
+        let location = locations.find(item => item.id === selectedId);
+        if (selectedId === SERVER_LOCATION_ID) {
+            const latitude = Number(select.dataset.serverLatitude);
+            const longitude = Number(select.dataset.serverLongitude);
+            if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+                throw new Error('The server location coordinates are unavailable. Select or create a saved location with coordinates.');
+            }
+            location = {
+                id: SERVER_LOCATION_ID,
+                name: select.dataset.serverLocationName || 'Current GaugeIQ location',
+                latitude,
+                longitude,
+                timezone: select.dataset.serverTimezone || 'auto'
+            };
+        }
+        if (!location || !Number.isFinite(Number(location.latitude)) || !Number.isFinite(Number(location.longitude))) {
+            throw new Error('This location needs valid latitude and longitude before historical data can be downloaded.');
+        }
+
+        const source = sourceSelect.value === 'weather' ? 'weather' : 'forecast';
+        const range = rangeSelect.value;
+        const now = new Date();
+        const endDate = new Date(now.getTime() - 86400000);
+        let startDate;
+        if (range === 'all') {
+            startDate = new Date(Date.UTC(1940, 0, 1));
+        } else {
+            const days = Math.max(1, Math.min(365, Number(range) || 365));
+            startDate = new Date(endDate.getTime() - (days - 1) * 86400000);
+        }
+        if (source === 'forecast' && startDate < new Date(Date.UTC(2022, 0, 1))) {
+            startDate = new Date(Date.UTC(2022, 0, 1));
+        }
+        if (startDate > endDate) throw new Error('There is no completed historical date in the selected range.');
+
+        const endpoint = source === 'forecast'
+            ? 'https://historical-forecast-api.open-meteo.com/v1/forecast'
+            : 'https://archive-api.open-meteo.com/v1/archive';
+        const params = new URLSearchParams({
+            latitude: String(location.latitude),
+            longitude: String(location.longitude),
+            start_date: dateOnly(startDate),
+            end_date: dateOnly(endDate),
+            hourly: 'temperature_2m,dew_point_2m,apparent_temperature,pressure_msl,surface_pressure,relative_humidity_2m,wind_speed_10m,wind_direction_10m,precipitation,cloud_cover,weather_code',
+            temperature_unit: 'celsius',
+            wind_speed_unit: 'kmh',
+            precipitation_unit: 'mm',
+            timezone: location.timezone && location.timezone !== 'auto' ? location.timezone : 'auto'
+        });
+        fetchButton?.setAttribute('disabled', 'disabled');
+        try {
+            setStatus('Downloading ' + (source === 'forecast' ? 'Historical Forecast' : 'Historical Weather') +
+                ' from ' + params.get('start_date') + ' to ' + params.get('end_date') + '…', false);
+            const response = await fetch(endpoint + '?' + params.toString(), { cache: 'no-store' });
+            let data;
+            try { data = await response.json(); }
+            catch { throw new Error('Open-Meteo returned an unreadable response. Please retry with a shorter range.'); }
+            if (!response.ok || data.error) {
+                throw new Error(data.reason || 'Open-Meteo returned HTTP ' + response.status + '. Try a shorter range or the other historical source.');
+            }
+            const parsed = fromOpenMeteoJson(data);
+            if (!parsed.readings.length) throw new Error('Open-Meteo returned no hourly readings for this location and date range.');
+            const targetName = String(location.name || 'GaugeIQ location');
+            const savedLocation = {
+                ...location,
+                name: targetName,
+                latitude: Number(location.latitude),
+                longitude: Number(location.longitude),
+                timezone: data.timezone || location.timezone || 'UTC',
+                source: source === 'forecast' ? 'Open-Meteo Historical Forecast' : 'Open-Meteo Historical Weather'
+            };
+            let targetId = location.id;
+            if (targetId === SERVER_LOCATION_ID) {
+                const match = locations.find(item =>
+                    Number.isFinite(Number(item.latitude)) && Number.isFinite(Number(item.longitude)) &&
+                    Math.abs(Number(item.latitude) - savedLocation.latitude) < 0.001 &&
+                    Math.abs(Number(item.longitude) - savedLocation.longitude) < 0.001
+                );
+                targetId = match?.id || null;
+            }
+            const saved = await saveLocationAndReadings(savedLocation, parsed.readings.map(row => ({
+                ...row,
+                source: savedLocation.source
+            })), targetId);
+            await refreshLocations(saved.id);
+            if (window.GaugeIQLoadHistory) window.GaugeIQLoadHistory('all');
+            setStatus('Historical data installed: ' + parsed.readings.length.toLocaleString() +
+                ' hourly records for ' + saved.name + '. Matching timestamps are deduplicated; live server records remain unchanged.' +
+                await storageSummary(), false);
+        } finally {
+            fetchButton?.removeAttribute('disabled');
+        }
+    }
+
     function setStatus(message, isError) {
         const element = status();
         if (!element) return;
@@ -318,7 +426,8 @@
         const select = locationSelect();
         if (!select) return;
         const locations = await allLocations();
-        const selected = selectId || select.value || SERVER_LOCATION_ID;
+        const remembered = localStorage.getItem('gaugeiq-active-weather-location');
+        const selected = selectId || remembered || select.value || SERVER_LOCATION_ID;
         select.replaceChildren();
         const serverOption = document.createElement('option');
         serverOption.value = SERVER_LOCATION_ID;
@@ -334,7 +443,10 @@
             select.append(option);
         });
         select.value = [...select.options].some(option => option.value === selected) ? selected : SERVER_LOCATION_ID;
+        localStorage.setItem('gaugeiq-active-weather-location', select.value);
         updateRangeButtons();
+        const activeLocation = locations.find(location => location.id === select.value);
+        window.GaugeIQSelectDashboardLocation?.(select.value, activeLocation || null);
     }
 
     function downloadJson(filename, data) {
@@ -442,15 +554,27 @@
         const importButton = document.getElementById('localWeatherImport');
         const exportButton = document.getElementById('localWeatherExport');
         const persistButton = document.getElementById('localWeatherPersist');
+        const fetchButton = document.getElementById('localWeatherFetch');
         if (!select || !fileInput || !importButton || !exportButton) return;
 
         select.addEventListener('change', () => {
+            localStorage.setItem('gaugeiq-active-weather-location', select.value);
             updateRangeButtons();
+            const selectedId = select.value;
+            if (selectedId === SERVER_LOCATION_ID) {
+                window.GaugeIQSelectDashboardLocation?.(selectedId, null);
+            } else {
+                allLocations().then(items => window.GaugeIQSelectDashboardLocation?.(selectedId, items.find(item => item.id === selectedId))).catch(() => {});
+            }
             document.querySelectorAll('.history-range-button').forEach(button => button.classList.remove('active'));
             document.querySelector('.history-range-button[data-hours="24"]')?.classList.add('active');
             if (window.GaugeIQLoadHistory) window.GaugeIQLoadHistory(24);
         });
         importButton.addEventListener('click', () => fileInput.click());
+        fetchButton?.addEventListener('click', async () => {
+            try { await installHistoricalData(); }
+            catch (error) { setStatus(error instanceof Error ? error.message : 'Unable to download historical weather data.', true); }
+        });
         fileInput.addEventListener('change', async () => {
             try { await importFile(fileInput.files?.[0]); }
             catch (error) { setStatus(error instanceof Error ? error.message : 'Unable to import this file.', true); }
@@ -481,7 +605,8 @@
         readingsFor,
         allLocations,
         refreshLocations,
-        setStatus
+        setStatus,
+        installHistoricalData
     };
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setup);

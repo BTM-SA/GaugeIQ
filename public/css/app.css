@@ -443,3 +443,5 @@ button:disabled { opacity: .55; cursor: default; }
 .local-weather-help{font-size:12px;line-height:1.5;margin:0}
 .history-range-button[hidden]{display:none!important}
 @media(max-width:560px){.local-weather-actions{display:grid;grid-template-columns:1fr}.local-weather-actions button{width:100%}}
+
+.local-weather-api-options{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;margin-top:12px}.local-weather-api-options label{align-self:end;color:var(--muted);font-size:13px;font-weight:700}.local-weather-api-options select{min-width:0;width:100%}.local-weather-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.local-weather-actions button{flex:1 1 auto}@media(max-width:560px){.local-weather-api-options{grid-template-columns:1fr}.local-weather-actions button{width:100%}}

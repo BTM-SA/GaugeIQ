@@ -9,19 +9,26 @@ final class PressureService
 
     private function locationCoordinates(): array
     {
-        $latitude = (string)$this->config['pressure']['latitude'];
-        $longitude = (string)$this->config['pressure']['longitude'];
-
-        $stmt = $this->db->prepare("SELECT `key`, `value` FROM gaugeiq_settings WHERE `key` IN ('location_latitude', 'location_longitude')");
+        $settings = [];
+        $stmt = $this->db->prepare(
+            "SELECT `key`, `value` FROM gaugeiq_settings
+             WHERE `key` IN ('active_location_latitude', 'active_location_longitude',
+                              'location_latitude', 'location_longitude')"
+        );
         $stmt->execute();
 
         foreach ($stmt->fetchAll() as $setting) {
-            if ((string)$setting['key'] === 'location_latitude') {
-                $latitude = (string)$setting['value'];
-            } elseif ((string)$setting['key'] === 'location_longitude') {
-                $longitude = (string)$setting['value'];
-            }
+            $settings[(string)$setting['key']] = (string)$setting['value'];
         }
+
+        // A browser-selected IndexedDB location is synced to active_location_*.
+        // Keep the existing configured location as a backward-compatible fallback.
+        $latitude = $settings['active_location_latitude']
+            ?? $settings['location_latitude']
+            ?? (string)$this->config['pressure']['latitude'];
+        $longitude = $settings['active_location_longitude']
+            ?? $settings['location_longitude']
+            ?? (string)$this->config['pressure']['longitude'];
 
         return [$latitude, $longitude];
     }
@@ -139,10 +146,24 @@ final class PressureService
 
     public function record(array $current): ?array
     {
-        $previous = $this->db->query(
-            'SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees
-             FROM gaugeiq_pressure_readings ORDER BY id DESC LIMIT 1'
-        )->fetch();
+        $changedAtQuery = $this->db->prepare(
+            "SELECT value FROM gaugeiq_settings WHERE `key` = 'active_location_changed_at' LIMIT 1"
+        );
+        $changedAtQuery->execute();
+        $changedAt = $changedAtQuery->fetchColumn();
+        if (is_string($changedAt) && $changedAt !== '') {
+            $previousQuery = $this->db->prepare(
+                'SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees
+                 FROM gaugeiq_pressure_readings WHERE created_at >= ? ORDER BY id DESC LIMIT 1'
+            );
+            $previousQuery->execute([$changedAt]);
+            $previous = $previousQuery->fetch();
+        } else {
+            $previous = $this->db->query(
+                'SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees
+                 FROM gaugeiq_pressure_readings ORDER BY id DESC LIMIT 1'
+            )->fetch();
+        }
 
         $stmt = $this->db->prepare(
             'INSERT INTO gaugeiq_pressure_readings
