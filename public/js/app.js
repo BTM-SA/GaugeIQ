@@ -112,14 +112,17 @@ function applyWindCompassHeading(heading) {
                 windCompassRotation += correction;
             }
 
-            // The red wind-from arrow and green wind-towards arrow are one
-            // physical compass indicator. The green arrow is drawn 180° from
-            // the red arrow, so both always rotate together as a single unit.
+            // Rotate the compass disc and its wind indicators together.
+            // The disc turns opposite the device heading; the wind indicator
+            // keeps its geographic bearing inside that rotating disc.
+            const compassDisc = windGauge.querySelector('.wind-compass-orientation');
             const windArrows = windGauge.querySelector('.wind-direction-arrows');
             const windDegrees = Number(windArrows?.dataset.windDegrees);
+            if (compassDisc) {
+                compassDisc.style.transform = 'rotate(' + (-windCompassRotation).toFixed(2) + 'deg)';
+            }
             if (windArrows && Number.isFinite(windDegrees)) {
-                const markerDelta = shortestCompassDelta(windCompassHeading, windDegrees);
-                windArrows.style.transform = 'rotate(' + markerDelta.toFixed(2) + 'deg)';
+                windArrows.style.transform = 'rotate(' + windDegrees.toFixed(2) + 'deg)';
             }
 
             if (windCompassStatus) {
@@ -221,6 +224,8 @@ if (windGauge) {
     if (initialArrows && Number.isFinite(initialWindDegrees)) {
         initialArrows.style.transform = 'rotate(' + initialWindDegrees.toFixed(2) + 'deg)';
     }
+    const initialCompassDisc = windGauge?.querySelector('.wind-compass-orientation');
+    if (initialCompassDisc) initialCompassDisc.style.transform = 'rotate(0deg)';
 
     if (windCompassButton) {
         windCompassButton.addEventListener('click', async () => {
