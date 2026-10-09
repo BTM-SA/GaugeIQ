@@ -799,10 +799,22 @@ async function loadWeatherChange() {
     if (!scoreElement || !summaryElement || !reasonsElement) return;
 
     try {
-        const response = await fetch('../api/history.php?hours=336', { cache: 'no-store' });
-        if (!response.ok) throw new Error('Unable to load recent readings.');
-        const data = await response.json();
-        const allReadings = Array.isArray(data.readings) ? data.readings : [];
+        const selectedLocation = document.getElementById('weatherLocationSelect')?.value || 'server-current';
+        const isLocalHistory = selectedLocation !== 'server-current' && Boolean(window.GaugeIQLocalWeather);
+        let allReadings;
+        if (isLocalHistory) {
+            const localReadings = await window.GaugeIQLocalWeather.readingsFor(selectedLocation, 'all');
+            allReadings = localReadings.map(item => ({
+                ...item,
+                created_at: item.created_at || item.timestamp || item.observed_at,
+                observed_at: item.observed_at || item.timestamp
+            }));
+        } else {
+            const response = await fetch('../api/history.php?hours=336', { cache: 'no-store' });
+            if (!response.ok) throw new Error('Unable to load recent readings.');
+            const data = await response.json();
+            allReadings = Array.isArray(data.readings) ? data.readings : [];
+        }
         const latestTime = allReadings.reduce((latest, item) => {
             const timestamp = new Date(item.created_at || item.observed_at).getTime();
             return Number.isFinite(timestamp) ? Math.max(latest, timestamp) : latest;
@@ -818,7 +830,7 @@ async function loadWeatherChange() {
         if (baselineElement && latestTime > 0 && Number.isFinite(result.score)) {
             const baseline = weatherLocalBaseline(allReadings, result.score, latestTime);
             const ageMinutes = Math.max(0, Math.round((Date.now() - latestTime) / 60000));
-            baselineElement.textContent = baseline.text + (ageMinutes > 90
+            baselineElement.textContent = (isLocalHistory ? 'Selected location history: ' : '') + baseline.text + (ageMinutes > 90
                 ? ' Latest stored reading is about ' + ageMinutes + ' minutes old; the result may be stale.'
                 : '');
         } else if (baselineElement) {
