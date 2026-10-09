@@ -58,12 +58,27 @@ try {
     $db = new Database($config);
     $pdo = $db->pdo();
     migrateDatabase($pdo);
+    $existingLocation = $pdo->query(
+        "SELECT `key`, `value` FROM gaugeiq_settings
+         WHERE `key` IN ('active_location_latitude', 'active_location_longitude')"
+    )->fetchAll();
+    $existingCoordinates = [];
+    foreach ($existingLocation as $setting) {
+        $existingCoordinates[(string)$setting['key']] = (float)$setting['value'];
+    }
+    $locationChanged = !isset($existingCoordinates['active_location_latitude'], $existingCoordinates['active_location_longitude'])
+        || abs($existingCoordinates['active_location_latitude'] - (float)$latitude) > 0.000001
+        || abs($existingCoordinates['active_location_longitude'] - (float)$longitude) > 0.000001;
+
     $values = [
         'active_location_latitude' => (string)$latitude,
         'active_location_longitude' => (string)$longitude,
         'active_location_name' => $name,
         'active_location_timezone' => $timezone,
     ];
+    if ($locationChanged) {
+        $values['active_location_changed_at'] = gmdate('c');
+    }
     $upsert = $pdo->prepare('SELECT 1 FROM gaugeiq_settings WHERE `key` = ?');
     $insert = $pdo->prepare('INSERT INTO gaugeiq_settings (`key`, `value`) VALUES (?, ?)');
     $update = $pdo->prepare('UPDATE gaugeiq_settings SET `value` = ? WHERE `key` = ?');
