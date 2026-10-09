@@ -609,7 +609,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 
     <p id="status" class="status"></p>
 </main>
-<script src="js/local-weather.js?v=20261009-history-api"></script>
-<script src="js/app.js?v=20261009-dashboard-location"></script>
+<script src="js/local-weather.js?v=20261009-location-sync"></script>
+<script src="js/app.js?v=20261009-location-sync"></script>
 </body>
 </html>
