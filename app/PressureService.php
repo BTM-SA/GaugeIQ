@@ -146,10 +146,24 @@ final class PressureService
 
     public function record(array $current): ?array
     {
-        $previous = $this->db->query(
-            'SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees
-             FROM gaugeiq_pressure_readings ORDER BY id DESC LIMIT 1'
-        )->fetch();
+        $changedAtQuery = $this->db->prepare(
+            "SELECT value FROM gaugeiq_settings WHERE `key` = 'active_location_changed_at' LIMIT 1"
+        );
+        $changedAtQuery->execute();
+        $changedAt = $changedAtQuery->fetchColumn();
+        if (is_string($changedAt) && $changedAt !== '') {
+            $previousQuery = $this->db->prepare(
+                'SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees
+                 FROM gaugeiq_pressure_readings WHERE created_at >= ? ORDER BY id DESC LIMIT 1'
+            );
+            $previousQuery->execute([$changedAt]);
+            $previous = $previousQuery->fetch();
+        } else {
+            $previous = $this->db->query(
+                'SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees
+                 FROM gaugeiq_pressure_readings ORDER BY id DESC LIMIT 1'
+            )->fetch();
+        }
 
         $stmt = $this->db->prepare(
             'INSERT INTO gaugeiq_pressure_readings
