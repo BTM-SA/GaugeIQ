@@ -22,6 +22,17 @@ $pdo = $db->pdo();
 migrateDatabase($pdo);
 
 $locationName = (string)$config['pressure']['location_name'];
+$dashboardLatitude = (string)($config['pressure']['latitude'] ?? '');
+$dashboardLongitude = (string)($config['pressure']['longitude'] ?? '');
+$coordinateSettings = $pdo->prepare("SELECT `key`, `value` FROM gaugeiq_settings WHERE `key` IN ('location_latitude', 'location_longitude')");
+$coordinateSettings->execute();
+foreach ($coordinateSettings->fetchAll() as $coordinateSetting) {
+    if ((string)$coordinateSetting['key'] === 'location_latitude') {
+        $dashboardLatitude = (string)$coordinateSetting['value'];
+    } elseif ((string)$coordinateSetting['key'] === 'location_longitude') {
+        $dashboardLongitude = (string)$coordinateSetting['value'];
+    }
+}
 $locationSetting = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = 'location_name' LIMIT 1");
 $locationSetting->execute();
 $storedLocationName = $locationSetting->fetchColumn();
@@ -496,7 +507,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         </div>
         <div class="local-weather-tools" aria-label="Local weather history tools">
             <label for="weatherLocationSelect">Active dashboard location</label>
-            <select id="weatherLocationSelect" class="theme-select" aria-label="Active dashboard location">
+            <select id="weatherLocationSelect" class="theme-select" aria-label="Active dashboard location" data-server-latitude="<?= htmlspecialchars($dashboardLatitude, ENT_QUOTES) ?>" data-server-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES) ?>" data-server-location-name="<?= htmlspecialchars($locationName, ENT_QUOTES) ?>" data-server-timezone="<?= htmlspecialchars((string)($config['app']['timezone'] ?? 'UTC'), ENT_QUOTES) ?>">
                 <option value="server-current">Current GaugeIQ location (server)</option>
             </select>
             <div class="local-weather-actions">
