@@ -429,3 +429,5 @@ button:disabled { opacity: .55; cursor: default; }
   .rain-probability-meta{font-size:12px}
   .algorithm-details{font-size:12px}
 }
+
+.weather-baseline-status{margin-top:9px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--muted);font-size:12px;line-height:1.45}
