@@ -286,6 +286,27 @@
         element.dataset.state = isError ? 'error' : 'ok';
     }
 
+    function formatBytes(value) {
+        if (!Number.isFinite(value) || value < 0) return 'unknown';
+        if (value < 1024 * 1024) return Math.round(value / 1024) + ' KB';
+        return (value / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    async function storageSummary() {
+        if (!navigator.storage || typeof navigator.storage.estimate !== 'function') return '';
+        try {
+            const estimate = await navigator.storage.estimate();
+            const usage = Number(estimate.usage);
+            const quota = Number(estimate.quota);
+            if (!Number.isFinite(usage) || !Number.isFinite(quota) || quota <= 0) return '';
+            const percent = usage / quota;
+            return ' Browser storage: ' + formatBytes(usage) + ' used of an estimated ' + formatBytes(quota) + ' available.' +
+                (percent >= 0.8 ? ' Storage is getting full; export a backup and check available device space.' : '');
+        } catch {
+            return '';
+        }
+    }
+
     function updateRangeButtons() {
         const localSelected = locationSelect()?.value && locationSelect().value !== SERVER_LOCATION_ID;
         document.querySelectorAll('[data-local-range="true"]').forEach(button => {
@@ -342,7 +363,7 @@
             locations,
             readings
         });
-        setStatus('Backup exported: ' + locations.length + ' location(s), ' + readings.length + ' readings.', false);
+        setStatus('Backup exported: ' + locations.length + ' location(s), ' + readings.length + ' readings.' + await storageSummary(), false);
     }
 
     async function importFile(file) {
@@ -389,7 +410,7 @@
         const range = document.querySelector('.history-range-button[data-hours="all"]');
         if (range) range.click();
         else if (window.GaugeIQLoadHistory) window.GaugeIQLoadHistory('all');
-        setStatus('Imported ' + parsed.readings.length + ' readings for ' + saved.name + ' into this device only.', false);
+        setStatus('Imported ' + parsed.readings.length + ' readings for ' + saved.name + ' into this device only.' + await storageSummary(), false);
     }
 
     async function requestPersistentStorage() {
@@ -437,7 +458,7 @@
 
         openDatabase()
             .then(() => refreshLocations())
-            .then(() => setStatus('Local weather database is ready. Imports and backups stay on this device unless you export them.', false))
+            .then(async () => setStatus('Local weather database is ready. Imports and backups stay on this device unless you export them.' + await storageSummary(), false))
             .catch(error => {
                 setStatus(error instanceof Error ? error.message : 'Local weather storage is unavailable.', true);
                 importButton.disabled = true;
