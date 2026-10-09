@@ -495,18 +495,25 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
             </div>
         </div>
         <div class="local-weather-tools" aria-label="Local weather history tools">
-            <label for="weatherLocationSelect">History location</label>
-            <select id="weatherLocationSelect" class="theme-select" aria-label="History location">
+            <label for="weatherLocationSelect">Active dashboard location</label>
+            <select id="weatherLocationSelect" class="theme-select" aria-label="Active dashboard location">
                 <option value="server-current">Current GaugeIQ location (server)</option>
             </select>
             <div class="local-weather-actions">
-                <button type="button" class="secondary" id="localWeatherImport">Import Open-Meteo data</button>
+                <button type="button" class="secondary" id="localWeatherFetch">Get historical data</button>
+                <button type="button" class="secondary" id="localWeatherImport">Import file</button>
                 <button type="button" class="secondary" id="localWeatherExport">Export backup</button>
                 <button type="button" class="secondary" id="localWeatherPersist">Protect local storage</button>
                 <input type="file" id="localWeatherFile" accept=".csv,.json,application/json,text/csv" hidden>
             </div>
+            <div class="local-weather-api-options">
+                <label for="localWeatherRange">Historical range</label>
+                <select id="localWeatherRange" class="theme-select"><option value="30">Last 30 days</option><option value="90">Last 90 days</option><option value="365" selected>Last year</option><option value="all">All available history</option></select>
+                <label for="localWeatherSource">Historical source</label>
+                <select id="localWeatherSource" class="theme-select"><option value="forecast" selected>Historical Forecast · recent conditions</option><option value="weather">Historical Weather · long-term history</option></select>
+            </div>
             <p id="localWeatherStatus" class="muted" role="status" aria-live="polite">Preparing local weather database…</p>
-            <p class="muted local-weather-help">Imports are stored in this browser on this device. Open-Meteo hourly JSON and CSV files are supported. Choose Import to restore a GaugeIQ backup. Export a backup before clearing browser data or changing devices.</p>
+            <p class="muted local-weather-help">Historical API readings and imported data are stored in this browser on this device. The active location is used for history and historical-data downloads. Historical Forecast is best for recent conditions; Historical Weather is better for long-term trends. Export a backup before clearing browser data or changing devices.</p>
         </div>
         <div class="history-range" role="group" aria-label="History range">
             <button type="button" class="history-range-button" data-hours="6">6h</button>
@@ -589,7 +596,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 
     <p id="status" class="status"></p>
 </main>
-<script src="js/local-weather.js?v=20261009-indexeddb"></script>
-<script src="js/app.js?v=20261009-local-history"></script>
+<script src="js/local-weather.js?v=20261009-history-api"></script>
+<script src="js/app.js?v=20261009-dashboard-location"></script>
 </body>
 </html>
