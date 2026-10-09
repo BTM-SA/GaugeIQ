@@ -197,7 +197,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                 <div class="temperature-summary-main">
                     <div class="temperature-summary-current">
                         <strong><?= number_format($temperatureC, 1) ?>°C</strong>
-                        <div class="temperature-feels-like-row"><span>Feels like <?= number_format($feelsLikeC, 1) ?>°C</span><div class="temperature-conditions-inline" id="weatherConditions" aria-live="polite">Conditions: <b>→ Steady</b></div></div>
+                        <div class="temperature-feels-like-row"><span>Feels like <?= number_format($feelsLikeC, 1) ?>°C</span></div>
                     </div>
                     <div class="temperature-summary-forecast">
                         <?php $todayCondition = $forecast ? $forecastCondition($forecast[0]['weather_code'] ?? null) : ['icon' => '—', 'label' => 'Unavailable']; ?>
@@ -206,6 +206,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                             <div><span>High</span><strong><?= $forecastHighC !== null ? number_format((float)$forecastHighC, 1) . '°' : '—' ?></strong></div>
                             <div><span>Low</span><strong><?= $forecastLowC !== null ? number_format((float)$forecastLowC, 1) . '°' : '—' ?></strong></div>
                         </div>
+                        <div class="temperature-conditions-inline" id="weatherConditions" aria-live="polite">Conditions: <b>→ Steady</b></div>
                     </div>
                 </div>
                 <div class="temperature-stability-row">
