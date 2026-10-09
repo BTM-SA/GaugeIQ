@@ -120,8 +120,8 @@
     function openMeteoTimestamp(value, offsetSeconds) {
         const raw = String(value || '').trim();
         if (!raw) return null;
-        if (/[zZ]|[+-]\\d{2}:?\\d{2}$/.test(raw)) return normalizeTimestamp(raw);
-        const match = raw.match(/^(\\d{4})-(\\d{2})-(\\d{2})[T ](\\d{2}):(\\d{2})(?::(\\d{2}))?$/);
+        if (/[zZ]|[+-]\d{2}:?\d{2}$/.test(raw)) return normalizeTimestamp(raw);
+        const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?$/);
         if (!match) return normalizeTimestamp(raw);
         const wallClockAsUtc = Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]), Number(match[4]), Number(match[5]), Number(match[6] || 0));
         const offset = Number(offsetSeconds);
@@ -130,7 +130,7 @@
 
     function localTimeInZoneToUtc(value, timeZone) {
         const raw = String(value || '').trim();
-        const match = raw.match(/^(\\d{4})-(\\d{2})-(\\d{2})[T ](\\d{2}):(\\d{2})(?::(\\d{2}))?$/);
+        const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?$/);
         if (!match) return normalizeTimestamp(raw);
         const desired = Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]), Number(match[4]), Number(match[5]), Number(match[6] || 0));
         try {
