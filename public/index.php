@@ -501,12 +501,12 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
             </select>
             <div class="local-weather-actions">
                 <button type="button" class="secondary" id="localWeatherImport">Import Open-Meteo data</button>
-                <button type="button" class="secondary" id="localWeatherExport">Export / restore backup</button>
+                <button type="button" class="secondary" id="localWeatherExport">Export backup</button>
                 <button type="button" class="secondary" id="localWeatherPersist">Protect local storage</button>
                 <input type="file" id="localWeatherFile" accept=".csv,.json,application/json,text/csv" hidden>
             </div>
             <p id="localWeatherStatus" class="muted" role="status" aria-live="polite">Preparing local weather database…</p>
-            <p class="muted local-weather-help">Imports are stored in this browser on this device. Open-Meteo hourly JSON and CSV files are supported. Export a backup before clearing browser data or changing devices.</p>
+            <p class="muted local-weather-help">Imports are stored in this browser on this device. Open-Meteo hourly JSON and CSV files are supported. Choose Import to restore a GaugeIQ backup. Export a backup before clearing browser data or changing devices.</p>
         </div>
         <div class="history-range" role="group" aria-label="History range">
             <button type="button" class="history-range-button" data-hours="6">6h</button>
