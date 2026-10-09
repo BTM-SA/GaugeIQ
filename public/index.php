@@ -128,6 +128,9 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     $pressureRange = max(0.1, $pressureHigh - $pressureLow);
     $pressureRatio = $current ? max(0.0, min(1.0, ((float)$current['pressure_hpa'] - $pressureLow) / $pressureRange)) : 0.0;
     $forecast = $current && is_array($current['forecast'] ?? null) ? $current['forecast'] : [];
+    $rainForecastMm = $current && isset($forecast[0]['rain_mm']) && is_numeric($forecast[0]['rain_mm'])
+        ? max(0.0, (float)$forecast[0]['rain_mm'])
+        : 0.0;
 
     $forecastCondition = static function (?int $code): array {
         return match (true) {
