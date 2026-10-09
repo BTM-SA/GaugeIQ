@@ -295,14 +295,22 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                             </radialGradient>
                         </defs>
                         <circle class="wind-gauge-glass-overlay" cx="50" cy="50" r="47"></circle>
-                        <g class="wind-speed-segments" aria-label="Wind speed gauge, maximum 60 kilometres per hour">
-                            <?php for ($segment = 0; $segment < 60; $segment++):
-                                $segmentAngle = ($segment * 6.0) - 90.0;
-                                $segmentStart = $windGaugePoint($segmentAngle, 44.4);
+                        <g class="wind-speed-segments" aria-label="Outer wind speed scale, 0 to 60 kilometres per hour">
+                            <?php for ($segment = 0; $segment < 120; $segment++):
+                                $segmentAngle = ($segment * 3.0) - 90.0;
+                                $segmentStart = $windGaugePoint($segmentAngle, 44.7);
                                 $segmentEnd = $windGaugePoint($segmentAngle, 47.8);
-                                $segmentActive = $current && $windSpeed >= ($segment + 1);
+                                $segmentActive = $current && $windSpeed >= (($segment + 1) / 2);
                             ?>
                                 <line class="<?= $segmentActive ? 'active' : '' ?>" x1="<?= number_format($segmentStart[0], 3, '.', '') ?>" y1="<?= number_format($segmentStart[1], 3, '.', '') ?>" x2="<?= number_format($segmentEnd[0], 3, '.', '') ?>" y2="<?= number_format($segmentEnd[1], 3, '.', '') ?>"></line>
+                            <?php endfor; ?>
+                        </g>
+                        <g class="wind-speed-scale-labels" aria-label="Wind speed scale labels in kilometres per hour">
+                            <?php for ($speedMark = 0; $speedMark <= 60; $speedMark += 10):
+                                $speedAngle = ($speedMark * 6.0) - 90.0;
+                                [$speedX, $speedY] = $windGaugePoint($speedAngle, 49.1);
+                            ?>
+                                <text x="<?= number_format($speedX, 3, '.', '') ?>" y="<?= number_format($speedY, 3, '.', '') ?>"><?= $speedMark ?></text>
                             <?php endfor; ?>
                         </g>
                         <circle class="wind-compass-ring" cx="50" cy="50" r="29.5"></circle>
@@ -316,15 +324,15 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                                 $svgAngle = $degree - 90.0;
                                 $majorTick = $degree % 30 === 0;
                                 $mediumTick = $degree % 10 === 0;
-                                $tickStart = $windGaugePoint($svgAngle, $majorTick ? 44.5 : ($mediumTick ? 42.8 : 43.5));
-                                $tickEnd = $windGaugePoint($svgAngle, 40.2);
+                                $tickStart = $windGaugePoint($svgAngle, $majorTick ? 41.7 : ($mediumTick ? 40.4 : 39.7));
+                                $tickEnd = $windGaugePoint($svgAngle, 37.5);
                             ?>
                                 <line class="<?= $majorTick ? 'major' : ($mediumTick ? 'medium' : '') ?> <?= $degree === 0 ? 'north-marker' : '' ?>" x1="<?= number_format($tickStart[0], 3, '.', '') ?>" y1="<?= number_format($tickStart[1], 3, '.', '') ?>" x2="<?= number_format($tickEnd[0], 3, '.', '') ?>" y2="<?= number_format($tickEnd[1], 3, '.', '') ?>"></line>
                             <?php endfor; ?>
                         </g>
                         <g class="wind-degree-labels">
                             <?php for ($degree = 0; $degree < 360; $degree += 30):
-                                [$degreeX, $degreeY] = $windGaugePoint($degree - 90.0, 37.5);
+                                [$degreeX, $degreeY] = $windGaugePoint($degree - 90.0, 35.3);
                             ?>
                                 <text class="<?= $degree === 0 ? 'north-degree' : '' ?>" x="<?= number_format($degreeX, 3, '.', '') ?>" y="<?= number_format($degreeY, 3, '.', '') ?>"><?= $degree ?></text>
                             <?php endfor; ?>
@@ -336,11 +344,9 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                                 <text class="<?= strlen($label) > 1 ? 'minor' : '' ?> <?= $label === 'N' ? 'north-label' : '' ?>" x="<?= number_format($labelX, 3, '.', '') ?>" y="<?= number_format($labelY, 3, '.', '') ?>"><?= $label ?></text>
                             <?php endforeach; ?>
                         </g>
-                    <g class="wind-direction-arrows" transform="rotate(<?= number_format($windDegrees, 2, '.', '') ?> 50 50)">
-                        <circle class="wind-direction-marker" cx="50" cy="20" r="2.7"></circle>
-                        <path class="wind-direction-to-marker" d="M50 80 L54 71 L50 73 L46 71 Z"></path>
-                        <path class="wind-direction-line wind-direction-line-from" d="M50 22.8 L50 31.5"></path>
-                        <path class="wind-direction-line wind-direction-line-to" d="M50 68.5 L50 77"></path>
+                    <g class="wind-direction-arrows" data-wind-degrees="<?= number_format($windDegrees, 2, '.', '') ?>" transform="rotate(<?= number_format($windDegrees, 2, '.', '') ?> 50 50)">
+                        <path class="wind-direction-from-arrow" d="M50 31 L43.5 21.5 L49 24.3 L50 18.5 L51 24.3 L56.5 21.5 Z"></path>
+                        <path class="wind-direction-to-marker" d="M50 81 L55.5 71 L51 73.5 L50 67.5 L49 73.5 L44.5 71 Z"></path>
                     </g>
                     </g>
 
