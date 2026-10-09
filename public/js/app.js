@@ -917,9 +917,9 @@ async function loadHistory(hours = 24) {
         }
 
         const charts = [
-            ['pressureChart', readings.map(r => ({ value: Number(r.pressure_hpa), time: r.observed_at || r.timestamp })), ' hPa', 1],
-            ['humidityChart', readings.map(r => ({ value: Number(r.humidity_percent), time: r.observed_at || r.timestamp })), '%', 0],
-            ['windChart', readings.map(r => ({ value: Number(r.wind_speed_kmh), time: r.observed_at || r.timestamp })), ' km/h', 1]
+            ['pressureChart', readings.map(r => ({ value: r.pressure_hpa == null ? NaN : Number(r.pressure_hpa), time: r.timestamp || r.observed_at })), ' hPa', 1],
+            ['humidityChart', readings.map(r => ({ value: r.humidity_percent == null ? NaN : Number(r.humidity_percent), time: r.timestamp || r.observed_at })), '%', 0],
+            ['windChart', readings.map(r => ({ value: r.wind_speed_kmh == null ? NaN : Number(r.wind_speed_kmh), time: r.timestamp || r.observed_at })), ' km/h', 1]
         ];
 
         charts.forEach(([id, values, unit, decimals]) => {
@@ -951,6 +951,7 @@ window.GaugeIQLoadHistory = loadHistory;
 
 document.querySelectorAll('.history-range-button').forEach(button => {
     button.addEventListener('click', () => {
+        if (button.hidden) return;
         document.querySelectorAll('.history-range-button').forEach(item => item.classList.remove('active'));
         button.classList.add('active');
         loadHistory(button.dataset.hours === 'all' ? 'all' : Number(button.dataset.hours));
