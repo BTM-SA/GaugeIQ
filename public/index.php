@@ -115,7 +115,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         <div>
             <p class="eyebrow">GAUGЕIQ</p>
             <h1>GaugeIQ</h1>
-            <p class="muted"><?= htmlspecialchars($locationName, ENT_QUOTES) ?></p>
+            <p class="muted" id="dashboardLocationName"><?= htmlspecialchars($locationName, ENT_QUOTES) ?></p>
         </div>
         <div class="header-actions">
             <a href="login.php" class="secondary button-link">Admin</a>
