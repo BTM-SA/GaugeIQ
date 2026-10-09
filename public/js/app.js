@@ -116,13 +116,11 @@ function applyWindCompassHeading(heading) {
             // The disc turns opposite the device heading; the wind indicator
             // keeps its geographic bearing inside that rotating disc.
             const compassDisc = windGauge.querySelector('.wind-compass-orientation');
-            const windArrows = windGauge.querySelector('.wind-direction-arrows');
-            const windDegrees = Number(windArrows?.dataset.windDegrees);
             if (compassDisc) {
+                // Rotate one SVG group for the dial, tick marks, speed segments,
+                // cardinal labels and both wind pointers. The pointers' fixed
+                // SVG bearing transform is applied inside this rotating group.
                 compassDisc.style.transform = 'rotate(' + (-windCompassRotation).toFixed(2) + 'deg)';
-            }
-            if (windArrows && Number.isFinite(windDegrees)) {
-                windArrows.style.transform = 'rotate(' + windDegrees.toFixed(2) + 'deg)';
             }
 
             if (windCompassStatus) {
