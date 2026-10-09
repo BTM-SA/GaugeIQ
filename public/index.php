@@ -301,24 +301,33 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                                 <line class="<?= $segmentActive ? 'active' : '' ?>" x1="<?= number_format($segmentStart[0], 3, '.', '') ?>" y1="<?= number_format($segmentStart[1], 3, '.', '') ?>" x2="<?= number_format($segmentEnd[0], 3, '.', '') ?>" y2="<?= number_format($segmentEnd[1], 3, '.', '') ?>"></line>
                             <?php endfor; ?>
                         </g>
-                        <circle class="wind-compass-ring" cx="50" cy="50" r="31"></circle>
+                        <circle class="wind-compass-ring" cx="50" cy="50" r="29.5"></circle>
                         <g class="wind-compass-ticks">
                             <?php
                             $compassLabels = [
                                 0 => 'N', 45 => 'NE', 90 => 'E', 135 => 'SE',
                                 180 => 'S', 225 => 'SW', 270 => 'W', 315 => 'NW'
                             ];
-                            for ($degree = 0; $degree < 360; $degree += 15):
+                            for ($degree = 0; $degree < 360; $degree += 5):
                                 $svgAngle = $degree - 90.0;
-                                $tickStart = $windGaugePoint($svgAngle, $degree % 45 === 0 ? 33.5 : 32.2);
-                                $tickEnd = $windGaugePoint($svgAngle, 30.0);
+                                $majorTick = $degree % 30 === 0;
+                                $mediumTick = $degree % 10 === 0;
+                                $tickStart = $windGaugePoint($svgAngle, $majorTick ? 44.5 : ($mediumTick ? 42.8 : 43.5));
+                                $tickEnd = $windGaugePoint($svgAngle, 40.2);
                             ?>
-                                <line class="<?= $degree % 45 === 0 ? 'major' : '' ?> <?= $degree === 0 ? 'north-marker' : '' ?>" x1="<?= number_format($tickStart[0], 3, '.', '') ?>" y1="<?= number_format($tickStart[1], 3, '.', '') ?>" x2="<?= number_format($tickEnd[0], 3, '.', '') ?>" y2="<?= number_format($tickEnd[1], 3, '.', '') ?>"></line>
+                                <line class="<?= $majorTick ? 'major' : ($mediumTick ? 'medium' : '') ?> <?= $degree === 0 ? 'north-marker' : '' ?>" x1="<?= number_format($tickStart[0], 3, '.', '') ?>" y1="<?= number_format($tickStart[1], 3, '.', '') ?>" x2="<?= number_format($tickEnd[0], 3, '.', '') ?>" y2="<?= number_format($tickEnd[1], 3, '.', '') ?>"></line>
+                            <?php endfor; ?>
+                        </g>
+                        <g class="wind-degree-labels">
+                            <?php for ($degree = 0; $degree < 360; $degree += 30):
+                                [$degreeX, $degreeY] = $windGaugePoint($degree - 90.0, 37.5);
+                            ?>
+                                <text class="<?= $degree === 0 ? 'north-degree' : '' ?>" x="<?= number_format($degreeX, 3, '.', '') ?>" y="<?= number_format($degreeY, 3, '.', '') ?>"><?= $degree ?></text>
                             <?php endfor; ?>
                         </g>
                         <g class="wind-compass-labels">
                             <?php foreach ($compassLabels as $degree => $label):
-                                [$labelX, $labelY] = $windGaugePoint($degree - 90.0, 26.5);
+                                [$labelX, $labelY] = $windGaugePoint($degree - 90.0, 25.5);
                             ?>
                                 <text class="<?= strlen($label) > 1 ? 'minor' : '' ?> <?= $label === 'N' ? 'north-label' : '' ?>" x="<?= number_format($labelX, 3, '.', '') ?>" y="<?= number_format($labelY, 3, '.', '') ?>"><?= $label ?></text>
                             <?php endforeach; ?>
@@ -334,8 +343,8 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     <circle class="wind-center" cx="50" cy="50" r="18.5"></circle>
                 </svg>
                 <div class="wind-gauge-center">
-                    <small><?= $current ? number_format($windDegrees, 0) . '°' : '—' ?></small>
-                    <strong><?= $current ? number_format($windSpeed, 1) : '—' ?><span>km/h</span></strong>
+                    <strong class="wind-heading-readout"><?= $current ? number_format($windDegrees, 0) . '° ' . htmlspecialchars($windDirection, ENT_QUOTES) : '—' ?></strong>
+                    <small class="wind-speed-readout"><?= $current ? number_format($windSpeed, 1) . ' km/h wind' : 'Wind data unavailable' ?></small>
                 </div>
             </div>
         </article>
