@@ -692,8 +692,9 @@ function weatherConditionsTrend(readings) {
 
     let score = 0;
     const reasons = [];
-    const addSignal = (value, worsening, improving, weight, label) => {
-        if (value === null || value === 0) return;
+    const addSignal = (strength, worsening, improving, weight, label) => {
+        if (strength === null || strength === 0) return;
+        const value = strength * weight;
         score += value;
         reasons.push({ label, direction: value > 0 ? 'worsening' : 'improving', points: value, weight, explanation: value > 0 ? worsening : improving });
     };
