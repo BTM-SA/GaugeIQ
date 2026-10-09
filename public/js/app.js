@@ -751,6 +751,48 @@ function weatherConditionsTrend(readings) {
     return { score, label, arrow, reasons, mixed, explanation };
 }
 
+function weatherLocalBaseline(readings, currentScore, latestTime) {
+    const windowHours = 6;
+    const dayMs = 24 * 60 * 60 * 1000;
+    const windowMs = windowHours * 60 * 60 * 1000;
+    const historicalScores = [];
+
+    for (let day = 1; day <= 14; day++) {
+        const windowEnd = latestTime - day * dayMs;
+        const windowReadings = readings.filter(item => {
+            const timestamp = new Date(item.created_at || item.observed_at).getTime();
+            return Number.isFinite(timestamp) && timestamp >= windowEnd - windowMs && timestamp <= windowEnd;
+        });
+        const result = weatherChangeScore(windowReadings);
+        if (Number.isFinite(result.score)) historicalScores.push(result.score);
+    }
+
+    if (historicalScores.length < 5) {
+        return {
+            count: historicalScores.length,
+            text: 'Building recent local baseline: ' + historicalScores.length + ' comparable six-hour windows available; at least 5 are needed.'
+        };
+    }
+
+    historicalScores.sort((a, b) => a - b);
+    const middle = Math.floor(historicalScores.length / 2);
+    const median = historicalScores.length % 2
+        ? historicalScores[middle]
+        : (historicalScores[middle - 1] + historicalScores[middle]) / 2;
+    const difference = currentScore - median;
+    let comparison = 'within the recent pattern';
+    if (difference >= 2) comparison = 'more change than usual in the recent readings';
+    else if (difference <= -2) comparison = 'less change than usual in the recent readings';
+
+    return {
+        count: historicalScores.length,
+        median,
+        text: 'Recent local pattern: median ' + median.toFixed(1) + '/10 across ' +
+            historicalScores.length + ' comparable six-hour windows. Current change is ' + comparison +
+            '. This is a short-term baseline, not a seasonal climate normal.'
+    };
+}
+
 async function loadWeatherChange() {
     const scoreElement = document.getElementById('weatherChangeScore');
     const summaryElement = document.getElementById('weatherChangeSummary');
@@ -758,12 +800,33 @@ async function loadWeatherChange() {
     if (!scoreElement || !summaryElement || !reasonsElement) return;
 
     try {
-        const response = await fetch('../api/history.php?hours=6', { cache: 'no-store' });
+        const response = await fetch('../api/history.php?hours=336', { cache: 'no-store' });
         if (!response.ok) throw new Error('Unable to load recent readings.');
         const data = await response.json();
-        const readings = Array.isArray(data.readings) ? data.readings : [];
+        const allReadings = Array.isArray(data.readings) ? data.readings : [];
+        const latestTime = allReadings.reduce((latest, item) => {
+            const timestamp = new Date(item.created_at || item.observed_at).getTime();
+            return Number.isFinite(timestamp) ? Math.max(latest, timestamp) : latest;
+        }, 0);
+        const currentWindowStart = latestTime - 6 * 60 * 60 * 1000;
+        const readings = allReadings.filter(item => {
+            const timestamp = new Date(item.created_at || item.observed_at).getTime();
+            return Number.isFinite(timestamp) && timestamp >= currentWindowStart && timestamp <= latestTime;
+        });
         const result = weatherChangeScore(readings);
         const trend = weatherConditionsTrend(readings);
+        const baselineElement = document.getElementById('weatherBaselineStatus');
+        if (baselineElement && latestTime > 0 && Number.isFinite(result.score)) {
+            const baseline = weatherLocalBaseline(allReadings, result.score, latestTime);
+            const ageMinutes = Math.max(0, Math.round((Date.now() - latestTime) / 60000));
+            baselineElement.textContent = baseline.text + (ageMinutes > 90
+                ? ' Latest stored reading is about ' + ageMinutes + ' minutes old; the result may be stale.'
+                : '');
+        } else if (baselineElement) {
+            baselineElement.textContent = latestTime > 0
+                ? 'Not enough valid current readings to compare against the recent local pattern.'
+                : 'No historical readings are available yet to establish a local baseline.';
+        }
 
         const conditionsElement = document.getElementById('weatherConditions');
         const trendIcon = document.getElementById('conditionsTrendIcon');
