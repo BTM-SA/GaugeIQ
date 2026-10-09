@@ -465,9 +465,9 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                 <li>Cloud-cover change: weight 1; meaningful from 15 percentage points, maximum severity at 50 points.</li>
                 <li>Weather-code severity change: weight 1; larger changes between clear, cloudy, rain and storm categories count more.</li>
             </ul>
-            <p><strong>Interpretation:</strong> 0–1.9 stable, 2–3.9 minor, 4–5.9 moderate, 6–7.9 significant, 8–10 very significant change. These initial weights and thresholds are provisional engineering rules, not yet statistically calibrated to local history.</p>
+            <p><strong>Interpretation:</strong> 0–1.9 stable, 2–3.9 minor, 4–5.9 moderate, 6–7.9 significant, 8–10 very significant change. These initial weights and thresholds are provisional engineering rules, not yet statistically calibrated to local history.</p>\n            <p><strong>Recent baseline:</strong> GaugeIQ calculates the same six-hour score for the previous 14 daily windows and compares the current score with their median. It needs at least 5 valid comparison windows; a difference of 2 or more points is labelled above or below the recent pattern. This context does not change the intensity score, and seasonal comparison is not yet implemented.</p>
         </details>
-        <p class="weather-change-note">Missing values are excluded rather than treated as zero. GaugeIQ currently uses a six-hour history window; local-normal and seasonal comparisons are not yet enabled.</p>
+        <p class="weather-change-note">Missing values are excluded rather than treated as zero. GaugeIQ compares the current six-hour change with up to 14 previous comparable six-hour windows. This is a short-term local pattern, not a seasonal climate normal.</p>
     </section>
 
     <section class="card conditions-trend-card" aria-labelledby="conditionsTrendTitle">
