@@ -56,19 +56,28 @@ if ($storedLookback !== false) {
 }
 
 $baseline = null;
+$locationChangedAtQuery = $pdo->prepare(
+    "SELECT value FROM gaugeiq_settings WHERE `key` = 'active_location_changed_at' LIMIT 1"
+);
+$locationChangedAtQuery->execute();
+$locationChangedAt = $locationChangedAtQuery->fetchColumn();
 $targetTimestamp = strtotime((string)$current['observed_at']);
 if ($targetTimestamp !== false) {
     $targetTimestamp -= $lookbackHours * 3600;
-    $baselineQuery = $pdo->prepare(
-        'SELECT pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, observed_at
-         FROM gaugeiq_pressure_readings
-         WHERE observed_at <= ? AND observed_at < ?
-         ORDER BY observed_at DESC, id DESC LIMIT 1'
-    );
-    $baselineQuery->execute([
+    $baselineSql = 'SELECT pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, observed_at
+                    FROM gaugeiq_pressure_readings
+                    WHERE observed_at <= ? AND observed_at < ?';
+    $baselineParams = [
         date('Y-m-d\\TH:i:s', $targetTimestamp),
         (string)$current['observed_at'],
-    ]);
+    ];
+    if ($locationChangedAt !== false && $locationChangedAt !== null && $locationChangedAt !== '') {
+        $baselineSql .= ' AND created_at >= ?';
+        $baselineParams[] = (string)$locationChangedAt;
+    }
+    $baselineSql .= ' ORDER BY observed_at DESC, id DESC LIMIT 1';
+    $baselineQuery = $pdo->prepare($baselineSql);
+    $baselineQuery->execute($baselineParams);
     $baseline = $baselineQuery->fetch() ?: null;
 }
 
