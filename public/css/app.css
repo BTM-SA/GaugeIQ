@@ -398,3 +398,34 @@ button:disabled { opacity: .55; cursor: default; }
 
 .climate-bar-predicted-rain .climate-segment.active{background:#2698f3}
 .climate-bar-predicted-rain .climate-segment.danger.active{background:#1674c5}
+
+
+/* Transparent weather insight meters */
+.rain-probability-card,.conditions-trend-card{margin-top:16px}
+.rain-probability-card .section-heading,.conditions-trend-card .section-heading{align-items:center}
+.rain-probability-score{display:flex;align-items:center;justify-content:center;min-width:82px;min-height:62px;padding:8px;border:2px solid #3987d7;border-radius:16px;color:#3987d7;background:var(--surface);font-size:27px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums}
+.conditions-trend-score{display:flex;align-items:center;justify-content:center;width:64px;height:64px;border:2px solid var(--border);border-radius:50%;background:var(--surface);font-size:30px;font-weight:900;color:var(--text)}
+.conditions-trend-score[data-trend="worsening"]{border-color:#c87838;color:#c87838}
+.conditions-trend-score[data-trend="improving"]{border-color:#25865a;color:#25865a}
+.conditions-trend-summary{margin-top:14px;font-size:15px;font-weight:800;color:var(--text)}
+.insight-meter-track{width:100%;height:12px;margin-top:14px;overflow:hidden;border-radius:999px;background:color-mix(in srgb,var(--muted) 18%,transparent)}
+.insight-meter-fill{height:100%;width:0;border-radius:999px;transition:width .25s ease}
+.rain-meter-fill{background:#3987d7}
+.change-meter-fill{background:#22a06b}
+.weather-change-score[data-level="moderate"]~.insight-meter-track .change-meter-fill{background:#d49a36}
+.weather-change-score[data-level="high"]~.insight-meter-track .change-meter-fill{background:#d94b4b}
+.rain-probability-meta{display:flex;justify-content:space-between;gap:12px;margin-top:12px;font-size:13px;color:var(--muted)}
+.rain-probability-meta strong{color:var(--text);font-variant-numeric:tabular-nums}
+.conditions-trend-reasons{display:grid;gap:8px;margin-top:12px}
+.algorithm-details{margin-top:14px;padding-top:12px;border-top:1px solid var(--border);color:var(--text);font-size:12px;line-height:1.55}
+.algorithm-details summary{cursor:pointer;font-size:13px;font-weight:800;color:var(--text);padding:5px 0}
+.algorithm-details p{margin:10px 0;color:var(--muted)}
+.algorithm-details ul{margin:8px 0;padding-left:20px;color:var(--muted)}
+.algorithm-details li{margin:6px 0}
+@media(max-width:560px){
+  .rain-probability-card .section-heading,.conditions-trend-card .section-heading{align-items:center;gap:10px}
+  .rain-probability-score{min-width:68px;min-height:54px;font-size:23px;border-radius:13px}
+  .conditions-trend-score{width:56px;height:56px;font-size:27px}
+  .rain-probability-meta{font-size:12px}
+  .algorithm-details{font-size:12px}
+}
