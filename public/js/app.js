@@ -783,7 +783,10 @@ async function loadWeatherChange() {
             scoreElement.dataset.level = level;
             document.getElementById('weatherChangeTrack')?.setAttribute('aria-valuenow', String(result.score));
             const changeFill = document.getElementById('weatherChangeFill');
-            if (changeFill) changeFill.style.width = (result.score * 10) + '%';
+            if (changeFill) {
+                changeFill.style.width = (result.score * 10) + '%';
+                changeFill.dataset.level = level;
+            }
             reasonsElement.innerHTML = result.components.map(component =>
                 '<div class="weather-change-reason"><span><strong>' + component.label + '</strong>: ' + component.evidence +
                 '. Severity ' + component.severity.toFixed(2) + '/1 × weight ' + component.weight +
