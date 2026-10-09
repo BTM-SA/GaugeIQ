@@ -45,7 +45,7 @@ if ($latitude === false || $latitude < -90 || $latitude > 90 ||
 if ($name === '') {
     $name = 'Saved location';
 }
-$name = mb_substr($name, 0, 120);
+$name = function_exists('mb_substr') ? mb_substr($name, 0, 120) : substr($name, 0, 120);
 if ($timezone !== 'auto') {
     try {
         new DateTimeZone($timezone);
