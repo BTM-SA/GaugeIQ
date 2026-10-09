@@ -929,15 +929,13 @@ async function selectDashboardLocation(locationId, location, reloadAfterSync = f
             method: 'POST',
             credentials: 'same-origin',
             headers: {'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
-            body: JSON.stringify(resettingToConfigured
-                ? {csrf, reset_to_configured: true}
-                : {
-                    csrf,
-                    name: String(location.name || 'Saved location').slice(0, 120),
-                    latitude: Number(location.latitude),
-                    longitude: Number(location.longitude),
-                    timezone: String(location.timezone || 'auto').slice(0, 80)
-                })
+            body: JSON.stringify({
+                csrf,
+                name: String(location.name || 'Saved location').slice(0, 120),
+                latitude: Number(location.latitude),
+                longitude: Number(location.longitude),
+                timezone: String(location.timezone || 'auto').slice(0, 80)
+            })
         });
         const syncResult = await syncResponse.json();
         if (!syncResponse.ok || !syncResult.success) {
