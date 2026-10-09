@@ -83,6 +83,19 @@ Production release packages bundle Composer dependencies, including vendor/, so 
 
 The browser settings page is available at `/alerts.php`. It provides a mobile-friendly interface for creating, enabling, disabling, and deleting alert rules. Direction values are stored as degrees internally so the alert engine can handle the 0°/360° boundary correctly.
 
+## Local weather history
+
+GaugeIQ can keep imported Open-Meteo hourly weather history in the browser's IndexedDB database on each device. This local dataset is separate from the server database used by scheduled monitoring, alert evaluation, and push notifications.
+
+From the dashboard's History section:
+
+- Select **Import Open-Meteo data** to import hourly JSON or CSV data. CSV imports ask for the timezone used by the file.
+- Choose a history location to view its local readings. Longer ranges and **All** are available for imported locations.
+- Select **Export backup** to download a JSON backup of all locally stored locations and readings. To restore it, select the backup file using **Import Open-Meteo data**.
+- Select **Protect local storage** to request persistent browser storage where supported. The page also displays a browser storage estimate when the browser exposes one.
+
+Local data is not uploaded to GaugeIQ's server. IndexedDB quota and persistence are controlled by the browser and device; users should export backups regularly, especially before clearing site data or changing devices. Restoring a backup merges records by location ID and timestamp rather than deleting other local records. Browser storage is not a substitute for an independent backup.
+
 ## Weather monitoring
 
 GaugeIQ records:
