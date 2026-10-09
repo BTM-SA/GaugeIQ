@@ -899,15 +899,15 @@ async function loadWeatherChange() {
 }
 
 
-async function selectDashboardLocation(locationId, location) {
+async function selectDashboardLocation(locationId, location, reloadAfterSync = false) {
     const selector = document.getElementById('weatherLocationSelect');
     const name = document.getElementById('dashboardLocationName');
     if (locationId === 'server-current') {
         location = {
-            name: selector?.dataset.serverLocationName || 'Current GaugeIQ location',
-            latitude: Number(selector?.dataset.serverLatitude),
-            longitude: Number(selector?.dataset.serverLongitude),
-            timezone: selector?.dataset.serverTimezone || 'auto'
+            name: selector?.dataset.configLocationName || 'Configured GaugeIQ location',
+            latitude: Number(selector?.dataset.configLatitude),
+            longitude: Number(selector?.dataset.configLongitude),
+            timezone: selector?.dataset.configTimezone || 'auto'
         };
     }
     if (!location || !Number.isFinite(Number(location.latitude)) || !Number.isFinite(Number(location.longitude))) {
@@ -916,30 +916,45 @@ async function selectDashboardLocation(locationId, location) {
     }
     if (name) name.textContent = 'Loading ' + location.name + '…';
     try {
-        if (locationId !== 'server-current') {
-            const syncEndpoint = selector?.dataset.locationSyncEndpoint;
-            const csrf = selector?.dataset.locationCsrf;
-            if (!syncEndpoint || !csrf) throw new Error('Location sync is not configured. Reload GaugeIQ and try again.');
-            const syncResponse = await fetch(syncEndpoint, {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: {'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
-                body: JSON.stringify({
+        const syncEndpoint = selector?.dataset.locationSyncEndpoint;
+        const csrf = selector?.dataset.locationCsrf;
+        if (!syncEndpoint || !csrf) throw new Error('Location sync is not configured. Reload GaugeIQ and try again.');
+        const resettingToConfigured = locationId === 'server-current';
+        const serverCoordinatesChanged = resettingToConfigured
+            ? Number(selector?.dataset.serverLatitude) !== Number(location.latitude) ||
+              Number(selector?.dataset.serverLongitude) !== Number(location.longitude)
+            : Number(selector?.dataset.serverLatitude) !== Number(location.latitude) ||
+              Number(selector?.dataset.serverLongitude) !== Number(location.longitude);
+        const syncResponse = await fetch(syncEndpoint, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
+            body: JSON.stringify(resettingToConfigured
+                ? {csrf, reset_to_configured: true}
+                : {
                     csrf,
                     name: String(location.name || 'Saved location').slice(0, 120),
                     latitude: Number(location.latitude),
                     longitude: Number(location.longitude),
                     timezone: String(location.timezone || 'auto').slice(0, 80)
                 })
-            });
-            const syncResult = await syncResponse.json();
-            if (!syncResponse.ok || !syncResult.success) throw new Error(syncResult.error || 'Unable to sync this location to the server; cron will keep using the previous location.');
-            if (selector) {
-                selector.dataset.serverLatitude = String(location.latitude);
-                selector.dataset.serverLongitude = String(location.longitude);
-                selector.dataset.serverLocationName = String(location.name || 'Saved location');
-                selector.dataset.serverTimezone = String(location.timezone || 'auto');
-            }
+        });
+        const syncResult = await syncResponse.json();
+        if (!syncResponse.ok || !syncResult.success) {
+            throw new Error(syncResult.error || 'Unable to sync this location to the server; cron will keep using the previous location.');
+        }
+        if (selector) {
+            selector.dataset.serverLatitude = String(location.latitude);
+            selector.dataset.serverLongitude = String(location.longitude);
+            selector.dataset.serverLocationName = String(location.name || 'Saved location');
+            selector.dataset.serverTimezone = String(location.timezone || 'auto');
+        }
+        // A full page render updates all server-rendered gauges and their derived
+        // indicators together. Do this on explicit user selection, or if a
+        // remembered local location had drifted from the server's active one.
+        if (reloadAfterSync || serverCoordinatesChanged) {
+            window.location.reload();
+            return;
         }
         const p = new URLSearchParams({
             latitude: String(location.latitude), longitude: String(location.longitude),
