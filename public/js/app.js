@@ -332,22 +332,24 @@ if (!('Notification' in window) || !('PushManager' in window)) {
     });
 }
 
-function formatChartTime(value, hours) {
+function formatChartTime(value, hours, timeZone) {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return '';
 
     if (hours === 'all' || hours >= 168) {
-        return date.toLocaleDateString([], { day: 'numeric', month: 'short' });
+        const options = { day: 'numeric', month: 'short' };
+        if (timeZone) options.timeZone = timeZone;
+        try { return date.toLocaleDateString([], options); }
+        catch { return date.toLocaleDateString([], { day: 'numeric', month: 'short' }); }
     }
 
-    return date.toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
-    });
+    const options = { hour: '2-digit', minute: '2-digit', hour12: false };
+    if (timeZone) options.timeZone = timeZone;
+    try { return date.toLocaleTimeString([], options); }
+    catch { return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }); }
 }
 
-function drawChart(canvas, values, unit, decimals = 1, hours = 24) {
+function drawChart(canvas, values, unit, decimals = 1, hours = 24, timeZone = null) {
     const ctx = canvas.getContext('2d');
     const dpr = window.devicePixelRatio || 1;
     const width = canvas.clientWidth || 600;
@@ -477,8 +479,8 @@ function drawChart(canvas, values, unit, decimals = 1, hours = 24) {
 
     const first = valid[0];
     const last = valid[valid.length - 1];
-    const firstLabel = formatChartTime(first.time, hours);
-    const lastLabel = formatChartTime(last.time, hours);
+    const firstLabel = formatChartTime(first.time, hours, timeZone);
+    const lastLabel = formatChartTime(last.time, hours, timeZone);
     ctx.fillText(firstLabel, pad.left, height - 17);
     const lastWidth = ctx.measureText(lastLabel).width;
     ctx.fillText(lastLabel, width - pad.right - lastWidth, height - 17);
@@ -905,9 +907,12 @@ async function loadHistory(hours = 24) {
         const selectedLocation = document.getElementById('weatherLocationSelect')?.value || 'server-current';
         const isLocal = selectedLocation !== 'server-current';
         let readings;
+        let chartTimezone = null;
 
         if (isLocal && window.GaugeIQLocalWeather) {
             readings = await window.GaugeIQLocalWeather.readingsFor(selectedLocation, hours);
+            const locations = await window.GaugeIQLocalWeather.allLocations();
+            chartTimezone = locations.find(location => location.id === selectedLocation)?.timezone || null;
         } else {
             const requestedHours = hours === 'all' ? 336 : Math.min(336, Math.max(1, Number(hours) || 24));
             const response = await fetch('../api/history.php?hours=' + encodeURIComponent(requestedHours), { cache: 'no-store' });
@@ -924,7 +929,7 @@ async function loadHistory(hours = 24) {
 
         charts.forEach(([id, values, unit, decimals]) => {
             const canvas = document.getElementById(id);
-            if (canvas) drawChart(canvas, values, unit, decimals, hours);
+            if (canvas) drawChart(canvas, values, unit, decimals, hours, chartTimezone);
         });
 
         const rangeLabel = hours === 'all' ? 'all imported history'
