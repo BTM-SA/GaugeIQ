@@ -9,7 +9,7 @@ header('Cache-Control: no-store');
 
 try {
     $db = new Database($config);
-    $hours = min(168, max(1, (int)($_GET['hours'] ?? 24)));
+    $hours = min(336, max(1, (int)($_GET['hours'] ?? 24)));
     $since = gmdate('c', time() - ($hours * 3600));
 
     // Filter by created_at, which is always stored in UTC by GaugeIQ.
