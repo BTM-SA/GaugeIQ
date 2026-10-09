@@ -178,8 +178,9 @@ button:disabled { opacity: .55; cursor: default; }
 :root[data-theme="dark"] .wind-speed-track{stroke:#747f8f;opacity:.72}
 .wind-speed-fill{fill:none;stroke:#2563eb;stroke-width:3.2;stroke-linecap:round;transition:d .7s ease,stroke-dasharray .7s ease}
 .wind-speed-fill[data-active="true"]{filter:drop-shadow(0 0 3px rgba(37,99,235,.22))}
-.wind-speed-segments{stroke:var(--border);stroke-width:2.8;stroke-linecap:butt;opacity:.98}
+.wind-speed-segments{stroke:var(--border);stroke-width:2.6;stroke-linecap:butt;opacity:.98}
 .wind-speed-segments line.active{stroke:#22c55e;filter:drop-shadow(0 0 1px rgba(34,197,94,.25))}
+.wind-speed-scale-labels{fill:var(--text);font-size:3.1px;font-weight:900;text-anchor:middle;dominant-baseline:middle;paint-order:stroke fill;stroke:var(--card);stroke-width:.65px;stroke-linejoin:round}
 .wind-speed-ticks{stroke:var(--muted);stroke-width:.9}
 .wind-speed-ticks line.major{stroke:var(--text);stroke-width:1.45}
 .wind-speed-ticks text{fill:#111827;font-size:4.1px;font-weight:450;text-anchor:middle;dominant-baseline:middle;paint-order:stroke fill;stroke:var(--card);stroke-width:.55px}
@@ -200,6 +201,7 @@ button:disabled { opacity: .55; cursor: default; }
 .wind-direction-line{fill:none;stroke-width:1.15;stroke-linecap:round}
 .wind-direction-line-from{stroke:#facc15}
 .wind-direction-line-to{stroke:#facc15}
+.wind-direction-from-arrow{fill:#facc15;stroke:#facc15;stroke-width:.5;stroke-linejoin:round;filter:drop-shadow(0 0 1px rgba(0,0,0,.25))}
 .wind-direction-marker{fill:#facc15;stroke:var(--card);stroke-width:.7px}
 .wind-direction-to-marker{fill:#facc15;stroke:#facc15;stroke-width:.4px}
 .wind-compass-labels .minor{font-size:3.2px}
