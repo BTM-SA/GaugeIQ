@@ -919,12 +919,9 @@ async function selectDashboardLocation(locationId, location, reloadAfterSync = f
         const syncEndpoint = selector?.dataset.locationSyncEndpoint;
         const csrf = selector?.dataset.locationCsrf;
         if (!syncEndpoint || !csrf) throw new Error('Location sync is not configured. Reload GaugeIQ and try again.');
-        const resettingToConfigured = locationId === 'server-current';
-        const serverCoordinatesChanged = resettingToConfigured
-            ? Number(selector?.dataset.serverLatitude) !== Number(location.latitude) ||
-              Number(selector?.dataset.serverLongitude) !== Number(location.longitude)
-            : Number(selector?.dataset.serverLatitude) !== Number(location.latitude) ||
-              Number(selector?.dataset.serverLongitude) !== Number(location.longitude);
+        const serverCoordinatesChanged =
+            Number(selector?.dataset.serverLatitude) !== Number(location.latitude) ||
+            Number(selector?.dataset.serverLongitude) !== Number(location.longitude);
         const syncResponse = await fetch(syncEndpoint, {
             method: 'POST',
             credentials: 'same-origin',
