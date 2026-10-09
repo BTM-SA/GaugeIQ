@@ -502,13 +502,6 @@ const WEATHER_CHANGE_WEIGHTS = {
     cloudCover: 1,
     weatherCode: 1
 };
-const WEATHER_CHANGE_WEIGHT_TOTAL = Object.values(WEATHER_CHANGE_WEIGHTS).reduce((sum, weight) => sum + weight, 0);
-
-function weatherConditionsStatus(trend) {
-    if (!trend || !trend.label) return { arrow: '→', label: 'Steady' };
-    return { arrow: trend.arrow, label: trend.label };
-}
-
 function weatherNumeric(value) {
     if (value === null || value === undefined || value === '') return null;
     const number = Number(value);
