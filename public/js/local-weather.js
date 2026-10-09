@@ -300,7 +300,7 @@
             const quota = Number(estimate.quota);
             if (!Number.isFinite(usage) || !Number.isFinite(quota) || quota <= 0) return '';
             const percent = usage / quota;
-            return ' Browser storage: ' + formatBytes(usage) + ' used of an estimated ' + formatBytes(quota) + ' available.' +
+            return ' Browser storage: ' + formatBytes(usage) + ' used; estimated origin quota ' + formatBytes(quota) + '.' +
                 (percent >= 0.8 ? ' Storage is getting full; export a backup and check available device space.' : '');
         } catch {
             return '';
@@ -389,13 +389,11 @@
             const backup = parsed.backup;
             if (backup.version !== 1) throw new Error('This GaugeIQ backup version is not supported.');
             if (!confirm('Restore ' + backup.locations.length + ' location(s) and ' + backup.readings.length + ' readings? Existing matching timestamps will be updated; other records will be kept.')) return;
-            const idMap = new Map();
             for (const location of backup.locations) {
-                const restored = await saveLocationAndReadings(location, backup.readings.filter(row => row.locationId === location.id), location.id);
-                idMap.set(location.id, restored.id);
+                await saveLocationAndReadings(location, backup.readings.filter(row => row.locationId === location.id), location.id);
             }
-            setStatus('Backup restored. ' + backup.locations.length + ' location(s) processed.', false);
-            await refreshLocations();
+            setStatus('Backup restored. ' + backup.locations.length + ' location(s) processed.' + await storageSummary(), false);
+            await refreshLocations(backup.locations[0]?.id);
             return;
         }
 
@@ -404,7 +402,11 @@
         if (name === null) return;
         parsed.location.name = name.trim() || defaultName;
         parsed.location.source = 'Open-Meteo';
-        const saved = await saveLocationAndReadings(parsed.location, parsed.readings);
+        const existing = (await allLocations()).find(location => location.name.toLocaleLowerCase() === parsed.location.name.toLocaleLowerCase());
+        const existingId = existing && confirm('A local location named "' + existing.name + '" already exists. Add these readings to it and update matching timestamps? Choose Cancel to create a separate location.')
+            ? existing.id
+            : undefined;
+        const saved = await saveLocationAndReadings(parsed.location, parsed.readings, existingId);
         await refreshLocations(saved.id);
         updateRangeButtons();
         const range = document.querySelector('.history-range-button[data-hours="all"]');
