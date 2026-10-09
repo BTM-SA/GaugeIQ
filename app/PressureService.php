@@ -9,19 +9,26 @@ final class PressureService
 
     private function locationCoordinates(): array
     {
-        $latitude = (string)$this->config['pressure']['latitude'];
-        $longitude = (string)$this->config['pressure']['longitude'];
-
-        $stmt = $this->db->prepare("SELECT `key`, `value` FROM gaugeiq_settings WHERE `key` IN ('location_latitude', 'location_longitude')");
+        $settings = [];
+        $stmt = $this->db->prepare(
+            "SELECT `key`, `value` FROM gaugeiq_settings
+             WHERE `key` IN ('active_location_latitude', 'active_location_longitude',
+                              'location_latitude', 'location_longitude')"
+        );
         $stmt->execute();
 
         foreach ($stmt->fetchAll() as $setting) {
-            if ((string)$setting['key'] === 'location_latitude') {
-                $latitude = (string)$setting['value'];
-            } elseif ((string)$setting['key'] === 'location_longitude') {
-                $longitude = (string)$setting['value'];
-            }
+            $settings[(string)$setting['key']] = (string)$setting['value'];
         }
+
+        // A browser-selected IndexedDB location is synced to active_location_*.
+        // Keep the existing configured location as a backward-compatible fallback.
+        $latitude = $settings['active_location_latitude']
+            ?? $settings['location_latitude']
+            ?? (string)$this->config['pressure']['latitude'];
+        $longitude = $settings['active_location_longitude']
+            ?? $settings['location_longitude']
+            ?? (string)$this->config['pressure']['longitude'];
 
         return [$latitude, $longitude];
     }
