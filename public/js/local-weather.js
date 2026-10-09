@@ -426,7 +426,8 @@
         const select = locationSelect();
         if (!select) return;
         const locations = await allLocations();
-        const selected = selectId || select.value || SERVER_LOCATION_ID;
+        const remembered = localStorage.getItem('gaugeiq-active-weather-location');
+        const selected = selectId || remembered || select.value || SERVER_LOCATION_ID;
         select.replaceChildren();
         const serverOption = document.createElement('option');
         serverOption.value = SERVER_LOCATION_ID;
@@ -442,6 +443,7 @@
             select.append(option);
         });
         select.value = [...select.options].some(option => option.value === selected) ? selected : SERVER_LOCATION_ID;
+        localStorage.setItem('gaugeiq-active-weather-location', select.value);
         updateRangeButtons();
         const activeLocation = locations.find(location => location.id === select.value);
         window.GaugeIQSelectDashboardLocation?.(select.value, activeLocation || null);
@@ -556,6 +558,7 @@
         if (!select || !fileInput || !importButton || !exportButton) return;
 
         select.addEventListener('change', () => {
+            localStorage.setItem('gaugeiq-active-weather-location', select.value);
             updateRangeButtons();
             const selectedId = select.value;
             if (selectedId === SERVER_LOCATION_ID) {
