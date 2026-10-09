@@ -658,8 +658,12 @@ function weatherChangeScore(readings) {
             changed ? 'condition code changed from ' + codes.first + ' to ' + codes.last + ' (severity-category difference ' + severityChange + ')' : 'condition code stayed the same');
     }
 
-    if (!components.length) {
-        return { score: null, summary: 'Not enough valid measurements to calculate a change score.', components: [], reasons: [], coverage: 0 };
+    if (components.length < 5) {
+        return {
+            score: null,
+            summary: 'Insufficient valid signals (' + components.length + '/9). At least 5 are required.',
+            components, reasons: [], coverage: components.length
+        };
     }
 
     const availableWeight = components.reduce((sum, component) => sum + component.weight, 0);
@@ -836,7 +840,7 @@ async function loadWeatherChange() {
         if (result.score === null) {
             scoreElement.textContent = '—';
             summaryElement.textContent = result.summary;
-            reasonsElement.innerHTML = '<div class="weather-change-reason">GaugeIQ needs at least three readings spanning an hour, with valid measurements, before it can estimate change intensity.</div>';
+            reasonsElement.innerHTML = '<div class="weather-change-reason">GaugeIQ needs at least three readings spanning one hour and at least five of nine valid signals. ' + result.coverage + '/9 signals are available in this window.</div>';
             document.getElementById('weatherChangeTrack')?.setAttribute('aria-valuenow', '0');
             document.getElementById('weatherChangeFill')?.style.setProperty('width', '0%');
         } else {
