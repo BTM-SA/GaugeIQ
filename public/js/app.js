@@ -336,7 +336,7 @@ function formatChartTime(value, hours) {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return '';
 
-    if (hours >= 168) {
+    if (hours === 'all' || hours >= 168) {
         return date.toLocaleDateString([], { day: 'numeric', month: 'short' });
     }
 
@@ -902,16 +902,24 @@ async function loadHistory(hours = 24) {
     historyStatus.textContent = 'Loading history…';
 
     try {
-        const response = await fetch('../api/history.php?hours=' + encodeURIComponent(hours), { cache: 'no-store' });
-        if (!response.ok) throw new Error('History unavailable.');
+        const selectedLocation = document.getElementById('weatherLocationSelect')?.value || 'server-current';
+        const isLocal = selectedLocation !== 'server-current';
+        let readings;
 
-        const data = await response.json();
-        const readings = Array.isArray(data.readings) ? data.readings : [];
+        if (isLocal && window.GaugeIQLocalWeather) {
+            readings = await window.GaugeIQLocalWeather.readingsFor(selectedLocation, hours);
+        } else {
+            const requestedHours = hours === 'all' ? 336 : Math.min(336, Math.max(1, Number(hours) || 24));
+            const response = await fetch('../api/history.php?hours=' + encodeURIComponent(requestedHours), { cache: 'no-store' });
+            if (!response.ok) throw new Error('History unavailable.');
+            const data = await response.json();
+            readings = Array.isArray(data.readings) ? data.readings : [];
+        }
 
         const charts = [
-            ['pressureChart', readings.map(r => ({ value: Number(r.pressure_hpa), time: r.observed_at })), ' hPa', 1],
-            ['humidityChart', readings.map(r => ({ value: Number(r.humidity_percent), time: r.observed_at })), '%', 0],
-            ['windChart', readings.map(r => ({ value: Number(r.wind_speed_kmh), time: r.observed_at })), ' km/h', 1]
+            ['pressureChart', readings.map(r => ({ value: Number(r.pressure_hpa), time: r.observed_at || r.timestamp })), ' hPa', 1],
+            ['humidityChart', readings.map(r => ({ value: Number(r.humidity_percent), time: r.observed_at || r.timestamp })), '%', 0],
+            ['windChart', readings.map(r => ({ value: Number(r.wind_speed_kmh), time: r.observed_at || r.timestamp })), ' km/h', 1]
         ];
 
         charts.forEach(([id, values, unit, decimals]) => {
@@ -919,23 +927,33 @@ async function loadHistory(hours = 24) {
             if (canvas) drawChart(canvas, values, unit, decimals, hours);
         });
 
-        const rangeLabel = hours === 168 ? '7 days' : hours + ' hours';
+        const rangeLabel = hours === 'all' ? 'all imported history'
+            : hours === 168 ? '7 days'
+            : hours === 720 ? '30 days'
+            : hours === 2160 ? '90 days'
+            : hours === 8760 ? '1 year'
+            : hours + ' hours';
+        const sourceLabel = isLocal ? 'local' : 'server';
         historyStatus.textContent = readings.length
-            ? 'Last ' + rangeLabel + ' · ' + readings.length + ' readings'
-            : 'No readings have been recorded yet.';
+            ? rangeLabel.charAt(0).toUpperCase() + rangeLabel.slice(1) + ' · ' + readings.length + ' readings · ' + sourceLabel
+            : (isLocal ? 'No local readings in this time range. Try a longer range or All imported history.' : 'No readings have been recorded yet.');
 
         const title = document.getElementById('historyTitle');
         if (title) title.textContent = 'History · ' + rangeLabel;
-    } catch {
-        historyStatus.textContent = 'Historical readings are currently unavailable.';
+    } catch (error) {
+        historyStatus.textContent = error instanceof Error && error.message
+            ? error.message
+            : 'Historical readings are currently unavailable.';
     }
 }
+
+window.GaugeIQLoadHistory = loadHistory;
 
 document.querySelectorAll('.history-range-button').forEach(button => {
     button.addEventListener('click', () => {
         document.querySelectorAll('.history-range-button').forEach(item => item.classList.remove('active'));
         button.classList.add('active');
-        loadHistory(Number(button.dataset.hours));
+        loadHistory(button.dataset.hours === 'all' ? 'all' : Number(button.dataset.hours));
     });
 });
 
