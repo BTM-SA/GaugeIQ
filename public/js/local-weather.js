@@ -396,6 +396,9 @@
             }
             setStatus('Backup restored. ' + backup.locations.length + ' location(s) processed.' + await storageSummary(), false);
             await refreshLocations(backup.locations[0]?.id);
+            const allRange = document.querySelector('.history-range-button[data-hours="all"]');
+            if (allRange && !allRange.hidden) allRange.click();
+            else if (window.GaugeIQLoadHistory) window.GaugeIQLoadHistory(24);
             return;
         }
 
