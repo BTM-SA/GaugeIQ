@@ -120,7 +120,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f3f4f6" id="themeColorMeta">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/app.css?v=20261010-weather-change">
+<link rel="stylesheet" href="css/app.css?v=20261010-compass-fix">
 <title>GaugeIQ</title>
 </head>
 <body>
@@ -312,8 +312,8 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     <div class="wind-summary-line">Speed &amp; direction</div>
                 </div>
                 <div class="wind-compass-controls">
-                    <span class="wind-compass-status" id="windCompassStatus">Compass off</span>
-                    <button type="button" class="secondary wind-compass-button" id="windCompassButton">Enable compass</button>
+                    <span class="wind-compass-status" id="windCompassStatus" hidden></span>
+                    <button type="button" class="secondary wind-compass-button" id="windCompassButton">Turn Compass ON</button>
                 </div>
             </div>
             <div class="wind-gauge" role="img" aria-label="<?= $current ? htmlspecialchars(number_format($windSpeed, 1) . ' kilometers per hour, ' . $windDirection . ', ' . number_format($windDegrees, 0) . ' degrees', ENT_QUOTES) : 'Wind data unavailable' ?>">
@@ -611,6 +611,6 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     <p id="status" class="status"></p>
 </main>
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
-<script src="js/app.js?v=20261010-weather-change"></script>
+<script src="js/app.js?v=20261010-compass-fix"></script>
 </body>
 </html>
