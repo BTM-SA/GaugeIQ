@@ -578,7 +578,7 @@ function weatherChangeScore(readings) {
         if (!pair || !Number.isFinite(severity)) return;
         components.push({
             key, label, weight: WEATHER_CHANGE_WEIGHTS[key],
-            severity: Math.max(0, Math.min(1, severity)), evidence
+            severity: Math.max(0, Math.min(1, severity)), evidence, pair
         });
     };
 
@@ -847,7 +847,7 @@ async function loadWeatherChange() {
         if (result.score === null) {
             scoreElement.textContent = '—';
             summaryElement.textContent = result.summary;
-            reasonsElement.innerHTML = '<div class="weather-change-reason">GaugeIQ needs at least three readings spanning one hour and at least five of nine valid signals. ' + result.coverage + '/9 signals are available in this window.</div>';
+            reasonsElement.innerHTML = '<div class="weather-change-reason"><span>GaugeIQ needs at least three readings spanning one hour and at least five of nine valid signals. ' + result.coverage + '/9 signals are available in this window.</span></div>';
             document.getElementById('weatherChangeTrack')?.setAttribute('aria-valuenow', '0');
             document.getElementById('weatherChangeFill')?.style.setProperty('width', '0%');
         } else {
@@ -862,11 +862,27 @@ async function loadWeatherChange() {
                 changeFill.style.width = (result.score * 10) + '%';
                 changeFill.dataset.level = level;
             }
-            reasonsElement.innerHTML = result.components.map(component =>
-                '<div class="weather-change-reason"><span><strong>' + component.label + '</strong>: ' + component.evidence +
-                '. Severity ' + component.severity.toFixed(2) + '/1 × weight ' + component.weight +
-                '; normalized contribution ' + component.contribution.toFixed(2) + ' points of ' + result.score.toFixed(1) + '/10.</span></div>'
-            ).join('');
+            reasonsElement.innerHTML = result.components.map(component => {
+                const hours = component.pair && Number.isFinite(component.pair.hours)
+                    ? component.pair.hours.toFixed(1)
+                    : null;
+                let description;
+                if (component.key === 'temperature' && component.pair) {
+                    const rising = component.pair.delta >= 0;
+                    description = '<strong>Temperature</strong>: <span class="weather-change-direction-arrow" aria-label="' +
+                        (rising ? 'increased' : 'decreased') + '">' + (rising ? '↑' : '↓') + '</span> ' +
+                        Math.abs(component.pair.delta).toFixed(1) + '°C' +
+                        (hours ? ' over window used (' + hours + ' hours)' : '');
+                } else if (component.key === 'windDirection' && component.pair) {
+                    const shift = weatherCircularDifference(component.pair.first, component.pair.last);
+                    description = '<strong>Wind direction</strong>: <span class="weather-change-direction-arrow" aria-label="direction shifted">↔</span> shifted by ' +
+                        Math.round(shift) + '°' + (hours ? ' over window used (' + hours + ' hours)' : '');
+                } else {
+                    description = '<strong>' + component.label + '</strong>: ' + component.evidence +
+                        (hours ? ' over window used (' + hours + ' hours)' : '');
+                }
+                return '<div class="weather-change-reason"><span>' + description + '</span></div>';
+            }).join('');
             const stabilityFill = document.getElementById('weatherStabilityFill');
             const stabilityTrack = stabilityFill?.closest('.temperature-stability-track');
             if (stabilityFill) {
@@ -1064,6 +1080,17 @@ document.querySelectorAll('.history-range-button').forEach(button => {
         loadHistory(button.dataset.hours === 'all' ? 'all' : Number(button.dataset.hours));
     });
 });
+
+const weatherChangeReasonsToggle = document.getElementById('weatherChangeReasonsToggle');
+const weatherChangeReasonsPanel = document.getElementById('weatherChangeReasons');
+if (weatherChangeReasonsToggle && weatherChangeReasonsPanel) {
+    weatherChangeReasonsToggle.addEventListener('click', () => {
+        const willShow = weatherChangeReasonsPanel.hidden;
+        weatherChangeReasonsPanel.hidden = !willShow;
+        weatherChangeReasonsToggle.setAttribute('aria-expanded', String(willShow));
+        weatherChangeReasonsToggle.textContent = willShow ? 'Hide reasons' : 'Show reasons';
+    });
+}
 
 loadHistory();
 loadWeatherChange();
