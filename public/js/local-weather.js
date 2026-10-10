@@ -605,7 +605,7 @@
         const exportButton = document.getElementById('localWeatherExport');
         const persistButton = document.getElementById('localWeatherPersist');
         const fetchButton = document.getElementById('localWeatherFetch');
-        if (!select || !fileInput || !importButton || !exportButton) return;
+        if (!select) return;
 
         select.addEventListener('change', () => {
             localStorage.setItem('gaugeiq-active-weather-location', select.value);
@@ -620,17 +620,17 @@
             document.querySelector('.history-range-button[data-hours="24"]')?.classList.add('active');
             if (window.GaugeIQLoadHistory) window.GaugeIQLoadHistory(24);
         });
-        importButton.addEventListener('click', () => fileInput.click());
+        importButton?.addEventListener('click', () => fileInput?.click());
         fetchButton?.addEventListener('click', async () => {
             try { await installHistoricalData(); }
             catch (error) { setStatus(error instanceof Error ? error.message : 'Unable to download historical weather data.', true); }
         });
-        fileInput.addEventListener('change', async () => {
+        fileInput?.addEventListener('change', async () => {
             try { await importFile(fileInput.files?.[0]); }
             catch (error) { setStatus(error instanceof Error ? error.message : 'Unable to import this file.', true); }
             finally { fileInput.value = ''; }
         });
-        exportButton.addEventListener('click', async () => {
+        exportButton?.addEventListener('click', async () => {
             try { await exportBackup(); }
             catch (error) { setStatus(error instanceof Error ? error.message : 'Unable to export a backup.', true); }
         });
@@ -644,8 +644,8 @@
             .then(async () => setStatus('Local weather database is ready. Imports and backups stay on this device unless you export them.' + await storageSummary(), false))
             .catch(error => {
                 setStatus(error instanceof Error ? error.message : 'Local weather storage is unavailable.', true);
-                importButton.disabled = true;
-                exportButton.disabled = true;
+                if (importButton) importButton.disabled = true;
+                if (exportButton) exportButton.disabled = true;
                 if (persistButton) persistButton.disabled = true;
             });
     }
