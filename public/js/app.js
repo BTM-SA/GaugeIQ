@@ -48,9 +48,13 @@ const WIND_COMPASS_NORTH_BUFFER = 6;
 const storedWindCompassState = localStorage.getItem(WIND_COMPASS_STORAGE_KEY);
 const windCompassCanRequestPermission = typeof DeviceOrientationEvent !== 'undefined'
     && typeof DeviceOrientationEvent.requestPermission === 'function';
-let windCompassEnabled = storedWindCompassState !== null
-    ? storedWindCompassState === 'true'
-    : !windCompassCanRequestPermission;
+// A saved "on" preference cannot replace the fresh user gesture required
+// by iOS/Safari. Start off there so the permission button is always available.
+let windCompassEnabled = windCompassCanRequestPermission
+    ? false
+    : storedWindCompassState !== null
+        ? storedWindCompassState === 'true'
+        : true;
 let windCompassListening = false;
 let windCompassHeading = null;
 let windCompassTargetHeading = null;
