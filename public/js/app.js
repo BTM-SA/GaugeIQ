@@ -121,13 +121,23 @@ function applyWindCompassHeading(heading) {
             // keeps its geographic bearing inside that rotating disc.
             const compassDisc = windGauge.querySelector('.wind-compass-orientation');
             if (compassDisc) {
-                // Use an SVG transform with an explicit centre. CSS transforms
-                // on SVG groups can otherwise rotate around their bounding-box
-                // origin, making the dial appear to drift instead of rotate.
+                // Rotate only the dial face. The wind needle is a separate,
+                // concentric SVG layer so the centre hub cannot cover or offset it.
                 compassDisc.setAttribute(
                     'transform',
                     'rotate(' + (-windCompassRotation).toFixed(2) + ' 50 50)'
                 );
+            }
+
+            const windNeedle = windGauge.querySelector('.wind-direction-arrows');
+            if (windNeedle) {
+                const windBearing = Number(windNeedle.getAttribute('data-wind-degrees'));
+                if (Number.isFinite(windBearing)) {
+                    windNeedle.setAttribute(
+                        'transform',
+                        'rotate(' + (windBearing - windCompassRotation).toFixed(2) + ' 50 50)'
+                    );
+                }
             }
 
             if (windCompassStatus) {
@@ -1005,7 +1015,12 @@ async function selectDashboardLocation(locationId, location, reloadAfterSync = f
         put('.wind-heading-readout', Math.round(c.wind_direction_10m)+'° '+['N','NE','E','SE','S','SW','W','NW'][Math.round((((c.wind_direction_10m%360)+360)%360)/45)%8]);
         put('.wind-speed-readout', fmt(c.wind_speed_10m)+' km/h wind');
         const arrows=document.querySelector('.wind-direction-arrows');
-        if(arrows)arrows.setAttribute('transform','rotate('+Number(c.wind_direction_10m)+' 50 50)');
+        if(arrows){
+            const bearing=((Number(c.wind_direction_10m)%360)+360)%360;
+            arrows.setAttribute('data-wind-degrees',String(bearing));
+            const heading=Number.isFinite(windCompassRotation)?windCompassRotation:0;
+            arrows.setAttribute('transform','rotate('+(bearing-heading)+' 50 50)');
+        }
         const score=document.getElementById('rainProbabilityScore'), fill=document.getElementById('rainProbabilityFill');
         const prob=Number(d.precipitation_probability_max?.[0]);
         if(score)score.textContent=Number.isFinite(prob)?Math.round(prob)+'%':'—';
