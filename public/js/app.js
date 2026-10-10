@@ -117,10 +117,13 @@ function applyWindCompassHeading(heading) {
             // keeps its geographic bearing inside that rotating disc.
             const compassDisc = windGauge.querySelector('.wind-compass-orientation');
             if (compassDisc) {
-                // Rotate one SVG group for the dial, tick marks, speed segments,
-                // cardinal labels and both wind pointers. The pointers' fixed
-                // SVG bearing transform is applied inside this rotating group.
-                compassDisc.style.transform = 'rotate(' + (-windCompassRotation).toFixed(2) + 'deg)';
+                // Use an SVG transform with an explicit centre. CSS transforms
+                // on SVG groups can otherwise rotate around their bounding-box
+                // origin, making the dial appear to drift instead of rotate.
+                compassDisc.setAttribute(
+                    'transform',
+                    'rotate(' + (-windCompassRotation).toFixed(2) + ' 50 50)'
+                );
             }
 
             if (windCompassStatus) {
@@ -140,12 +143,15 @@ function handleWindDeviceOrientation(event) {
     let heading = null;
 
     if (Number.isFinite(event.webkitCompassHeading)) {
+        // Safari/iOS exposes a compass-corrected heading directly.
         heading = event.webkitCompassHeading;
-    } else if (Number.isFinite(event.alpha)) {
-        // Standard orientation fallback. Absolute alpha is measured clockwise
-        // from the device reference frame, so invert it to obtain a compass
-        // heading when no native compass heading is exposed.
-        heading = 360 - event.alpha;
+    } else if (event.absolute === true && Number.isFinite(event.alpha)) {
+        // Do not use relative deviceorientation alpha: it is not a geographic
+        // heading and can fight the absolute event, making the compass jump.
+        // For absolute alpha, invert the clockwise rotation and compensate for
+        // the current screen orientation (portrait/landscape).
+        const screenAngle = Number(window.screen?.orientation?.angle ?? window.orientation ?? 0);
+        heading = 360 - event.alpha + (Number.isFinite(screenAngle) ? screenAngle : 0);
     }
 
     if (heading !== null) {
@@ -156,31 +162,11 @@ function handleWindDeviceOrientation(event) {
 function updateWindCompassButton() {
     if (!windCompassButton) return;
 
-    windCompassButton.textContent = windCompassEnabled ? 'Turn compass off' : 'Turn compass on';
+    // This is an enable-only control: there is no separate/off state button.
+    windCompassButton.textContent = 'Turn Compass ON';
     windCompassButton.setAttribute('aria-pressed', windCompassEnabled ? 'true' : 'false');
-}
-
-function disableWindCompass() {
-    windCompassEnabled = false;
-    localStorage.setItem(WIND_COMPASS_STORAGE_KEY, 'false');
-
-    if (windCompassListening) {
-        window.removeEventListener('deviceorientation', handleWindDeviceOrientation, true);
-        window.removeEventListener('deviceorientationabsolute', handleWindDeviceOrientation, true);
-        windCompassListening = false;
-    }
-
-    if (windCompassAnimationFrame !== null) {
-        cancelAnimationFrame(windCompassAnimationFrame);
-        windCompassAnimationFrame = null;
-    }
-
-    windCompassTargetHeading = null;
-    windCompassHeading = null;
-    windCompassRotation = null;
-
-    if (windCompassStatus) windCompassStatus.textContent = 'Compass off';
-    updateWindCompassButton();
+    windCompassButton.disabled = windCompassEnabled;
+    if (windCompassStatus && !windCompassEnabled) windCompassStatus.hidden = true;
 }
 
 async function enableWindCompass() {
@@ -208,7 +194,10 @@ async function enableWindCompass() {
         }
 
         updateWindCompassButton();
-        if (windCompassStatus) windCompassStatus.textContent = 'Finding heading…';
+        if (windCompassStatus) {
+            windCompassStatus.hidden = false;
+            windCompassStatus.textContent = 'Finding heading…';
+        }
     } catch (error) {
         if (windCompassStatus) {
             windCompassStatus.textContent = error instanceof Error ? error.message : 'Compass unavailable';
@@ -218,16 +207,13 @@ async function enableWindCompass() {
 
 if (windGauge) {
     const initialCompassDisc = windGauge?.querySelector('.wind-compass-orientation');
-    if (initialCompassDisc) initialCompassDisc.style.transform = 'rotate(0deg)';
+    if (initialCompassDisc) initialCompassDisc.setAttribute('transform', 'rotate(0 50 50)');
+
+    if (windCompassStatus) windCompassStatus.hidden = true;
 
     if (windCompassButton) {
         windCompassButton.addEventListener('click', async () => {
-            if (windCompassEnabled) {
-                disableWindCompass();
-                return;
-            }
-
-            await enableWindCompass();
+            if (!windCompassEnabled) await enableWindCompass();
         });
         updateWindCompassButton();
     }
@@ -236,8 +222,6 @@ if (windGauge) {
         typeof DeviceOrientationEvent !== 'undefined' &&
         typeof DeviceOrientationEvent.requestPermission !== 'function') {
         enableWindCompass();
-    } else if (!windCompassEnabled && windCompassStatus) {
-        windCompassStatus.textContent = 'Compass off';
     }
 }
 
