@@ -525,26 +525,11 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                 <p id="historyStatus" class="muted">Loading history…</p>
             </div>
         </div>
-        <div class="local-weather-tools" aria-label="Local weather history tools">
+        <div class="local-weather-tools dashboard-history-location" aria-label="Historical graph location">
             <label for="weatherLocationSelect">Active dashboard location</label>
             <select id="weatherLocationSelect" class="theme-select" aria-label="Active dashboard location" data-server-latitude="<?= htmlspecialchars($dashboardLatitude, ENT_QUOTES) ?>" data-server-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES) ?>" data-server-location-name="<?= htmlspecialchars($locationName, ENT_QUOTES) ?>" data-server-timezone="<?= htmlspecialchars($dashboardTimezone, ENT_QUOTES) ?>" data-config-latitude="<?= htmlspecialchars((string)($config['pressure']['latitude'] ?? ''), ENT_QUOTES) ?>" data-config-longitude="<?= htmlspecialchars((string)($config['pressure']['longitude'] ?? ''), ENT_QUOTES) ?>" data-config-location-name="<?= htmlspecialchars((string)($config['pressure']['location_name'] ?? 'Configured GaugeIQ location'), ENT_QUOTES) ?>" data-config-timezone="<?= htmlspecialchars((string)($config['app']['timezone'] ?? 'UTC'), ENT_QUOTES) ?>" data-location-csrf="<?= htmlspecialchars($csrfToken, ENT_QUOTES) ?>" data-location-sync-endpoint="save-dashboard-location.php">
                 <option value="server-current">Current GaugeIQ location (server)</option>
             </select>
-            <div class="local-weather-actions">
-                <button type="button" class="secondary" id="localWeatherFetch">Get historical data</button>
-                <button type="button" class="secondary" id="localWeatherImport">Import file</button>
-                <button type="button" class="secondary" id="localWeatherExport">Export backup</button>
-                <button type="button" class="secondary" id="localWeatherPersist">Protect local storage</button>
-                <input type="file" id="localWeatherFile" accept=".csv,.json,application/json,text/csv" hidden>
-            </div>
-            <div class="local-weather-api-options">
-                <label for="localWeatherRange">Historical range</label>
-                <select id="localWeatherRange" class="theme-select"><option value="30">Last 30 days</option><option value="90">Last 90 days</option><option value="365" selected>Last year</option><option value="all">All available history</option></select>
-                <label for="localWeatherSource">Historical source</label>
-                <select id="localWeatherSource" class="theme-select"><option value="forecast" selected>Historical Forecast · recent conditions</option><option value="weather">Historical Weather · long-term history</option></select>
-            </div>
-            <p id="localWeatherStatus" class="muted" role="status" aria-live="polite">Preparing local weather database…</p>
-            <p class="muted local-weather-help">Historical API readings and imported data are stored in this browser on this device. The active location is used for history and historical-data downloads. Historical Forecast is best for recent conditions; Historical Weather is better for long-term trends. Export a backup before clearing browser data or changing devices.</p>
         </div>
         <div class="history-range" role="group" aria-label="History range">
             <button type="button" class="history-range-button" data-hours="6">6h</button>
