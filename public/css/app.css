@@ -166,10 +166,12 @@ button:disabled { opacity: .55; cursor: default; }
 .wind-gauge-card{padding:18px;overflow:hidden}
 .wind-gauge-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
 .wind-gauge-heading .label{margin:0 0 3px}
-.wind-compass-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-.wind-compass-status{font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--muted);white-space:nowrap}
-.wind-compass-button{padding:7px 10px;font-size:11px}
-.wind-compass-orientation{transform:none}.wind-compass-button[aria-pressed="true"]{background:var(--surface);color:var(--text);border:1px solid var(--border)}
+.wind-compass-controls{display:flex;flex-direction:column;align-items:flex-end;gap:7px;flex-wrap:nowrap;justify-content:flex-start}
+.wind-compass-status{font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--muted);white-space:nowrap;text-align:right}
+.wind-compass-status[hidden]{display:none!important}
+.wind-compass-button{padding:7px 10px;font-size:11px;white-space:nowrap}
+.wind-compass-button:disabled{opacity:.72;cursor:default}
+.wind-compass-button[aria-pressed="true"]{background:var(--surface);color:var(--text);border:1px solid var(--border)}
 
 .wind-gauge-live{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:5px 8px;border:1px solid var(--border);border-radius:999px;background:var(--surface)}
 .wind-gauge{position:relative;width:min(100%,330px);margin:10px auto 0;aspect-ratio:1;filter:drop-shadow(0 10px 18px rgba(17,24,39,.08))}
