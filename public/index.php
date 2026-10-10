@@ -120,7 +120,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f3f4f6" id="themeColorMeta">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/app.css?v=20261010-compass-reasons-fix">
+<link rel="stylesheet" href="css/app.css?v=20261010-compass-needle-center-fix">
 <title>GaugeIQ</title>
 </head>
 <body>
@@ -377,13 +377,13 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                                 <text class="<?= strlen($label) > 1 ? 'minor' : '' ?> <?= $label === 'N' ? 'north-label' : '' ?>" x="<?= number_format($labelX, 3, '.', '') ?>" y="<?= number_format($labelY, 3, '.', '') ?>"><?= $label ?></text>
                             <?php endforeach; ?>
                         </g>
-                    <g class="wind-direction-arrows" data-wind-degrees="<?= number_format($windDegrees, 2, '.', '') ?>" transform="rotate(<?= number_format($windDegrees, 2, '.', '') ?> 50 50)">
-                        <path class="wind-direction-from-arrow" d="M50 18.5 L43.5 30 L48 27 L48 33 L52 33 L52 27 L56.5 30 Z"></path>
-                        <path class="wind-direction-to-marker" d="M50 81.5 L56.5 70 L52 73 L52 67 L48 67 L48 73 L43.5 70 Z"></path>
-                    </g>
                     </g>
 
                     <circle class="wind-center" cx="50" cy="50" r="18.5"></circle>
+                    <g class="wind-direction-arrows" data-wind-degrees="<?= number_format($windDegrees, 2, '.', '') ?>" transform="rotate(<?= number_format($windDegrees, 2, '.', '') ?> 50 50)">
+                        <path class="wind-direction-from-arrow" d="M50 22 L44 31 L48 28 L48 47 L52 47 L52 28 L56 31 Z"></path>
+                        <path class="wind-direction-to-marker" d="M50 78 L56 69 L52 72 L52 53 L48 53 L48 72 L44 69 Z"></path>
+                    </g>
                 </svg>
                 <div class="wind-gauge-center">
                     <strong class="wind-heading-readout"><?= $current ? number_format($windDegrees, 0) . '° ' . htmlspecialchars($windDirection, ENT_QUOTES) : '—' ?></strong>
@@ -611,6 +611,6 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     <p id="status" class="status"></p>
 </main>
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
-<script src="js/app.js?v=20261010-compass-reasons-fix"></script>
+<script src="js/app.js?v=20261010-compass-needle-center-fix"></script>
 </body>
 </html>
