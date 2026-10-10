@@ -87,16 +87,18 @@ The browser settings page is available at `/alerts.php`. It provides a mobile-fr
 
 GaugeIQ can keep imported Open-Meteo hourly weather history in the browser's IndexedDB database on each device. This local dataset is separate from the server database used by scheduled monitoring, alert evaluation, and push notifications.
 
-From the dashboard's History section:
+Historical data management is in the **Admin** area:
+- Import Open-Meteo historical data from supported CSV or JSON files. CSV imports ask for the timezone used by the file.
+- Download historical weather data from Open-Meteo for a selected location and date range.
+- Choose a history location and source when viewing or managing local readings.
+- Export a JSON backup of locally stored locations and readings, and restore it by importing the backup.
+- Request persistent browser storage where supported and review the browser storage estimate when available.
 
-- Select **Import Open-Meteo data** to import hourly JSON or CSV data. CSV imports ask for the timezone used by the file.
-- Choose a history location to view its local readings. Longer ranges and **All** are available for imported locations.
-- Select **Export backup** to download a JSON backup of all locally stored locations and readings. To restore it, select the backup file using **Import Open-Meteo data**.
-- Select **Protect local storage** to request persistent browser storage where supported. The page also displays a browser storage estimate when the browser exposes one.
+The dashboard keeps the historical graphs and their range controls; importing, downloading, exporting, and protecting local history are Admin tasks. The selected location's local history can also feed the dashboard's history-based weather insights.
 
 Local data is not uploaded to GaugeIQ's server. IndexedDB quota and persistence are controlled by the browser and device; users should export backups regularly, especially before clearing site data or changing devices. Restoring a backup merges records by location ID and timestamp rather than deleting other local records. Browser storage is not a substitute for an independent backup.
 
-## Weather monitoring
+## Weather monitoring and dashboard insights
 
 GaugeIQ records:
 
@@ -106,6 +108,18 @@ GaugeIQ records:
 - Wind direction
 
 Alerts can be configured independently. Wind monitoring supports speed thresholds, direction-change thresholds, and specific compass directions. Direction calculations use degrees and correctly handle the 0°/360° boundary.
+
+### Weather Change score
+
+The dashboard's **Weather Change** score estimates the intensity of change across the latest available observation window (up to six hours). It is a weighted change indicator, not a forecast or probability of rain. The dashboard shows the score in a circle; on mobile, the score and summary are centred. The intensity bar has been removed, and the individual reason cards stay hidden until **Show reasons** is pressed.
+
+For each available signal, GaugeIQ calculates a severity from 0 to 1, applies its configured weight, and normalizes over signals with valid readings:
+
+`score = 10 × weighted severity sum ÷ valid-signal weight sum`
+
+The result is capped at 10 and displayed to one decimal place. Missing readings are excluded rather than treated as zero. Current provisional signal weights and thresholds are documented in the dashboard's **Show calculation and weights** disclosure. These engineering thresholds have not yet been statistically calibrated, so the score should be interpreted as an indicator of recent change rather than a calibrated risk prediction.
+
+When the reason cards are opened, the temperature card shows an up or down arrow, the measured temperature difference, and the actual observation-window duration. The wind-direction card uses a two-way arrow and shows the shortest angular shift in degrees over its observation window. Other cards summarize the available signal changes and their observation windows.
 
 ## Project status
 

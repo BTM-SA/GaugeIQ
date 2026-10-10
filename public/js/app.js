@@ -48,9 +48,13 @@ const WIND_COMPASS_NORTH_BUFFER = 6;
 const storedWindCompassState = localStorage.getItem(WIND_COMPASS_STORAGE_KEY);
 const windCompassCanRequestPermission = typeof DeviceOrientationEvent !== 'undefined'
     && typeof DeviceOrientationEvent.requestPermission === 'function';
-let windCompassEnabled = storedWindCompassState !== null
-    ? storedWindCompassState === 'true'
-    : !windCompassCanRequestPermission;
+// A saved "on" preference cannot replace the fresh user gesture required
+// by iOS/Safari. Start off there so the permission button is always available.
+let windCompassEnabled = windCompassCanRequestPermission
+    ? false
+    : storedWindCompassState !== null
+        ? storedWindCompassState === 'true'
+        : true;
 let windCompassListening = false;
 let windCompassHeading = null;
 let windCompassTargetHeading = null;
@@ -117,10 +121,13 @@ function applyWindCompassHeading(heading) {
             // keeps its geographic bearing inside that rotating disc.
             const compassDisc = windGauge.querySelector('.wind-compass-orientation');
             if (compassDisc) {
-                // Rotate one SVG group for the dial, tick marks, speed segments,
-                // cardinal labels and both wind pointers. The pointers' fixed
-                // SVG bearing transform is applied inside this rotating group.
-                compassDisc.style.transform = 'rotate(' + (-windCompassRotation).toFixed(2) + 'deg)';
+                // Use an SVG transform with an explicit centre. CSS transforms
+                // on SVG groups can otherwise rotate around their bounding-box
+                // origin, making the dial appear to drift instead of rotate.
+                compassDisc.setAttribute(
+                    'transform',
+                    'rotate(' + (-windCompassRotation).toFixed(2) + ' 50 50)'
+                );
             }
 
             if (windCompassStatus) {
@@ -140,12 +147,15 @@ function handleWindDeviceOrientation(event) {
     let heading = null;
 
     if (Number.isFinite(event.webkitCompassHeading)) {
+        // Safari/iOS exposes a compass-corrected heading directly.
         heading = event.webkitCompassHeading;
-    } else if (Number.isFinite(event.alpha)) {
-        // Standard orientation fallback. Absolute alpha is measured clockwise
-        // from the device reference frame, so invert it to obtain a compass
-        // heading when no native compass heading is exposed.
-        heading = 360 - event.alpha;
+    } else if (event.absolute === true && Number.isFinite(event.alpha)) {
+        // Do not use relative deviceorientation alpha: it is not a geographic
+        // heading and can fight the absolute event, making the compass jump.
+        // For absolute alpha, invert the clockwise rotation and compensate for
+        // the current screen orientation (portrait/landscape).
+        const screenAngle = Number(window.screen?.orientation?.angle ?? window.orientation ?? 0);
+        heading = 360 - event.alpha + (Number.isFinite(screenAngle) ? screenAngle : 0);
     }
 
     if (heading !== null) {
@@ -156,31 +166,11 @@ function handleWindDeviceOrientation(event) {
 function updateWindCompassButton() {
     if (!windCompassButton) return;
 
-    windCompassButton.textContent = windCompassEnabled ? 'Turn compass off' : 'Turn compass on';
+    // This is an enable-only control: there is no separate/off state button.
+    windCompassButton.textContent = 'Turn Compass ON';
     windCompassButton.setAttribute('aria-pressed', windCompassEnabled ? 'true' : 'false');
-}
-
-function disableWindCompass() {
-    windCompassEnabled = false;
-    localStorage.setItem(WIND_COMPASS_STORAGE_KEY, 'false');
-
-    if (windCompassListening) {
-        window.removeEventListener('deviceorientation', handleWindDeviceOrientation, true);
-        window.removeEventListener('deviceorientationabsolute', handleWindDeviceOrientation, true);
-        windCompassListening = false;
-    }
-
-    if (windCompassAnimationFrame !== null) {
-        cancelAnimationFrame(windCompassAnimationFrame);
-        windCompassAnimationFrame = null;
-    }
-
-    windCompassTargetHeading = null;
-    windCompassHeading = null;
-    windCompassRotation = null;
-
-    if (windCompassStatus) windCompassStatus.textContent = 'Compass off';
-    updateWindCompassButton();
+    windCompassButton.disabled = windCompassEnabled;
+    if (windCompassStatus && !windCompassEnabled) windCompassStatus.hidden = true;
 }
 
 async function enableWindCompass() {
@@ -208,7 +198,10 @@ async function enableWindCompass() {
         }
 
         updateWindCompassButton();
-        if (windCompassStatus) windCompassStatus.textContent = 'Finding heading…';
+        if (windCompassStatus) {
+            windCompassStatus.hidden = false;
+            windCompassStatus.textContent = 'Finding heading…';
+        }
     } catch (error) {
         if (windCompassStatus) {
             windCompassStatus.textContent = error instanceof Error ? error.message : 'Compass unavailable';
@@ -218,16 +211,13 @@ async function enableWindCompass() {
 
 if (windGauge) {
     const initialCompassDisc = windGauge?.querySelector('.wind-compass-orientation');
-    if (initialCompassDisc) initialCompassDisc.style.transform = 'rotate(0deg)';
+    if (initialCompassDisc) initialCompassDisc.setAttribute('transform', 'rotate(0 50 50)');
+
+    if (windCompassStatus) windCompassStatus.hidden = true;
 
     if (windCompassButton) {
         windCompassButton.addEventListener('click', async () => {
-            if (windCompassEnabled) {
-                disableWindCompass();
-                return;
-            }
-
-            await enableWindCompass();
+            if (!windCompassEnabled) await enableWindCompass();
         });
         updateWindCompassButton();
     }
@@ -236,8 +226,6 @@ if (windGauge) {
         typeof DeviceOrientationEvent !== 'undefined' &&
         typeof DeviceOrientationEvent.requestPermission !== 'function') {
         enableWindCompass();
-    } else if (!windCompassEnabled && windCompassStatus) {
-        windCompassStatus.textContent = 'Compass off';
     }
 }
 
@@ -578,7 +566,7 @@ function weatherChangeScore(readings) {
         if (!pair || !Number.isFinite(severity)) return;
         components.push({
             key, label, weight: WEATHER_CHANGE_WEIGHTS[key],
-            severity: Math.max(0, Math.min(1, severity)), evidence
+            severity: Math.max(0, Math.min(1, severity)), evidence, pair
         });
     };
 
@@ -847,7 +835,7 @@ async function loadWeatherChange() {
         if (result.score === null) {
             scoreElement.textContent = '—';
             summaryElement.textContent = result.summary;
-            reasonsElement.innerHTML = '<div class="weather-change-reason">GaugeIQ needs at least three readings spanning one hour and at least five of nine valid signals. ' + result.coverage + '/9 signals are available in this window.</div>';
+            reasonsElement.innerHTML = '<div class="weather-change-reason"><span>GaugeIQ needs at least three readings spanning one hour and at least five of nine valid signals. ' + result.coverage + '/9 signals are available in this window.</span></div>';
             document.getElementById('weatherChangeTrack')?.setAttribute('aria-valuenow', '0');
             document.getElementById('weatherChangeFill')?.style.setProperty('width', '0%');
         } else {
@@ -862,11 +850,27 @@ async function loadWeatherChange() {
                 changeFill.style.width = (result.score * 10) + '%';
                 changeFill.dataset.level = level;
             }
-            reasonsElement.innerHTML = result.components.map(component =>
-                '<div class="weather-change-reason"><span><strong>' + component.label + '</strong>: ' + component.evidence +
-                '. Severity ' + component.severity.toFixed(2) + '/1 × weight ' + component.weight +
-                '; normalized contribution ' + component.contribution.toFixed(2) + ' points of ' + result.score.toFixed(1) + '/10.</span></div>'
-            ).join('');
+            reasonsElement.innerHTML = result.components.map(component => {
+                const hours = component.pair && Number.isFinite(component.pair.hours)
+                    ? component.pair.hours.toFixed(1)
+                    : null;
+                let description;
+                if (component.key === 'temperature' && component.pair) {
+                    const rising = component.pair.delta >= 0;
+                    description = '<strong>Temperature</strong>: <span class="weather-change-direction-arrow" aria-label="' +
+                        (rising ? 'increased' : 'decreased') + '">' + (rising ? '↑' : '↓') + '</span> ' +
+                        Math.abs(component.pair.delta).toFixed(1) + '°C' +
+                        (hours ? ' over window used (' + hours + ' hours)' : '');
+                } else if (component.key === 'windDirection' && component.pair) {
+                    const shift = weatherCircularDifference(component.pair.first, component.pair.last);
+                    description = '<strong>Wind direction</strong>: <span class="weather-change-direction-arrow" aria-label="direction shifted">↔</span> shifted by ' +
+                        Math.round(shift) + '°' + (hours ? ' over window used (' + hours + ' hours)' : '');
+                } else {
+                    description = '<strong>' + component.label + '</strong>: ' + component.evidence +
+                        (hours ? ' over window used (' + hours + ' hours)' : '');
+                }
+                return '<div class="weather-change-reason"><span>' + description + '</span></div>';
+            }).join('');
             const stabilityFill = document.getElementById('weatherStabilityFill');
             const stabilityTrack = stabilityFill?.closest('.temperature-stability-track');
             if (stabilityFill) {
@@ -1064,6 +1068,17 @@ document.querySelectorAll('.history-range-button').forEach(button => {
         loadHistory(button.dataset.hours === 'all' ? 'all' : Number(button.dataset.hours));
     });
 });
+
+const weatherChangeReasonsToggle = document.getElementById('weatherChangeReasonsToggle');
+const weatherChangeReasonsPanel = document.getElementById('weatherChangeReasons');
+if (weatherChangeReasonsToggle && weatherChangeReasonsPanel) {
+    weatherChangeReasonsToggle.addEventListener('click', () => {
+        const willShow = weatherChangeReasonsPanel.hidden;
+        weatherChangeReasonsPanel.hidden = !willShow;
+        weatherChangeReasonsToggle.setAttribute('aria-expanded', String(willShow));
+        weatherChangeReasonsToggle.textContent = willShow ? 'Hide reasons' : 'Show reasons';
+    });
+}
 
 loadHistory();
 loadWeatherChange();
