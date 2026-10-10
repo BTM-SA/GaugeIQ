@@ -120,7 +120,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f3f4f6" id="themeColorMeta">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/app.css?v=20261010-compass-fix">
+<link rel="stylesheet" href="css/app.css?v=20261010-compass-reasons-fix">
 <title>GaugeIQ</title>
 </head>
 <body>
@@ -378,8 +378,8 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                             <?php endforeach; ?>
                         </g>
                     <g class="wind-direction-arrows" data-wind-degrees="<?= number_format($windDegrees, 2, '.', '') ?>" transform="rotate(<?= number_format($windDegrees, 2, '.', '') ?> 50 50)">
-                        <path class="wind-direction-from-arrow" d="M50 31 L43.5 21.5 L49 24.3 L50 18.5 L51 24.3 L56.5 21.5 Z"></path>
-                        <path class="wind-direction-to-marker" d="M50 81 L55.5 71 L51 73.5 L50 67.5 L49 73.5 L44.5 71 Z"></path>
+                        <path class="wind-direction-from-arrow" d="M50 18.5 L43.5 30 L48 27 L48 33 L52 33 L52 27 L56.5 30 Z"></path>
+                        <path class="wind-direction-to-marker" d="M50 81.5 L56.5 70 L52 73 L52 67 L48 67 L48 73 L43.5 70 Z"></path>
                     </g>
                     </g>
 
@@ -611,6 +611,6 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     <p id="status" class="status"></p>
 </main>
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
-<script src="js/app.js?v=20261010-compass-fix"></script>
+<script src="js/app.js?v=20261010-compass-reasons-fix"></script>
 </body>
 </html>
