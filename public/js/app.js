@@ -146,16 +146,16 @@ function handleWindDeviceOrientation(event) {
 
     let heading = null;
 
+    const screenAngle = Number(window.screen?.orientation?.angle ?? window.orientation ?? 0);
+    const screenOffset = Number.isFinite(screenAngle) ? screenAngle : 0;
+
     if (Number.isFinite(event.webkitCompassHeading)) {
-        // Safari/iOS exposes a compass-corrected heading directly.
-        heading = event.webkitCompassHeading;
+        // The native heading describes the device's top edge. Offset it so the
+        // dial follows the top edge of the screen in portrait or landscape.
+        heading = event.webkitCompassHeading + screenOffset;
     } else if (event.absolute === true && Number.isFinite(event.alpha)) {
-        // Do not use relative deviceorientation alpha: it is not a geographic
-        // heading and can fight the absolute event, making the compass jump.
-        // For absolute alpha, invert the clockwise rotation and compensate for
-        // the current screen orientation (portrait/landscape).
-        const screenAngle = Number(window.screen?.orientation?.angle ?? window.orientation ?? 0);
-        heading = 360 - event.alpha + (Number.isFinite(screenAngle) ? screenAngle : 0);
+        // Relative alpha is not geographic north; only use absolute readings.
+        heading = 360 - event.alpha + screenOffset;
     }
 
     if (heading !== null) {
@@ -850,27 +850,43 @@ async function loadWeatherChange() {
                 changeFill.style.width = (result.score * 10) + '%';
                 changeFill.dataset.level = level;
             }
-            reasonsElement.innerHTML = result.components.map(component => {
-                const hours = component.pair && Number.isFinite(component.pair.hours)
-                    ? component.pair.hours.toFixed(1)
-                    : null;
-                let description;
-                if (component.key === 'temperature' && component.pair) {
-                    const rising = component.pair.delta >= 0;
-                    description = '<strong>Temperature</strong>: <span class="weather-change-direction-arrow" aria-label="' +
-                        (rising ? 'increased' : 'decreased') + '">' + (rising ? '↑' : '↓') + '</span> ' +
-                        Math.abs(component.pair.delta).toFixed(1) + '°C' +
-                        (hours ? ' over window used (' + hours + ' hours)' : '');
-                } else if (component.key === 'windDirection' && component.pair) {
-                    const shift = weatherCircularDifference(component.pair.first, component.pair.last);
-                    description = '<strong>Wind direction</strong>: <span class="weather-change-direction-arrow" aria-label="direction shifted">↔</span> shifted by ' +
-                        Math.round(shift) + '°' + (hours ? ' over window used (' + hours + ' hours)' : '');
-                } else {
-                    description = '<strong>' + component.label + '</strong>: ' + component.evidence +
-                        (hours ? ' over window used (' + hours + ' hours)' : '');
-                }
-                return '<div class="weather-change-reason"><span>' + description + '</span></div>';
-            }).join('');
+            reasonsElement.innerHTML = result.components
+                .filter(component => Number.isFinite(component.severity) && component.severity > 0)
+                .map(component => {
+                    const pair = component.pair;
+                    const arrow = delta => delta > 0 ? '↑' : '↓';
+                    let description;
+
+                    if (pair && ['pressure', 'humidity', 'windSpeed', 'temperature', 'dewPointSpread', 'rainfall', 'cloudCover'].includes(component.key)) {
+                        const delta = Number(pair.delta);
+                        if (!Number.isFinite(delta) || delta === 0) return '';
+                        const unit = {
+                            pressure: ' hPa',
+                            humidity: ' percentage points',
+                            windSpeed: ' km/h',
+                            temperature: '°C',
+                            dewPointSpread: '°C',
+                            rainfall: ' mm',
+                            cloudCover: ' percentage points'
+                        }[component.key];
+                        const precision = component.key === 'humidity' || component.key === 'cloudCover' ? 0
+                            : component.key === 'rainfall' ? 2 : 1;
+                        let label = component.label;
+                        if (component.key === 'dewPointSpread') label = 'Temperature/dew-point gap';
+                        description = '<strong>' + label + '</strong>: <span class="weather-change-direction-arrow" aria-label="' +
+                            (delta > 0 ? 'increased' : 'decreased') + '">' + arrow(delta) + '</span> ' +
+                            Math.abs(delta).toFixed(precision) + unit;
+                    } else if (component.key === 'windDirection' && pair) {
+                        const shift = weatherCircularDifference(pair.first, pair.last);
+                        if (shift === 0) return '';
+                        description = '<strong>Wind direction</strong>: <span class="weather-change-direction-arrow" aria-label="direction shifted">↔</span> shifted by ' +
+                            Math.round(shift) + '°';
+                    } else {
+                        description = '<strong>' + component.label + '</strong>: ' + component.evidence;
+                    }
+
+                    return description ? '<div class="weather-change-reason"><span>' + description + '</span></div>' : '';
+                }).join('');
             const stabilityFill = document.getElementById('weatherStabilityFill');
             const stabilityTrack = stabilityFill?.closest('.temperature-stability-track');
             if (stabilityFill) {
