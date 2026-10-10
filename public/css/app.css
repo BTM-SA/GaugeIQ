@@ -445,3 +445,130 @@ button:disabled { opacity: .55; cursor: default; }
 @media(max-width:560px){.local-weather-actions{display:grid;grid-template-columns:1fr}.local-weather-actions button{width:100%}}
 
 .local-weather-api-options{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;margin-top:12px}.local-weather-api-options label{align-self:end;color:var(--muted);font-size:13px;font-weight:700}.local-weather-api-options select{min-width:0;width:100%}.local-weather-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.local-weather-actions button{flex:1 1 auto}@media(max-width:560px){.local-weather-api-options{grid-template-columns:1fr}.local-weather-actions button{width:100%}}
+
+
+/* Focused sign-in layout: keep the admin entry point balanced on desktop and mobile. */
+.auth-page {
+    min-height: 100vh;
+    min-height: 100svh;
+    background:
+        radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 58%),
+        var(--background);
+}
+.auth-shell {
+    width: min(100% - 32px, 440px);
+    min-height: 100vh;
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: max(24px, env(safe-area-inset-top)) 0 max(24px, env(safe-area-inset-bottom));
+}
+.admin-auth {
+    width: 100%;
+    margin: 0;
+    padding: clamp(22px, 5vw, 34px);
+    border-radius: 22px;
+}
+.admin-auth .eyebrow {
+    color: var(--accent);
+    overflow-wrap: anywhere;
+}
+.admin-auth h1 {
+    font-size: clamp(25px, 6vw, 32px);
+    line-height: 1.15;
+    letter-spacing: -.035em;
+    overflow-wrap: anywhere;
+}
+.admin-auth > .muted {
+    margin: 10px 0 24px;
+    line-height: 1.55;
+}
+.admin-auth form {
+    display: grid;
+    gap: 16px;
+}
+.admin-auth form label {
+    display: grid;
+    gap: 7px;
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 750;
+}
+.admin-auth input:not([type="hidden"]) {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    padding: 12px 13px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    font-weight: 500;
+    box-shadow: none;
+}
+.admin-auth input:not([type="hidden"]):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+.admin-auth .auth-submit,
+.admin-auth .admin-auth-back {
+    display: inline-flex;
+    width: 100%;
+    min-height: 48px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 0;
+    padding: 12px 16px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    background: var(--accent);
+    color: #fff;
+    font: inherit;
+    font-weight: 750;
+    line-height: 1.2;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+.admin-auth .auth-submit:hover,
+.admin-auth .admin-auth-back:hover {
+    filter: brightness(1.08);
+}
+.admin-auth .auth-submit:focus-visible,
+.admin-auth .admin-auth-back:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+.admin-auth .admin-auth-back {
+    margin-top: 10px;
+    border-color: var(--border);
+    background: var(--surface);
+    color: var(--text);
+}
+.admin-auth .monitor-warning {
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+@media (max-width: 560px) {
+    .auth-shell {
+        width: 100%;
+        padding: max(16px, env(safe-area-inset-top)) 14px max(16px, env(safe-area-inset-bottom));
+        align-items: center;
+    }
+    .admin-auth {
+        padding: 24px 20px;
+        border-radius: 18px;
+    }
+    .admin-auth > .muted {
+        margin-bottom: 22px;
+    }
+}
+@media (max-width: 360px) {
+    .auth-shell { padding-left: 10px; padding-right: 10px; }
+    .admin-auth { padding: 21px 16px; }
+}
