@@ -120,7 +120,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f3f4f6" id="themeColorMeta">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/app.css?v=20261010-weather-change">
 <title>GaugeIQ</title>
 </head>
 <body>
@@ -477,10 +477,8 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         </div>
         <div class="weather-change-summary" id="weatherChangeSummary">Analysing recent conditions…</div>
         <div class="weather-baseline-status" id="weatherBaselineStatus" aria-live="polite">Building a recent local baseline…</div>
-        <div class="insight-meter-track" role="progressbar" aria-label="Weather change intensity" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0" id="weatherChangeTrack">
-            <div class="insight-meter-fill change-meter-fill" id="weatherChangeFill" style="width:0%"></div>
-        </div>
-        <div class="weather-change-reasons" id="weatherChangeReasons" aria-live="polite"></div>
+        <button type="button" class="secondary weather-change-reasons-toggle" id="weatherChangeReasonsToggle" aria-controls="weatherChangeReasons" aria-expanded="false">Show reasons</button>
+        <div class="weather-change-reasons" id="weatherChangeReasons" aria-live="polite" hidden></div>
         <details class="algorithm-details">
             <summary>Show calculation and weights</summary>
             <p><strong>Formula:</strong> score = 10 × (sum of each signal's weight × its severity) ÷ (sum of weights for signals with valid readings). Each severity is between 0 and 1. The result is capped at 10 and rounded to one decimal place.</p>
@@ -613,6 +611,6 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     <p id="status" class="status"></p>
 </main>
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
-<script src="js/app.js?v=20261009-location-refresh"></script>
+<script src="js/app.js?v=20261010-weather-change"></script>
 </body>
 </html>
