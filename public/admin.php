@@ -243,6 +243,45 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     </form>
 </section>
 
+ <section class="card history-management-card" aria-labelledby="historyManagementTitle">
+    <div class="section-heading">
+        <div>
+            <h2 id="historyManagementTitle">Historical data</h2>
+            <p class="muted">Download historical weather for a location, import a CSV/JSON dataset, or export a backup. Imported data is stored in this browser on this device.</p>
+        </div>
+    </div>
+    <div class="local-weather-tools" aria-label="Historical data management">
+        <label for="weatherLocationSelect">Location for historical data</label>
+        <select id="weatherLocationSelect" class="theme-select"
+            data-server-latitude="<?= h(gaugeSetting($pdo, 'active_location_latitude', $locationLatitude) ?? $locationLatitude) ?>"
+            data-server-longitude="<?= h(gaugeSetting($pdo, 'active_location_longitude', $locationLongitude) ?? $locationLongitude) ?>"
+            data-server-location-name="<?= h(gaugeSetting($pdo, 'active_location_name', $locationName) ?? $locationName) ?>"
+            data-server-timezone="<?= h(gaugeSetting($pdo, 'active_location_timezone', (string)($config['app']['timezone'] ?? 'UTC')) ?? 'UTC') ?>"
+            data-config-latitude="<?= h((string)$config['pressure']['latitude']) ?>"
+            data-config-longitude="<?= h((string)$config['pressure']['longitude']) ?>"
+            data-config-location-name="<?= h((string)$config['pressure']['location_name']) ?>"
+            data-config-timezone="<?= h((string)($config['app']['timezone'] ?? 'UTC')) ?>"
+            data-location-csrf="<?= h($csrf) ?>" data-location-sync-endpoint="save-dashboard-location.php">
+            <option value="server-current">Current GaugeIQ location (server)</option>
+        </select>
+        <div class="local-weather-actions">
+            <button type="button" class="secondary" id="localWeatherFetch">Get historical data</button>
+            <button type="button" class="secondary" id="localWeatherImport">Import file</button>
+            <button type="button" class="secondary" id="localWeatherExport">Export backup</button>
+            <button type="button" class="secondary" id="localWeatherPersist">Protect local storage</button>
+            <input type="file" id="localWeatherFile" accept=".csv,.json,application/json,text/csv" hidden>
+        </div>
+        <div class="local-weather-api-options">
+            <label for="localWeatherRange">Historical range to download</label>
+            <select id="localWeatherRange" class="theme-select"><option value="30">Last 30 days</option><option value="90">Last 90 days</option><option value="365" selected>Last year</option><option value="all">All available history</option></select>
+            <label for="localWeatherSource">Historical source</label>
+            <select id="localWeatherSource" class="theme-select"><option value="forecast" selected>Historical Forecast · recent conditions</option><option value="weather">Historical Weather · long-term history</option></select>
+        </div>
+        <p id="localWeatherStatus" class="muted" role="status" aria-live="polite">Preparing local weather database…</p>
+        <p class="muted local-weather-help">Historical Forecast is intended for recent conditions; Historical Weather is more suitable for long-term trends. “All available history” may take multiple requests. Export a backup before clearing browser data or changing devices. This browser storage is separate from GaugeIQ's server database.</p>
+    </div>
+</section>
+
 <section class="card monitoring-card" aria-labelledby="monitoringTitle">
     <div class="section-heading">
         <div><h2 id="monitoringTitle">Monitoring status</h2><p class="muted">GaugeIQ's scheduled background monitor.</p></div>
@@ -450,6 +489,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     <a class="secondary button-link" href="./">Back to GaugeIQ</a>
 </section>
 
+<script src="js/local-weather.js?v=20261010-admin-history" defer></script>
 <script src="js/admin.js" defer></script>
 <script src="js/alerts.js?v=4" defer></script>
 </main>
