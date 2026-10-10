@@ -44,12 +44,30 @@ $dashboardTimezone = $storedCoordinates['active_location_timezone'] ?? $dashboar
 
 try {
     $current = $service->fetchCurrent();
-    $latest = $db->pdo()->query(
-        'SELECT pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, observed_at FROM gaugeiq_pressure_readings ORDER BY id DESC LIMIT 1'
-    )->fetch();
+    $changedAtStmt = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = 'active_location_changed_at' LIMIT 1");
+    $changedAtStmt->execute();
+    $activeLocationChangedAt = $changedAtStmt->fetchColumn();
+    if (is_string($activeLocationChangedAt) && $activeLocationChangedAt !== '') {
+        $latestStmt = $pdo->prepare(
+            'SELECT pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, observed_at
+             FROM gaugeiq_pressure_readings WHERE created_at >= ? ORDER BY id DESC LIMIT 1'
+        );
+        $latestStmt->execute([$activeLocationChangedAt]);
+        $latest = $latestStmt->fetch() ?: null;
+        $rangeStmt = $pdo->prepare(
+            'SELECT MIN(pressure_hpa) AS pressure_low, MAX(pressure_hpa) AS pressure_high
+             FROM gaugeiq_pressure_readings WHERE created_at >= ?'
+        );
+        $rangeStmt->execute([$activeLocationChangedAt]);
+        $pressureHistory = $rangeStmt->fetch() ?: [];
+    } else {
+        $latest = $pdo->query(
+            'SELECT pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, observed_at FROM gaugeiq_pressure_readings ORDER BY id DESC LIMIT 1'
+        )->fetch() ?: null;
+        $pressureHistory = $pdo->query('SELECT MIN(pressure_hpa) AS pressure_low, MAX(pressure_hpa) AS pressure_high FROM gaugeiq_pressure_readings')->fetch() ?: [];
+    }
 
     $change = $latest ? $current['pressure_hpa'] - (float)$latest['pressure_hpa'] : 0.0;
-    $pressureHistory = $pdo->query('SELECT MIN(pressure_hpa) AS pressure_low, MAX(pressure_hpa) AS pressure_high FROM gaugeiq_pressure_readings')->fetch() ?: [];
 
     $settings = [];
     foreach ($pdo->query("SELECT `key`, `value` FROM gaugeiq_settings WHERE `key` IN ('monitor_last_success_at', 'monitor_last_error')") as $setting) {
@@ -509,7 +527,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         </div>
         <div class="local-weather-tools" aria-label="Local weather history tools">
             <label for="weatherLocationSelect">Active dashboard location</label>
-            <select id="weatherLocationSelect" class="theme-select" aria-label="Active dashboard location" data-server-latitude="<?= htmlspecialchars($dashboardLatitude, ENT_QUOTES) ?>" data-server-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES) ?>" data-server-location-name="<?= htmlspecialchars($locationName, ENT_QUOTES) ?>" data-server-timezone="<?= htmlspecialchars($dashboardTimezone, ENT_QUOTES) ?>" data-location-csrf="<?= htmlspecialchars($csrfToken, ENT_QUOTES) ?>" data-location-sync-endpoint="save-dashboard-location.php">
+            <select id="weatherLocationSelect" class="theme-select" aria-label="Active dashboard location" data-server-latitude="<?= htmlspecialchars($dashboardLatitude, ENT_QUOTES) ?>" data-server-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES) ?>" data-server-location-name="<?= htmlspecialchars($locationName, ENT_QUOTES) ?>" data-server-timezone="<?= htmlspecialchars($dashboardTimezone, ENT_QUOTES) ?>" data-config-latitude="<?= htmlspecialchars((string)($config['pressure']['latitude'] ?? ''), ENT_QUOTES) ?>" data-config-longitude="<?= htmlspecialchars((string)($config['pressure']['longitude'] ?? ''), ENT_QUOTES) ?>" data-config-location-name="<?= htmlspecialchars((string)($config['pressure']['location_name'] ?? 'Configured GaugeIQ location'), ENT_QUOTES) ?>" data-config-timezone="<?= htmlspecialchars((string)($config['app']['timezone'] ?? 'UTC'), ENT_QUOTES) ?>" data-location-csrf="<?= htmlspecialchars($csrfToken, ENT_QUOTES) ?>" data-location-sync-endpoint="save-dashboard-location.php">
                 <option value="server-current">Current GaugeIQ location (server)</option>
             </select>
             <div class="local-weather-actions">
@@ -609,7 +627,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 
     <p id="status" class="status"></p>
 </main>
-<script src="js/local-weather.js?v=20261009-location-sync"></script>
-<script src="js/app.js?v=20261009-location-sync"></script>
+<script src="js/local-weather.js?v=20261009-location-refresh"></script>
+<script src="js/app.js?v=20261009-location-refresh"></script>
 </body>
 </html>

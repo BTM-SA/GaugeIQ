@@ -176,7 +176,7 @@
                 timestamp,
                 temperature_c: numberOrNull(hourly.temperature_2m?.[i]),
                 dew_point_c: numberOrNull(hourly.dew_point_2m?.[i]),
-                pressure_hpa: numberOrNull(hourly.pressure_msl?.[i] ?? hourly.surface_pressure?.[i]),
+                pressure_hpa: numberOrNull(hourly.surface_pressure?.[i] ?? hourly.pressure_msl?.[i]),
                 humidity_percent: numberOrNull(hourly.relative_humidity_2m?.[i]),
                 wind_speed_kmh: numberOrNull(hourly.wind_speed_10m?.[i]),
                 wind_direction_degrees: numberOrNull(hourly.wind_direction_10m?.[i]),
@@ -276,6 +276,19 @@
             }
             await transactionDone(tx);
         }
+
+        // Keep the displayed location count cumulative when data is imported in
+        // several batches (for example, the year-by-year "all history" import).
+        const totalCount = await new Promise((resolve, reject) => {
+            const countTx = db.transaction(STORE_READINGS, 'readonly');
+            const request = countTx.objectStore(STORE_READINGS).index('locationId').count(IDBKeyRange.only(id));
+            request.onsuccess = () => resolve(request.result || 0);
+            request.onerror = () => reject(request.error || new Error('Unable to count saved weather readings.'));
+        });
+        record.readingCount = totalCount;
+        tx = db.transaction(STORE_LOCATIONS, 'readwrite');
+        tx.objectStore(STORE_LOCATIONS).put(record);
+        await transactionDone(tx);
         return record;
     }
 
@@ -331,55 +344,92 @@
         const endpoint = source === 'forecast'
             ? 'https://historical-forecast-api.open-meteo.com/v1/forecast'
             : 'https://archive-api.open-meteo.com/v1/archive';
-        const params = new URLSearchParams({
+        const endpointName = source === 'forecast' ? 'Historical Forecast' : 'Historical Weather';
+        const timezone = location.timezone && location.timezone !== 'auto' ? location.timezone : 'auto';
+        const makeParams = (from, to) => new URLSearchParams({
             latitude: String(location.latitude),
             longitude: String(location.longitude),
-            start_date: dateOnly(startDate),
-            end_date: dateOnly(endDate),
+            start_date: dateOnly(from),
+            end_date: dateOnly(to),
             hourly: 'temperature_2m,dew_point_2m,apparent_temperature,pressure_msl,surface_pressure,relative_humidity_2m,wind_speed_10m,wind_direction_10m,precipitation,cloud_cover,weather_code',
             temperature_unit: 'celsius',
             wind_speed_unit: 'kmh',
             precipitation_unit: 'mm',
-            timezone: location.timezone && location.timezone !== 'auto' ? location.timezone : 'auto'
+            timezone
         });
+
+        // "All available" can span decades. Request one calendar year at a time
+        // so API responses remain manageable and each completed year is saved
+        // before the next request, rather than holding the entire dataset in RAM.
+        const dateRanges = [];
+        if (range === 'all') {
+            let cursor = new Date(Date.UTC(startDate.getUTCFullYear(), 0, 1));
+            while (cursor <= endDate) {
+                const yearEnd = new Date(Date.UTC(cursor.getUTCFullYear(), 11, 31));
+                const chunkEnd = yearEnd < endDate ? yearEnd : endDate;
+                const chunkStart = cursor < startDate ? startDate : cursor;
+                if (chunkStart <= chunkEnd) dateRanges.push([new Date(chunkStart), new Date(chunkEnd)]);
+                cursor = new Date(Date.UTC(cursor.getUTCFullYear() + 1, 0, 1));
+            }
+        } else {
+            dateRanges.push([startDate, endDate]);
+        }
+
         fetchButton?.setAttribute('disabled', 'disabled');
+        let saved = null;
+        let totalReadings = 0;
+        let targetId = location.id;
+        const targetName = String(location.name || 'GaugeIQ location');
+        let savedLocation = {
+            ...location,
+            name: targetName,
+            latitude: Number(location.latitude),
+            longitude: Number(location.longitude),
+            timezone,
+            source: source === 'forecast' ? 'Open-Meteo Historical Forecast' : 'Open-Meteo Historical Weather'
+        };
+        if (targetId === SERVER_LOCATION_ID) {
+            const match = locations.find(item =>
+                Number.isFinite(Number(item.latitude)) && Number.isFinite(Number(item.longitude)) &&
+                Math.abs(Number(item.latitude) - savedLocation.latitude) < 0.001 &&
+                Math.abs(Number(item.longitude) - savedLocation.longitude) < 0.001
+            );
+            targetId = match?.id || null;
+        }
+
         try {
-            setStatus('Downloading ' + (source === 'forecast' ? 'Historical Forecast' : 'Historical Weather') +
-                ' from ' + params.get('start_date') + ' to ' + params.get('end_date') + '…', false);
-            const response = await fetch(endpoint + '?' + params.toString(), { cache: 'no-store' });
-            let data;
-            try { data = await response.json(); }
-            catch { throw new Error('Open-Meteo returned an unreadable response. Please retry with a shorter range.'); }
-            if (!response.ok || data.error) {
-                throw new Error(data.reason || 'Open-Meteo returned HTTP ' + response.status + '. Try a shorter range or the other historical source.');
+            for (let index = 0; index < dateRanges.length; index += 1) {
+                const [chunkStart, chunkEnd] = dateRanges[index];
+                const params = makeParams(chunkStart, chunkEnd);
+                setStatus('Downloading ' + endpointName + ' (' + (index + 1) + '/' + dateRanges.length + '): ' +
+                    params.get('start_date') + ' to ' + params.get('end_date') + '…', false);
+                const response = await fetch(endpoint + '?' + params.toString(), { cache: 'no-store' });
+                let data;
+                try { data = await response.json(); }
+                catch { throw new Error('Open-Meteo returned an unreadable response for ' + params.get('start_date') + '.'); }
+                if (!response.ok || data.error) {
+                    throw new Error((data.reason || 'Open-Meteo returned HTTP ' + response.status) +
+                        '. Completed data has been saved; retry the import to continue.');
+                }
+                const parsed = fromOpenMeteoJson(data);
+                if (!parsed.readings.length) {
+                    if (range === 'all') continue;
+                    throw new Error('Open-Meteo returned no hourly readings for this location and date range.');
+                }
+                savedLocation.timezone = data.timezone || savedLocation.timezone || 'UTC';
+                saved = await saveLocationAndReadings(savedLocation, parsed.readings.map(row => ({
+                    ...row,
+                    source: savedLocation.source
+                })), targetId);
+                targetId = saved.id;
+                totalReadings += parsed.readings.length;
             }
-            const parsed = fromOpenMeteoJson(data);
-            if (!parsed.readings.length) throw new Error('Open-Meteo returned no hourly readings for this location and date range.');
-            const targetName = String(location.name || 'GaugeIQ location');
-            const savedLocation = {
-                ...location,
-                name: targetName,
-                latitude: Number(location.latitude),
-                longitude: Number(location.longitude),
-                timezone: data.timezone || location.timezone || 'UTC',
-                source: source === 'forecast' ? 'Open-Meteo Historical Forecast' : 'Open-Meteo Historical Weather'
-            };
-            let targetId = location.id;
-            if (targetId === SERVER_LOCATION_ID) {
-                const match = locations.find(item =>
-                    Number.isFinite(Number(item.latitude)) && Number.isFinite(Number(item.longitude)) &&
-                    Math.abs(Number(item.latitude) - savedLocation.latitude) < 0.001 &&
-                    Math.abs(Number(item.longitude) - savedLocation.longitude) < 0.001
-                );
-                targetId = match?.id || null;
+            if (!saved || totalReadings === 0) {
+                throw new Error('Open-Meteo returned no hourly readings for this location and date range.');
             }
-            const saved = await saveLocationAndReadings(savedLocation, parsed.readings.map(row => ({
-                ...row,
-                source: savedLocation.source
-            })), targetId);
             await refreshLocations(saved.id);
             if (window.GaugeIQLoadHistory) window.GaugeIQLoadHistory('all');
-            setStatus('Historical data installed: ' + parsed.readings.length.toLocaleString() +
+            setStatus('Historical data installed: ' + totalReadings.toLocaleString() +
                 ' hourly records for ' + saved.name + '. Matching timestamps are deduplicated; live server records remain unchanged.' +
                 await storageSummary(), false);
         } finally {
@@ -562,9 +612,9 @@
             updateRangeButtons();
             const selectedId = select.value;
             if (selectedId === SERVER_LOCATION_ID) {
-                window.GaugeIQSelectDashboardLocation?.(selectedId, null);
+                window.GaugeIQSelectDashboardLocation?.(selectedId, null, true);
             } else {
-                allLocations().then(items => window.GaugeIQSelectDashboardLocation?.(selectedId, items.find(item => item.id === selectedId))).catch(() => {});
+                allLocations().then(items => window.GaugeIQSelectDashboardLocation?.(selectedId, items.find(item => item.id === selectedId), true)).catch(() => {});
             }
             document.querySelectorAll('.history-range-button').forEach(button => button.classList.remove('active'));
             document.querySelector('.history-range-button[data-hours="24"]')?.classList.add('active');

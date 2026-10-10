@@ -799,10 +799,22 @@ async function loadWeatherChange() {
     if (!scoreElement || !summaryElement || !reasonsElement) return;
 
     try {
-        const response = await fetch('../api/history.php?hours=336', { cache: 'no-store' });
-        if (!response.ok) throw new Error('Unable to load recent readings.');
-        const data = await response.json();
-        const allReadings = Array.isArray(data.readings) ? data.readings : [];
+        const selectedLocation = document.getElementById('weatherLocationSelect')?.value || 'server-current';
+        const isLocalHistory = selectedLocation !== 'server-current' && Boolean(window.GaugeIQLocalWeather);
+        let allReadings;
+        if (isLocalHistory) {
+            const localReadings = await window.GaugeIQLocalWeather.readingsFor(selectedLocation, 'all');
+            allReadings = localReadings.map(item => ({
+                ...item,
+                created_at: item.created_at || item.timestamp || item.observed_at,
+                observed_at: item.observed_at || item.timestamp
+            }));
+        } else {
+            const response = await fetch('../api/history.php?hours=336', { cache: 'no-store' });
+            if (!response.ok) throw new Error('Unable to load recent readings.');
+            const data = await response.json();
+            allReadings = Array.isArray(data.readings) ? data.readings : [];
+        }
         const latestTime = allReadings.reduce((latest, item) => {
             const timestamp = new Date(item.created_at || item.observed_at).getTime();
             return Number.isFinite(timestamp) ? Math.max(latest, timestamp) : latest;
@@ -818,7 +830,7 @@ async function loadWeatherChange() {
         if (baselineElement && latestTime > 0 && Number.isFinite(result.score)) {
             const baseline = weatherLocalBaseline(allReadings, result.score, latestTime);
             const ageMinutes = Math.max(0, Math.round((Date.now() - latestTime) / 60000));
-            baselineElement.textContent = baseline.text + (ageMinutes > 90
+            baselineElement.textContent = (isLocalHistory ? 'Selected location history: ' : '') + baseline.text + (ageMinutes > 90
                 ? ' Latest stored reading is about ' + ageMinutes + ' minutes old; the result may be stale.'
                 : '');
         } else if (baselineElement) {
@@ -899,15 +911,15 @@ async function loadWeatherChange() {
 }
 
 
-async function selectDashboardLocation(locationId, location) {
+async function selectDashboardLocation(locationId, location, reloadAfterSync = false) {
     const selector = document.getElementById('weatherLocationSelect');
     const name = document.getElementById('dashboardLocationName');
     if (locationId === 'server-current') {
         location = {
-            name: selector?.dataset.serverLocationName || 'Current GaugeIQ location',
-            latitude: Number(selector?.dataset.serverLatitude),
-            longitude: Number(selector?.dataset.serverLongitude),
-            timezone: selector?.dataset.serverTimezone || 'auto'
+            name: selector?.dataset.configLocationName || 'Configured GaugeIQ location',
+            latitude: Number(selector?.dataset.configLatitude),
+            longitude: Number(selector?.dataset.configLongitude),
+            timezone: selector?.dataset.configTimezone || 'auto'
         };
     }
     if (!location || !Number.isFinite(Number(location.latitude)) || !Number.isFinite(Number(location.longitude))) {
@@ -916,30 +928,40 @@ async function selectDashboardLocation(locationId, location) {
     }
     if (name) name.textContent = 'Loading ' + location.name + '…';
     try {
-        if (locationId !== 'server-current') {
-            const syncEndpoint = selector?.dataset.locationSyncEndpoint;
-            const csrf = selector?.dataset.locationCsrf;
-            if (!syncEndpoint || !csrf) throw new Error('Location sync is not configured. Reload GaugeIQ and try again.');
-            const syncResponse = await fetch(syncEndpoint, {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: {'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
-                body: JSON.stringify({
-                    csrf,
-                    name: String(location.name || 'Saved location').slice(0, 120),
-                    latitude: Number(location.latitude),
-                    longitude: Number(location.longitude),
-                    timezone: String(location.timezone || 'auto').slice(0, 80)
-                })
-            });
-            const syncResult = await syncResponse.json();
-            if (!syncResponse.ok || !syncResult.success) throw new Error(syncResult.error || 'Unable to sync this location to the server; cron will keep using the previous location.');
-            if (selector) {
-                selector.dataset.serverLatitude = String(location.latitude);
-                selector.dataset.serverLongitude = String(location.longitude);
-                selector.dataset.serverLocationName = String(location.name || 'Saved location');
-                selector.dataset.serverTimezone = String(location.timezone || 'auto');
-            }
+        const syncEndpoint = selector?.dataset.locationSyncEndpoint;
+        const csrf = selector?.dataset.locationCsrf;
+        if (!syncEndpoint || !csrf) throw new Error('Location sync is not configured. Reload GaugeIQ and try again.');
+        const serverCoordinatesChanged =
+            Number(selector?.dataset.serverLatitude) !== Number(location.latitude) ||
+            Number(selector?.dataset.serverLongitude) !== Number(location.longitude);
+        const syncResponse = await fetch(syncEndpoint, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
+            body: JSON.stringify({
+                csrf,
+                name: String(location.name || 'Saved location').slice(0, 120),
+                latitude: Number(location.latitude),
+                longitude: Number(location.longitude),
+                timezone: String(location.timezone || 'auto').slice(0, 80)
+            })
+        });
+        const syncResult = await syncResponse.json();
+        if (!syncResponse.ok || !syncResult.success) {
+            throw new Error(syncResult.error || 'Unable to sync this location to the server; cron will keep using the previous location.');
+        }
+        if (selector) {
+            selector.dataset.serverLatitude = String(location.latitude);
+            selector.dataset.serverLongitude = String(location.longitude);
+            selector.dataset.serverLocationName = String(location.name || 'Saved location');
+            selector.dataset.serverTimezone = String(location.timezone || 'auto');
+        }
+        // A full page render updates all server-rendered gauges and their derived
+        // indicators together. Do this on explicit user selection, or if a
+        // remembered local location had drifted from the server's active one.
+        if (reloadAfterSync || serverCoordinatesChanged) {
+            window.location.reload();
+            return;
         }
         const p = new URLSearchParams({
             latitude: String(location.latitude), longitude: String(location.longitude),
