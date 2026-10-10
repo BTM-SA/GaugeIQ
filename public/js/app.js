@@ -129,17 +129,6 @@ function applyWindCompassHeading(heading) {
                 );
             }
 
-            const windNeedle = windGauge.querySelector('.wind-direction-arrows');
-            if (windNeedle) {
-                const windBearing = Number(windNeedle.getAttribute('data-wind-degrees'));
-                if (Number.isFinite(windBearing)) {
-                    windNeedle.setAttribute(
-                        'transform',
-                        'rotate(' + (windBearing - windCompassRotation).toFixed(2) + ' 50 50)'
-                    );
-                }
-            }
-
             if (windCompassStatus) {
                 windCompassStatus.textContent = 'Heading ' + Math.round(windCompassHeading) + '° · ' + compassDirectionLabel(windCompassHeading);
             }
@@ -1018,8 +1007,7 @@ async function selectDashboardLocation(locationId, location, reloadAfterSync = f
         if(arrows){
             const bearing=((Number(c.wind_direction_10m)%360)+360)%360;
             arrows.setAttribute('data-wind-degrees',String(bearing));
-            const heading=Number.isFinite(windCompassRotation)?windCompassRotation:0;
-            arrows.setAttribute('transform','rotate('+(bearing-heading)+' 50 50)');
+            arrows.setAttribute('transform','rotate('+bearing+' 50 50)');
         }
         const score=document.getElementById('rainProbabilityScore'), fill=document.getElementById('rainProbabilityFill');
         const prob=Number(d.precipitation_probability_max?.[0]);
